@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { BarreHaute, BarreBasse } from '@/components/Navigation'
+import { Notifications } from '@/components/social/Notifications'
+import { chargerNotifications } from '@/lib/donnees-notifs'
 import type { Profil } from '@/types/database'
 
 /**
@@ -36,14 +38,21 @@ export default async function CarnetLayout({
 
   if (!profil || !profil.onboarded || !profil.pseudo) redirect('/bienvenue')
 
+  const notifications = await chargerNotifications()
+  const cloche = <Notifications notifications={notifications} />
+
   return (
     <>
-      <BarreHaute avatar={profil.avatar ?? '💪'} pseudo={profil.pseudo} />
+      <BarreHaute
+        avatar={profil.avatar ?? '💪'}
+        pseudo={profil.pseudo}
+        notifications={cloche}
+      />
       {/* La marge basse laisse la place à la barre de navigation */}
       <div className="mx-auto max-w-5xl px-4 pb-28 md:px-6 md:pb-12">
         {children}
       </div>
-      <BarreBasse avatar={profil.avatar ?? '💪'} />
+      <BarreBasse avatar={profil.avatar ?? '💪'} notifications={cloche} />
     </>
   )
 }

@@ -6,6 +6,8 @@ import {
 } from '@/lib/donnees'
 import { bilanDisponible, calculerBilan, moisPrecedent } from '@/lib/bilan'
 import { BanniereBilan } from '@/components/bilan/Banniere'
+import { Annonces } from '@/components/social/Annonces'
+import { chargerAnnonces } from '@/lib/donnees-notifs'
 import { chargerFil, chargerSignaux, chargerAmis } from '@/lib/donnees-social'
 import { repartitionXP, totalXP, calculerNiveau, volumeSeance } from '@/lib/xp'
 import { semaineCourante, libelleSemaine } from '@/lib/semaine'
@@ -34,6 +36,8 @@ export default async function Accueil() {
       chargerSignaux(),
       chargerAmis(),
     ])
+
+  const annonces = await chargerAnnonces()
 
   const profil = brut as Pick<Profil, 'pseudo' | 'avatar'> | null
 
@@ -70,6 +74,8 @@ export default async function Accueil() {
   return (
     <div className="flex flex-col gap-6 py-4">
       <Presence />
+
+      {annonces.length > 0 && <Annonces annonces={annonces} />}
 
       {bilan && !bilan.vide && <BanniereBilan bilan={bilan} />}
 
