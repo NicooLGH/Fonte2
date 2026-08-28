@@ -16,6 +16,8 @@ type Entree = { href: string; libelle: string; ico: string }
 const ENTREES: Entree[] = [
   { href: '/', libelle: 'Accueil', ico: '🏠' },
   { href: '/seances', libelle: 'Séances', ico: '🏋️' },
+  { href: '/suivi', libelle: 'Suivi', ico: '⚖️' },
+  { href: '/analyse', libelle: 'Analyse', ico: '📊' },
 ]
 
 export function BarreHaute({

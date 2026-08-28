@@ -4,6 +4,7 @@ import { creerClientServeur } from './supabase/server'
 import type { Groupe } from '@/types/database'
 import type { Releve } from './xp'
 import type { Exercice, SeanceComplete } from './carnet'
+import type { ReleveComplet, Objectifs, CleSuivi } from './suivi'
 
 /* ============================================================
    Lecture du carnet — serveur uniquement
@@ -98,4 +99,81 @@ export async function chargerReleves(): Promise<Releve[]> {
     semaine: r.week_key as string,
     bonusDimanche: Boolean(r.bonus_dimanche),
   }))
+}
+
+/* ============================================================
+   Relevés hebdomadaires et objectifs
+   ============================================================ */
+
+
+const CLES: CleSuivi[] = [
+  'poids',
+  'calories',
+  'pec',
+  'bras',
+  'epaule',
+  'jambe',
+  'taille',
+]
+
+/** Convertit `null` et les chaînes en nombre ou null. */
+function nombreOuNull(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
+export async function chargerSuiviComplet(): Promise<ReleveComplet[]> {
+  const supabase = await creerClientServeur()
+  const { data } = await supabase
+    .from('suivi')
+    .select(
+      'id, date, week_key, poids, calories, pec, bras, epaule, jambe, taille, bonus_dimanche, note, photo_path'
+    )
+    .order('week_key', { ascending: false })
+
+  return (data ?? []).map((r) => {
+    const ligne = r as Record<string, unknown>
+    const valeurs = Object.fromEntries(
+      CLES.map((c) => [c, nombreOuNull(ligne[c])])
+    ) as { [K in CleSuivi]: number | null }
+
+    return {
+      id: ligne.id as string,
+      date: ligne.date as string,
+      semaine: ligne.week_key as string,
+      bonusDimanche: Boolean(ligne.bonus_dimanche),
+      note: (ligne.note as string | null) ?? null,
+      aPhoto: Boolean(ligne.photo_path),
+      ...valeurs,
+    }
+  })
+}
+
+/**
+ * Objectifs.
+ *
+ * La colonne `mensu` porte historiquement l'ensemble des cibles,
+ * poids compris : on la lit telle quelle plutôt que de migrer
+ * une structure que l'ancien carnet utilise encore.
+ */
+export async function chargerObjectifs(): Promise<Objectifs> {
+  const supabase = await creerClientServeur()
+  const { data } = await supabase
+    .from('objectifs')
+    .select('mensu, suivi')
+    .maybeSingle()
+
+  if (!data) return {}
+
+  const mensu = (data.mensu ?? {}) as Record<string, unknown>
+  const suivi = (data.suivi ?? {}) as Record<string, unknown>
+
+  const objectifs: Objectifs = {}
+  for (const cle of CLES) {
+    if (cle === 'calories') continue
+    const v = nombreOuNull(mensu[cle] ?? suivi[cle])
+    if (v !== null) objectifs[cle] = v
+  }
+  return objectifs
 }
