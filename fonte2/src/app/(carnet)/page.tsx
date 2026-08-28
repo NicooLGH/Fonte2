@@ -1,4 +1,11 @@
-import { chargerExercices, chargerSeances, chargerReleves } from '@/lib/donnees'
+import {
+  chargerExercices,
+  chargerSeances,
+  chargerReleves,
+  chargerSuiviComplet,
+} from '@/lib/donnees'
+import { bilanDisponible, calculerBilan, moisPrecedent } from '@/lib/bilan'
+import { BanniereBilan } from '@/components/bilan/Banniere'
 import { chargerFil, chargerSignaux, chargerAmis } from '@/lib/donnees-social'
 import { repartitionXP, totalXP, calculerNiveau, volumeSeance } from '@/lib/xp'
 import { semaineCourante, libelleSemaine } from '@/lib/semaine'
@@ -30,6 +37,12 @@ export default async function Accueil() {
 
   const profil = brut as Pick<Profil, 'pseudo' | 'avatar'> | null
 
+  // Le bilan n'est calculé que pendant sa fenêtre d'affichage :
+  // inutile de charger le suivi complet le reste du mois.
+  const bilan = bilanDisponible()
+    ? calculerBilan(moisPrecedent(), seances, await chargerSuiviComplet(), exercices)
+    : null
+
   const repartition = repartitionXP(
     seances,
     releves,
@@ -57,6 +70,8 @@ export default async function Accueil() {
   return (
     <div className="flex flex-col gap-6 py-4">
       <Presence />
+
+      {bilan && !bilan.vide && <BanniereBilan bilan={bilan} />}
 
       <section className="rounded-carte border border-bordure bg-verre p-6">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">

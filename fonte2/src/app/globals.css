@@ -85,3 +85,24 @@ h1, h2, h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   BILAN MENSUEL
+   ============================================================ */
+/* Chaque écran entre par le bas. Écrit à la main plutôt que via
+   un module d'animations : une seule transition ne justifie pas
+   une dépendance de plus. */
+@keyframes bilan-entree {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bilan-entree {
+  animation: bilan-entree 0.5s cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
