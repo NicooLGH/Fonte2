@@ -1,32 +1,32 @@
 import { chargerExercices, chargerSeances, chargerReleves } from '@/lib/donnees'
+import { chargerFil, chargerSignaux, chargerAmis } from '@/lib/donnees-social'
 import { repartitionXP, totalXP, calculerNiveau, volumeSeance } from '@/lib/xp'
 import { semaineCourante, libelleSemaine } from '@/lib/semaine'
 import { creerClientServeur } from '@/lib/supabase/server'
+import { Fil } from '@/components/social/Fil'
+import { Presence } from '@/components/social/Presence'
 import type { Profil } from '@/types/database'
 
-/**
- * Accueil.
- *
- * Il affiche pour l'instant le niveau et les statistiques ; le
- * fil d'actualité viendra à la session 5, quand les amis
- * existeront.
- */
 export default async function Accueil() {
   const supabase = await creerClientServeur()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [{ data: brut }, exercices, seances, releves] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('pseudo, avatar')
-      .eq('id', user!.id)
-      .maybeSingle(),
-    chargerExercices(),
-    chargerSeances(),
-    chargerReleves(),
-  ])
+  const [{ data: brut }, exercices, seances, releves, fil, signaux, amis] =
+    await Promise.all([
+      supabase
+        .from('profiles')
+        .select('pseudo, avatar')
+        .eq('id', user!.id)
+        .maybeSingle(),
+      chargerExercices(),
+      chargerSeances(),
+      chargerReleves(),
+      chargerFil(),
+      chargerSignaux(),
+      chargerAmis(),
+    ])
 
   const profil = brut as Pick<Profil, 'pseudo' | 'avatar'> | null
 
@@ -51,14 +51,13 @@ export default async function Accueil() {
     { valeur: semainesSuivies, libelle: 'Semaines suivies' },
     { valeur: exercices.length, libelle: 'Exercices suivis' },
     { valeur: Math.round(volumeSemaine), libelle: 'Kg cette semaine' },
-    {
-      valeur: Math.round(repartition.streak / 10),
-      libelle: "Semaines d'affilée",
-    },
+    { valeur: Math.round(repartition.streak / 10), libelle: "Semaines d'affilée" },
   ]
 
   return (
     <div className="flex flex-col gap-6 py-4">
+      <Presence />
+
       <section className="rounded-carte border border-bordure bg-verre p-6">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
           Semaine {libelleSemaine(semaine)}
@@ -80,7 +79,6 @@ export default async function Accueil() {
           </div>
         </div>
 
-        {/* Progression vers le niveau suivant */}
         <div className="mt-6">
           <div className="h-2 overflow-hidden rounded-full bg-verre-fort">
             <div
@@ -91,8 +89,7 @@ export default async function Accueil() {
           <div className="mt-2 flex justify-between font-mono text-[10.5px] text-encre-douce">
             <span className="text-accent-2">{niveau.xp} XP</span>
             <span>
-              {niveau.xpSuivant - niveau.xp} XP avant le niveau{' '}
-              {niveau.niveau + 1}
+              {niveau.xpSuivant - niveau.xp} XP avant le niveau {niveau.niveau + 1}
             </span>
           </div>
         </div>
@@ -109,14 +106,12 @@ export default async function Accueil() {
         </dl>
       </section>
 
-      {seances.length === 0 && (
-        <section className="rounded-carte border border-bordure bg-verre p-6 text-center">
-          <h2 className="mb-2 text-2xl">Ton carnet est vide</h2>
-          <p className="text-sm text-encre-douce">
-            Crée un exercice, puis enregistre ta première séance.
-          </p>
-        </section>
-      )}
+      <Fil
+        publications={fil}
+        signaux={signaux}
+        nbAmis={amis.amis.length}
+        actifs={amis.actifsSemaine}
+      />
     </div>
   )
 }

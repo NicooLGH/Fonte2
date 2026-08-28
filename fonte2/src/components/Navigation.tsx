@@ -18,6 +18,7 @@ const ENTREES: Entree[] = [
   { href: '/seances', libelle: 'Séances', ico: '🏋️' },
   { href: '/suivi', libelle: 'Suivi', ico: '⚖️' },
   { href: '/analyse', libelle: 'Analyse', ico: '📊' },
+  { href: '/amis', libelle: 'Amis', ico: '👥' },
 ]
 
 export function BarreHaute({
