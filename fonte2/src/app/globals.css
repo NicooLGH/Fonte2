@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   FONTE — Thème
+   ============================================================
+   Les couleurs et les polices reprennent celles du carnet
+   actuel. Déclarées dans @theme, elles deviennent des classes
+   Tailwind : bg-fond, text-encre, font-display, etc.
+   ============================================================ */
+
+@theme {
+  /* Couleurs — mode sombre par défaut */
+  --color-fond: #0e0f11;
+  --color-encre: #f4f3ee;
+  --color-encre-douce: #8d9096;
+  --color-accent: #ff4b2b;
+  --color-accent-clair: #ff8a63;
+  --color-accent-2: #4cc9f0;
+  --color-verre: rgb(255 255 255 / 0.045);
+  --color-verre-fort: rgb(255 255 255 / 0.08);
+  --color-bordure: rgb(255 255 255 / 0.1);
+  --color-filet: rgb(255 255 255 / 0.07);
+
+  /* Polices — les variables sont posées par next/font */
+  --font-display: var(--police-display), sans-serif;
+  --font-corps: var(--police-corps), sans-serif;
+  --font-mono: var(--police-mono), monospace;
+
+  /* Arrondis : généreux, comme sur le carnet actuel */
+  --radius-carte: 24px;
+  --radius-pilule: 999px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Mode clair, activé par la classe `clair` sur <html> */
+.clair {
+  --color-fond: #f2f1ed;
+  --color-encre: #16181b;
+  --color-encre-douce: #5f6368;
+  --color-accent: #e13a18;
+  --color-accent-2: #0369a1;
+  --color-verre: rgb(0 0 0 / 0.035);
+  --color-verre-fort: rgb(0 0 0 / 0.06);
+  --color-bordure: rgb(0 0 0 / 0.1);
+  --color-filet: rgb(0 0 0 / 0.07);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-fond);
+  color: var(--color-encre);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-corps);
+  min-height: 100dvh;
+  /* Les deux halos du carnet actuel : orange en haut à gauche,
+     bleu à droite. Fixés au fond pour ne pas défiler avec le
+     contenu. */
+  background-image:
+    radial-gradient(circle at 12% 4%, rgb(255 75 43 / 0.22), transparent 45%),
+    radial-gradient(circle at 92% 38%, rgb(76 201 240 / 0.14), transparent 45%);
+  background-attachment: fixed;
+}
+
+/* Titres : Bebas Neue, en capitales, très serré */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+
+/* Le focus doit rester visible au clavier, mais ne pas
+   apparaître à chaque clic de souris. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Respect du réglage système « animations réduites » */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
