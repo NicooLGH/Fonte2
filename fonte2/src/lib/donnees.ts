@@ -5,6 +5,7 @@ import type { Groupe } from '@/types/database'
 import type { Releve } from './xp'
 import type { Exercice, SeanceComplete } from './carnet'
 import type { ReleveComplet, Objectifs, CleSuivi } from './suivi'
+import { lireEntrees, type Modele } from './live'
 
 /* ============================================================
    Lecture du carnet — serveur uniquement
@@ -176,4 +177,22 @@ export async function chargerObjectifs(): Promise<Objectifs> {
     if (v !== null) objectifs[cle] = v
   }
   return objectifs
+}
+
+/* ============================================================
+   Modèles de séance
+   ============================================================ */
+
+export async function chargerModeles(): Promise<Modele[]> {
+  const supabase = await creerClientServeur()
+  const { data } = await supabase
+    .from('modeles')
+    .select('id, nom, exercices')
+    .order('created_at')
+
+  return (data ?? []).map((m) => ({
+    id: m.id as string,
+    nom: m.nom as string,
+    entrees: lireEntrees(m.exercices),
+  }))
 }
