@@ -1,15 +1,17 @@
+import { redirect } from 'next/navigation'
 import { creerClientServeur } from '@/lib/supabase/server'
+import { seDeconnecter } from '@/app/auth/actions'
 import { semaineCourante, libelleSemaine } from '@/lib/semaine'
 import type { Profil } from '@/types/database'
 
-/*
- * Page de vérification du socle.
+/**
+ * Page d'accueil provisoire.
  *
- * C'est un composant serveur : le code ci-dessous s'exécute sur
- * Vercel, jamais dans le navigateur. La page arrive donc déjà
- * remplie, sans écran de chargement.
+ * Le proxy garantit déjà qu'on est connecté pour arriver ici. On
+ * s'occupe donc seulement du cas du carnet neuf : un compte dont
+ * le pseudo n'a pas encore été choisi part vers /bienvenue.
  *
- * Elle sera remplacée par le fil d'actualité à la session 5.
+ * Elle deviendra le fil d'actualité à la session 5.
  */
 export default async function Accueil() {
   const supabase = await creerClientServeur()
@@ -17,101 +19,68 @@ export default async function Accueil() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  if (!user) redirect('/connexion')
 
-  // Lecture réelle de la base, pour vérifier que les règles de
-  // sécurité laissent bien passer la requête.
-  let pseudo: string | null = null
-  let erreur: string | null = null
+  const { data } = await supabase
+    .from('profiles')
+    .select('pseudo, avatar, role, onboarded')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  if (user) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('pseudo, avatar, role')
-      .eq('id', user.id)
-      .maybeSingle()
+  const profil = data as Pick<
+    Profil,
+    'pseudo' | 'avatar' | 'role' | 'onboarded'
+  > | null
 
-    // Le client n'est pas typé par le schéma (voir types/database.ts) :
-    // on annonce donc explicitement la forme attendue.
-    const profil = data as Pick<Profil, 'pseudo' | 'avatar' | 'role'> | null
-
-    if (error) erreur = error.message
-    else pseudo = profil?.pseudo ?? null
-  }
-
-  const semaine = semaineCourante()
+  // Compte créé avant que le déclencheur n'existe, ou bienvenue
+  // interrompue : on renvoie au choix du pseudo.
+  if (!profil || !profil.onboarded || !profil.pseudo) redirect('/bienvenue')
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center gap-8 px-6 py-16">
       <header>
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-          Socle · semaine {libelleSemaine(semaine)}
+          Semaine {libelleSemaine(semaineCourante())}
         </p>
-        <h1 className="mt-3 text-6xl sm:text-7xl">
-          Fonte<span className="text-accent">.</span>
+        <h1 className="mt-3 flex items-center gap-4 text-5xl sm:text-6xl">
+          <span
+            aria-hidden
+            className="flex h-14 w-14 shrink-0 items-center justify-center
+                       rounded-full border border-bordure bg-verre text-3xl"
+          >
+            {profil.avatar ?? '💪'}
+          </span>
+          {profil.pseudo}
         </h1>
       </header>
 
       <section className="rounded-carte border border-bordure bg-verre p-6">
-        <h2 className="mb-4 text-2xl">Vérification</h2>
-
-        <dl className="divide-y divide-filet text-sm">
-          <Ligne
-            libelle="Connexion à Supabase"
-            valeur={erreur ? 'échec' : 'établie'}
-            ok={!erreur}
-          />
-          <Ligne
-            libelle="Session"
-            valeur={user ? 'reconnue côté serveur' : 'aucune'}
-            ok={!!user}
-          />
-          {user && (
-            <Ligne
-              libelle="Profil"
-              valeur={pseudo ? pseudo : 'sans pseudo'}
-              ok={!!pseudo}
-            />
-          )}
-        </dl>
-
-        {erreur && (
-          <p className="mt-4 font-mono text-xs text-accent">{erreur}</p>
-        )}
-
-        {!user && (
-          <p className="mt-5 text-sm leading-relaxed text-encre-douce">
-            Aucune session : c&apos;est normal, l&apos;écran de connexion arrive
-            à la prochaine session. Le middleware laisse passer cette page pour
-            que tu puisses vérifier le socle.
+        <h2 className="mb-4 text-2xl">Te voilà connecté</h2>
+        <p className="text-sm leading-relaxed text-encre-douce">
+          La session tient dans un cookie : le serveur sait qui tu es avant même
+          d&apos;envoyer la page. Plus d&apos;écran masqué puis révélé.
+        </p>
+        {profil.role === 'admin' && (
+          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.08em] text-accent-2">
+            Compte administrateur
           </p>
         )}
       </section>
 
+      <form action={seDeconnecter}>
+        <button
+          type="submit"
+          className="w-full rounded-full border border-bordure bg-verre px-6 py-3
+                     text-sm font-semibold text-encre-douce transition-colors
+                     hover:border-accent/50 hover:text-accent"
+        >
+          Se déconnecter
+        </button>
+      </form>
+
       <footer className="font-mono text-[11px] text-encre-douce">
-        Prochaine étape : authentification.
+        Prochaine étape : le carnet — exercices, modèles et séances.
       </footer>
     </main>
-  )
-}
-
-function Ligne({
-  libelle,
-  valeur,
-  ok,
-}: {
-  libelle: string
-  valeur: string
-  ok: boolean
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 py-3">
-      <dt className="text-encre-douce">{libelle}</dt>
-      <dd
-        className={`font-mono text-xs ${ok ? 'text-accent-2' : 'text-accent'}`}
-      >
-        {ok ? '✓ ' : '✕ '}
-        {valeur}
-      </dd>
-    </div>
   )
 }

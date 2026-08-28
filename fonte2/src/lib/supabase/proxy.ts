@@ -8,13 +8,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 const PUBLIQUES = ['/connexion', '/inscription', '/mot-de-passe']
 
 /**
- * Les redirections restent désactivées tant que l'écran de
- * connexion n'existe pas : sans lui, toute visite finirait sur
- * une page introuvable.
- *
- * À passer à `true` à la session 2, une fois /connexion en place.
+ * Chemins toujours accessibles : le retour des liens email doit
+ * passer même sans session, puisque c'est lui qui la crée.
  */
-const REDIRECTIONS_ACTIVES = false
+const TOUJOURS_OUVERTS = ['/auth/callback']
 
 /**
  * Rafraîchit le jeton d'accès à chaque requête et protège les
@@ -57,9 +54,7 @@ export async function actualiserSession(request: NextRequest) {
   const chemin = request.nextUrl.pathname
   const estPublique = PUBLIQUES.some((p) => chemin.startsWith(p))
 
-  // Le jeton vient d'être rafraîchi ci-dessus ; c'est déjà utile
-  // même sans redirection.
-  if (!REDIRECTIONS_ACTIVES) return reponse
+  if (TOUJOURS_OUVERTS.some((p) => chemin.startsWith(p))) return reponse
 
   if (!user && !estPublique) {
     const url = request.nextUrl.clone()
