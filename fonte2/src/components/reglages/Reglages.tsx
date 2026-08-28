@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { Champ, Bouton, Erreur, Succes } from '@/components/ui'
 import { REGLES_PSEUDO } from '@/lib/messages'
+import { BoutonInstallation } from '@/components/Installation'
 import {
   changerPseudo,
   changerAvatar,
@@ -25,12 +26,14 @@ export function Reglages({
   email,
   partageSeances,
   partagePresence,
+  admin,
 }: {
   pseudo: string
   avatar: string
   email: string
   partageSeances: boolean
   partagePresence: boolean
+  admin: boolean
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
@@ -145,6 +148,16 @@ export function Reglages({
         </Ligne>
       </Section>
 
+      {/* ---- Application ---- */}
+      <Section titre="Application">
+        <Ligne
+          titre="Installer FONTE"
+          detail="S'ajoute à ton écran d'accueil et s'ouvre en plein écran, sans barre de navigateur."
+        >
+          <BoutonInstallation />
+        </Ligne>
+      </Section>
+
       {/* ---- Compte ---- */}
       <Section titre="Compte">
         <Ligne titre="Adresse email" detail={email}>
@@ -179,6 +192,23 @@ export function Reglages({
           </form>
         </Ligne>
       </Section>
+
+      {admin && (
+        <Section titre="Administration">
+          <Ligne
+            titre="Annonces et notifications"
+            detail="Publier des annonces et écrire à tous les membres."
+          >
+            <a
+              href="/admin"
+              className="inline-block rounded-full bg-accent px-5 py-2.5 text-sm
+                         font-semibold text-white transition-colors hover:bg-accent-clair"
+            >
+              Ouvrir l'administration
+            </a>
+          </Ligne>
+        </Section>
+      )}
 
       <ZoneDeDanger enCours={enCours} onAgir={agir} />
     </div>

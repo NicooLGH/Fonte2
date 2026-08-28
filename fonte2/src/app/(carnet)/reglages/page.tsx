@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { Reglages } from '@/components/reglages/Reglages'
+import { suisJeAdmin } from '@/lib/donnees-notifs'
 import type { Profil } from '@/types/database'
 
 export default async function PageReglages() {
@@ -9,6 +10,8 @@ export default async function PageReglages() {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
+
+  const admin = await suisJeAdmin()
 
   const { data } = await supabase
     .from('profiles')
@@ -28,6 +31,7 @@ export default async function PageReglages() {
       email={user.email ?? '—'}
       partageSeances={profil?.partage_seances ?? false}
       partagePresence={profil?.partage_presence ?? true}
+      admin={admin}
     />
   )
 }
