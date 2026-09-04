@@ -6,6 +6,7 @@ import type { Releve } from './xp'
 import type { Exercice, SeanceComplete } from './carnet'
 import type { ReleveComplet, Objectifs, CleSuivi } from './suivi'
 import { lireEntrees, type Modele } from './live'
+import type { Rappel } from './rappel'
 
 /* ============================================================
    Lecture du carnet — serveur uniquement
@@ -195,4 +196,23 @@ export async function chargerModeles(): Promise<Modele[]> {
     nom: m.nom as string,
     entrees: lireEntrees(m.exercices),
   }))
+}
+
+/* ============================================================
+   Rappel hebdomadaire
+   ============================================================ */
+
+export async function chargerRappel(): Promise<Rappel> {
+  const supabase = await creerClientServeur()
+  const { data } = await supabase
+    .from('reminder_settings')
+    .select('day, dismissed_week')
+    .maybeSingle()
+
+  if (!data) return { jour: null, semaineEcartee: null }
+
+  return {
+    jour: data.day === null || data.day === undefined ? null : Number(data.day),
+    semaineEcartee: (data.dismissed_week as string | null) ?? null,
+  }
 }

@@ -275,7 +275,11 @@ function SaisieSeance({
                     inputMode="decimal"
                     value={serie.poids}
                     onChange={(e) => majSerie(iBloc, iSerie, 'poids', e.target.value)}
-                    placeholder="kg"
+                    placeholder={
+                      derniere?.[iSerie]
+                        ? String(derniere[iSerie].poids)
+                        : (derniere?.at(-1)?.poids.toString() ?? 'kg')
+                    }
                     aria-label={`Poids série ${iSerie + 1}`}
                     className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond
                                px-3 py-2.5 text-center font-display text-xl
@@ -287,7 +291,11 @@ function SaisieSeance({
                     inputMode="numeric"
                     value={serie.reps}
                     onChange={(e) => majSerie(iBloc, iSerie, 'reps', e.target.value)}
-                    placeholder="reps"
+                    placeholder={
+                      derniere?.[iSerie]
+                        ? String(derniere[iSerie].reps)
+                        : (derniere?.at(-1)?.reps.toString() ?? 'reps')
+                    }
                     aria-label={`Répétitions série ${iSerie + 1}`}
                     className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond
                                px-3 py-2.5 text-center font-display text-xl

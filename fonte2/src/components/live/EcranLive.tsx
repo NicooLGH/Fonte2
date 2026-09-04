@@ -7,6 +7,8 @@ import {
   dureeLive,
   mmss,
   DUREE_MAX_MS,
+  DUREES_ECHAUFFEMENT,
+  CLE_ECHAUFFEMENT,
   type BlocLive,
   type Modele,
   type SeanceLive,
@@ -26,7 +28,7 @@ import { enregistrerSeanceLive } from '@/app/(carnet)/seances/actions'
    retard dès que le navigateur suspend la page.
    ============================================================ */
 
-type Etape = 'choix' | 'reprise' | 'seance'
+type Etape = 'choix' | 'reprise' | 'preparation' | 'seance'
 
 export function EcranLive({
   userId,
@@ -42,6 +44,8 @@ export function EcranLive({
   const router = useRouter()
   const [live, setLive] = useState<SeanceLive | null>(null)
   const [etape, setEtape] = useState<Etape>('choix')
+  const [modeleChoisi, setModeleChoisi] = useState<Modele | null>(null)
+  const [minutes, setMinutes] = useState(0)
   const [maintenant, setMaintenant] = useState(Date.now())
   const [erreur, setErreur] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
@@ -66,9 +70,16 @@ export function EcranLive({
     }
   }, [cle])
 
+  // La durée d'échauffement retenue de la dernière fois : on ne
+  // la redemande pas à chaque séance.
+  useEffect(() => {
+    const garde = Number(localStorage.getItem(CLE_ECHAUFFEMENT))
+    if (Number.isFinite(garde) && garde > 0) setMinutes(garde)
+  }, [])
+
   /* ---- Chrono ---- */
   useEffect(() => {
-    if (etape !== 'seance' || live?.fin) return
+    if ((etape !== 'seance' && etape !== 'preparation') || live?.fin) return
     const t = setInterval(() => setMaintenant(Date.now()), 1000)
     return () => clearInterval(t)
   }, [etape, live?.fin])
@@ -90,7 +101,7 @@ export function EcranLive({
   const nomExo = (id: string) => exercices.find((e) => e.id === id)?.nom ?? '—'
 
   /* ---- Démarrage ---- */
-  function demarrerModele(modele: Modele) {
+  function choisirModele(modele: Modele) {
     const valides = modele.entrees.filter((e) =>
       exercices.some((x) => x.id === e.id)
     )
@@ -98,6 +109,18 @@ export function EcranLive({
       setErreur("Ce modèle n'a plus d'exercice valide.")
       return
     }
+    setErreur(null)
+    setModeleChoisi(modele)
+    setEtape('preparation')
+  }
+
+  function lancer() {
+    const modele = modeleChoisi!
+    const valides = modele.entrees.filter((e) =>
+      exercices.some((x) => x.id === e.id)
+    )
+
+    localStorage.setItem(CLE_ECHAUFFEMENT, String(minutes))
 
     enregistrer({
       nom: modele.nom,
@@ -106,6 +129,7 @@ export function EcranLive({
       reposDebut: null,
       index: 0,
       note: '',
+      echauffementFin: minutes > 0 ? Date.now() + minutes * 60000 : null,
       blocs: valides.map((e) => ({
         exerciceId: e.id,
         alternatives: e.alternatives.filter((a) =>
@@ -161,6 +185,64 @@ export function EcranLive({
     )
   }
 
+  if (etape === 'preparation' && modeleChoisi) {
+    return (
+      <Cadre titre={modeleChoisi.nom}>
+        <p className="mb-5 text-sm leading-relaxed text-encre-douce">
+          {modeleChoisi.entrees.map((e) => nomExo(e.id)).join(' · ')}
+        </p>
+
+        <p className="mb-3 font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+          Échauffement
+        </p>
+        <div className="mb-2 flex flex-wrap gap-2">
+          {DUREES_ECHAUFFEMENT.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMinutes(m)}
+              aria-pressed={minutes === m}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold
+                transition-colors ${
+                  minutes === m
+                    ? 'border-accent bg-accent/15 text-accent'
+                    : 'border-bordure bg-verre text-encre-douce hover:text-encre'
+                }`}
+            >
+              {m === 0 ? 'Aucun' : `${m} min`}
+            </button>
+          ))}
+        </div>
+        <p className="mb-6 font-mono text-[10.5px] leading-relaxed text-encre-douce">
+          Un décompte plein écran avant de commencer. Ce choix est retenu pour
+          tes prochaines séances.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={lancer}
+            className="rounded-full bg-accent px-6 py-3.5 font-semibold text-white
+                       transition-colors hover:bg-accent-clair"
+          >
+            Commencer
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setModeleChoisi(null)
+              setEtape('choix')
+            }}
+            className="rounded-full border border-bordure bg-verre px-6 py-3
+                       text-sm font-semibold text-encre-douce hover:text-encre"
+          >
+            Changer de modèle
+          </button>
+        </div>
+      </Cadre>
+    )
+  }
+
   if (etape === 'choix' || !live) {
     return (
       <Cadre titre="Démarrer une séance">
@@ -192,7 +274,7 @@ export function EcranLive({
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => demarrerModele(m)}
+                  onClick={() => choisirModele(m)}
                   className="rounded-2xl border border-bordure bg-verre p-4 text-left
                              transition-colors hover:border-accent"
                 >
@@ -330,6 +412,62 @@ export function EcranLive({
       router.push('/seances')
       router.refresh()
     })
+  }
+
+  /* ---- Échauffement ---- */
+  if (live.echauffementFin) {
+    const restant = live.echauffementFin - maintenant
+    const fini = restant <= 0
+
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
+          {fini ? 'Prêt' : 'Échauffement'}
+        </p>
+
+        <p
+          className={`font-display leading-[0.85] text-[clamp(6rem,28vw,12rem)] ${
+            fini ? 'text-accent-2' : 'text-accent'
+          }`}
+        >
+          {fini ? '00:00' : mmss(restant)}
+        </p>
+
+        <p className="max-w-xs text-sm leading-relaxed text-encre-douce">
+          {fini
+            ? 'Échauffement terminé. Tu peux attaquer.'
+            : 'Mobilité, cardio léger, séries à vide — ce qui te met en condition.'}
+        </p>
+
+        <div className="mt-4 flex w-full max-w-xs flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => enregistrer({ ...live, echauffementFin: null })}
+            className={`rounded-full px-6 py-3.5 font-semibold transition-colors ${
+              fini
+                ? 'bg-accent text-white hover:bg-accent-clair'
+                : 'border border-bordure bg-verre text-encre-douce hover:text-encre'
+            }`}
+          >
+            {fini ? 'Commencer la séance' : "Passer l'échauffement"}
+          </button>
+          {!fini && (
+            <button
+              type="button"
+              onClick={() =>
+                enregistrer({
+                  ...live,
+                  echauffementFin: live.echauffementFin! + 60000,
+                })
+              }
+              className="font-mono text-xs text-encre-douce underline underline-offset-4"
+            >
+              + 1 minute
+            </button>
+          )}
+        </div>
+      </main>
+    )
   }
 
   /* ---- Écran de fin ---- */
@@ -513,7 +651,11 @@ export function EcranLive({
                     ),
                   }))
                 }
-                placeholder="kg"
+                placeholder={
+                  derniere?.series[i]
+                    ? String(derniere.series[i].poids)
+                    : (derniere?.series.at(-1)?.poids.toString() ?? 'kg')
+                }
                 aria-label={`Poids série ${i + 1}`}
                 className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond px-2 py-3
                            text-center font-display text-2xl focus:border-accent focus:outline-none"
@@ -531,7 +673,11 @@ export function EcranLive({
                     ),
                   }))
                 }
-                placeholder="reps"
+                placeholder={
+                  derniere?.series[i]
+                    ? String(derniere.series[i].reps)
+                    : (derniere?.series.at(-1)?.reps.toString() ?? 'reps')
+                }
                 aria-label={`Répétitions série ${i + 1}`}
                 className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond px-2 py-3
                            text-center font-display text-2xl focus:border-accent focus:outline-none"
@@ -568,6 +714,13 @@ export function EcranLive({
             </div>
           ))}
         </div>
+
+        {derniere && (
+          <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-encre-douce">
+            Les chiffres grisés rappellent ta dernière séance. Ils ne
+            s'enregistrent pas : à toi de saisir ce que tu viens de faire.
+          </p>
+        )}
 
         <button
           type="button"

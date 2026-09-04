@@ -44,7 +44,17 @@ export type SeanceLive = {
   index: number
   note: string
   blocs: BlocLive[]
+  /**
+   * Fin prévue de l'échauffement, en horodatage absolu.
+   * `null` quand il est terminé ou qu'il n'y en avait pas.
+   */
+  echauffementFin: number | null
 }
+
+/** Durées d'échauffement proposées, en minutes. */
+export const DUREES_ECHAUFFEMENT = [0, 3, 5, 8, 10, 15] as const
+
+export const CLE_ECHAUFFEMENT = 'fonte-echauffement'
 
 /** Au-delà de douze heures, la séance est considérée oubliée. */
 export const DUREE_MAX_MS = 12 * 3600 * 1000

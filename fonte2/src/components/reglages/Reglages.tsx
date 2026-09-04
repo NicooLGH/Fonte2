@@ -4,6 +4,8 @@ import { useEffect, useState, useTransition } from 'react'
 import { Champ, Bouton, Erreur, Succes } from '@/components/ui'
 import { REGLES_PSEUDO } from '@/lib/messages'
 import { BoutonInstallation } from '@/components/Installation'
+import { JOURS } from '@/lib/rappel'
+import { definirJourRappel } from '@/app/(carnet)/reglages/rappel'
 import {
   changerPseudo,
   changerAvatar,
@@ -27,6 +29,7 @@ export function Reglages({
   partageSeances,
   partagePresence,
   admin,
+  jourRappel,
 }: {
   pseudo: string
   avatar: string
@@ -34,6 +37,7 @@ export function Reglages({
   partageSeances: boolean
   partagePresence: boolean
   admin: boolean
+  jourRappel: number | null
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
@@ -138,6 +142,48 @@ export function Reglages({
             desactive={enCours}
             onChange={(v) => agir(() => changerPartagePresence(v))}
           />
+        </Ligne>
+      </Section>
+
+      {/* ---- Rappel ---- */}
+      <Section titre="Rappel hebdomadaire">
+        <Ligne
+          titre="Jour du relevé"
+          detail="Ce jour-là, un rappel discret apparaît sur l'accueil si ton relevé n'est pas encore rempli. Écarté, il ne revient pas avant la semaine suivante."
+        >
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              disabled={enCours}
+              onClick={() => agir(() => definirJourRappel(null))}
+              aria-pressed={jourRappel === null}
+              className={`rounded-full border px-3.5 py-2 text-xs font-semibold
+                transition-colors ${
+                  jourRappel === null
+                    ? 'border-accent bg-accent/15 text-accent'
+                    : 'border-bordure bg-verre text-encre-douce hover:text-encre'
+                }`}
+            >
+              Aucun
+            </button>
+            {JOURS.map((j) => (
+              <button
+                key={j.valeur}
+                type="button"
+                disabled={enCours}
+                onClick={() => agir(() => definirJourRappel(j.valeur))}
+                aria-pressed={jourRappel === j.valeur}
+                className={`rounded-full border px-3.5 py-2 text-xs font-semibold
+                  transition-colors ${
+                    jourRappel === j.valeur
+                      ? 'border-accent bg-accent/15 text-accent'
+                      : 'border-bordure bg-verre text-encre-douce hover:text-encre'
+                  }`}
+              >
+                {j.nom.slice(0, 3)}
+              </button>
+            ))}
+          </div>
         </Ligne>
       </Section>
 

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { Reglages } from '@/components/reglages/Reglages'
 import { suisJeAdmin } from '@/lib/donnees-notifs'
+import { chargerRappel } from '@/lib/donnees'
 import type { Profil } from '@/types/database'
 
 export default async function PageReglages() {
@@ -11,7 +12,7 @@ export default async function PageReglages() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const admin = await suisJeAdmin()
+  const [admin, rappel] = await Promise.all([suisJeAdmin(), chargerRappel()])
 
   const { data } = await supabase
     .from('profiles')
@@ -32,6 +33,7 @@ export default async function PageReglages() {
       partageSeances={profil?.partage_seances ?? false}
       partagePresence={profil?.partage_presence ?? true}
       admin={admin}
+      jourRappel={rappel.jour}
     />
   )
 }
