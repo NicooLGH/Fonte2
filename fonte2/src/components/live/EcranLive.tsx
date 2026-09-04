@@ -275,11 +275,13 @@ export function EcranLive({
         : b
     )
     const prochain = blocs.findIndex((b) => !b.termine)
+    // Le repos continue d'un exercice à l'autre : on se repose
+    // entre deux mouvements comme entre deux séries, et le
+    // remettre à zéro ici faisait perdre le décompte en cours.
     enregistrer({
       ...live!,
       blocs,
       index: prochain === -1 ? blocs.length : prochain,
-      reposDebut: null,
     })
     window.scrollTo({ top: 0 })
   }

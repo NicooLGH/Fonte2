@@ -1,6 +1,7 @@
 import { chargerExercices, chargerSeances } from '@/lib/donnees'
 import { nomGroupe, icoGroupe } from '@/lib/carnet'
 import { volumeSeance } from '@/lib/xp'
+import { semaineCourante } from '@/lib/semaine'
 import type { Groupe } from '@/types/database'
 
 /**
@@ -44,24 +45,31 @@ export default async function PageAnalyse() {
   const volumeTotal = equilibre.reduce((t, g) => t + g.volume, 0)
   const volumeMax = Math.max(...equilibre.map((g) => g.volume), 1)
 
-  /* ---- Records ---- */
-  const records = exercices
-    .map((exo) => {
-      let max = 0
-      for (const s of seances) {
-        const bloc = s.blocs.find((b) => b.exerciceId === exo.id)
-        for (const serie of bloc?.series ?? []) {
-          if (serie.poids > max) max = serie.poids
-        }
-      }
-      return { nom: exo.nom, poids: max, objectif: exo.objectif }
-    })
-    .filter((r) => r.poids > 0)
-    .sort((a, b) => b.poids - a.poids)
-
   /* ---- Assiduité ---- */
   const semainesActives = new Set(seances.map((s) => s.semaine)).size
   const volumeTotalTous = seances.reduce((t, s) => t + volumeSeance(s), 0)
+
+  // Carte thermique : une case par semaine de l'année en cours,
+  // teintée selon le nombre de séances.
+  const annee = new Date().getFullYear()
+  const parSemaine = new Map<string, number>()
+  for (const s of seances) {
+    parSemaine.set(s.semaine, (parSemaine.get(s.semaine) ?? 0) + 1)
+  }
+
+  const semaineActuelle = Number(semaineCourante().split('-W')[1])
+  const cases = Array.from({ length: 53 }, (_, i) => {
+    const cle = `${annee}-W${String(i + 1).padStart(2, '0')}`
+    return {
+      numero: i + 1,
+      seances: parSemaine.get(cle) ?? 0,
+      future: i + 1 > semaineActuelle,
+    }
+  })
+
+  const ecoulees = cases.filter((c) => !c.future).length
+  const actives = cases.filter((c) => !c.future && c.seances > 0).length
+  const pourcentage = ecoulees ? Math.round((actives / ecoulees) * 100) : 0
 
   return (
     <div className="flex flex-col gap-6 py-4">
@@ -126,43 +134,50 @@ export default async function PageAnalyse() {
         )}
       </section>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="rounded-carte border border-bordure bg-verre p-5">
-          <h2 className="mb-4 text-2xl">Records personnels</h2>
-          {records.length === 0 ? (
-            <p className="text-sm italic text-encre-douce">
-              Aucun record enregistré.
-            </p>
-          ) : (
-            <ul className="divide-y divide-filet">
-              {records.map((r) => (
-                <li
-                  key={r.nom}
-                  className="flex items-baseline justify-between gap-3 py-3"
-                >
-                  <span className="min-w-0 flex-1 truncate text-sm">
-                    {r.nom}
-                    {r.objectif !== null && (
-                      <span className="ml-2 font-mono text-[10px] text-encre-douce">
-                        obj. {r.objectif} kg
-                      </span>
-                    )}
-                  </span>
-                  <span className="font-display text-2xl text-accent-2">
-                    {r.poids}
-                    <span className="ml-1 font-corps text-[10px] text-encre-douce">
-                      kg
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+      <section className="rounded-carte border border-bordure bg-verre p-5">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="text-2xl">Assiduité</h2>
+          <p className="font-mono text-[11px] text-encre-douce">
+            <span className="text-accent-2">{pourcentage} %</span> des semaines
+            écoulées en {annee}
+          </p>
+        </div>
 
-        <section className="rounded-carte border border-bordure bg-verre p-5">
-          <h2 className="mb-4 text-2xl">Assiduité</h2>
-          <dl className="grid grid-cols-2 gap-5">
+        {/* Une case par semaine, teintée selon le nombre de séances. */}
+        <div className="mb-6 flex flex-wrap gap-[3px]">
+          {cases.map((c) => (
+            <span
+              key={c.numero}
+              title={
+                c.future
+                  ? `Semaine ${c.numero} — à venir`
+                  : `Semaine ${c.numero} — ${c.seances} séance${c.seances > 1 ? 's' : ''}`
+              }
+              className={`h-[13px] w-[13px] rounded-[3px] ${
+                c.future
+                  ? 'bg-verre'
+                  : c.seances === 0
+                    ? 'bg-verre-fort'
+                    : c.seances === 1
+                      ? 'bg-accent/35'
+                      : c.seances === 2
+                        ? 'bg-accent/60'
+                        : 'bg-accent'
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="mb-6 flex items-center gap-2 font-mono text-[10px] text-encre-douce">
+          <span>Moins</span>
+          <span className="h-[11px] w-[11px] rounded-[3px] bg-verre-fort" />
+          <span className="h-[11px] w-[11px] rounded-[3px] bg-accent/35" />
+          <span className="h-[11px] w-[11px] rounded-[3px] bg-accent/60" />
+          <span className="h-[11px] w-[11px] rounded-[3px] bg-accent" />
+          <span>Plus</span>
+        </div>
+
+          <dl className="grid grid-cols-2 gap-5 border-t border-filet pt-5 sm:grid-cols-4">
             <div>
               <dd className="font-display text-3xl text-accent">
                 {seances.length}
@@ -189,7 +204,6 @@ export default async function PageAnalyse() {
             </div>
           </dl>
         </section>
-      </div>
     </div>
   )
 }

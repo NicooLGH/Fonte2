@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { chargerProfil } from '@/lib/donnees-social'
 import { VueProfil } from '@/components/social/ProfilPublic'
+import { chargerExercices, chargerSeances, chargerReleves } from '@/lib/donnees'
+import { repartitionXP, totalXP, calculerNiveau } from '@/lib/xp'
 
 /**
  * Mon profil.
@@ -17,7 +19,16 @@ export default async function MonProfil() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const profil = await chargerProfil(user.id)
+  const [profil, exercices, seances, releves] = await Promise.all([
+    chargerProfil(user.id),
+    chargerExercices(),
+    chargerSeances(),
+    chargerReleves(),
+  ])
+
+  const n = calculerNiveau(
+    totalXP(repartitionXP(seances, releves, exercices.map((e) => e.id)))
+  )
 
   if (!profil)
     return (
@@ -26,5 +37,17 @@ export default async function MonProfil() {
       </p>
     )
 
-  return <VueProfil profil={profil} encouragementEnvoye={null} />
+  return (
+    <VueProfil
+      profil={profil}
+      encouragementEnvoye={null}
+      niveau={{
+        niveau: n.niveau,
+        rang: n.rang,
+        xp: n.xp,
+        xpSuivant: n.xpSuivant,
+        progression: n.progression,
+      }}
+    />
+  )
 }

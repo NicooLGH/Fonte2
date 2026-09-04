@@ -1,16 +1,20 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 /**
  * Modale.
  *
- * Le carnet actuel utilisait `prompt()` et `confirm()` à ses
- * débuts, avant qu'on les remplace un par un. Ici, une seule
- * modale sert à tout : saisie, confirmation, détail.
+ * Le contenu est déplacé à la racine du document plutôt que
+ * rendu sur place. La raison n'est pas cosmétique : un parent
+ * portant `backdrop-blur`, `transform` ou `filter` devient un
+ * repère de positionnement pour ses descendants en `fixed`. La
+ * modale se calait alors sur la barre de navigation — d'où son
+ * apparition en haut de l'écran et sa hauteur tronquée.
  *
  * Elle ferme sur Échap et au clic dehors, et empêche la page de
- * défiler derrière — sinon on perd sa place en la refermant.
+ * défiler derrière.
  */
 export function Modale({
   titre,
@@ -26,6 +30,11 @@ export function Modale({
   children: React.ReactNode
 }) {
   const carte = useRef<HTMLDivElement>(null)
+  const [monte, setMonte] = useState(false)
+
+  // Le portail n'existe qu'une fois la page rendue dans le
+  // navigateur : sur le serveur, `document` n'existe pas.
+  useEffect(() => setMonte(true), [])
 
   useEffect(() => {
     if (!ouverte) return
@@ -37,9 +46,6 @@ export function Modale({
 
     const avant = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-
-    // Le focus entre dans la modale, sinon la navigation au
-    // clavier reste bloquée sur la page derrière.
     carte.current?.focus()
 
     return () => {
@@ -48,11 +54,11 @@ export function Modale({
     }
   }, [ouverte, onFermer])
 
-  if (!ouverte) return null
+  if (!ouverte || !monte) return null
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onFermer()
       }}
@@ -67,7 +73,7 @@ export function Modale({
                    border border-bordure bg-fond p-6 outline-none"
       >
         <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <h2 className="text-2xl">{titre}</h2>
             {sousTitre && (
               <p className="mt-1 text-sm text-encre-douce">{sousTitre}</p>
@@ -85,8 +91,13 @@ export function Modale({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+        {/* `break-words` évite qu'un mot très long déborde
+            au lieu de passer à la ligne. */}
+        <div className="min-h-0 flex-1 overflow-y-auto break-words">
+          {children}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

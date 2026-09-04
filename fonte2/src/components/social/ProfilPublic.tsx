@@ -28,9 +28,19 @@ import {
 export function VueProfil({
   profil,
   encouragementEnvoye,
+  niveau,
 }: {
   profil: Profil
   encouragementEnvoye: Signe | null
+  /* Seulement pour son propre profil : l'XP des autres ne
+     regarde personne. */
+  niveau?: {
+    niveau: number
+    rang: string
+    xp: number
+    xpSuivant: number
+    progression: number
+  }
 }) {
   const [erreur, setErreur] = useState<string | null>(null)
   const [signe, setSigne] = useState<Signe | null>(encouragementEnvoye)
@@ -60,6 +70,11 @@ export function VueProfil({
 
           <div className="min-w-0 flex-1">
             <h1 className="text-4xl sm:text-5xl">{profil.pseudo}</h1>
+            {niveau && (
+              <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-accent-2">
+                Niveau {niveau.niveau} · {niveau.rang}
+              </p>
+            )}
             <div className="mt-3 flex flex-wrap gap-2">
               <Etiquette accent>
                 {profil.streak > 0
@@ -82,6 +97,24 @@ export function VueProfil({
             <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
           </div>
         </div>
+
+        {niveau && (
+          <div className="mt-6">
+            <div className="h-2 overflow-hidden rounded-full bg-verre-fort">
+              <div
+                className="h-full rounded-full bg-accent transition-[width] duration-500"
+                style={{ width: `${Math.round(niveau.progression * 100)}%` }}
+              />
+            </div>
+            <div className="mt-2 flex justify-between font-mono text-[10.5px] text-encre-douce">
+              <span className="text-accent-2">{niveau.xp} XP</span>
+              <span>
+                {niveau.xpSuivant - niveau.xp} XP avant le niveau{' '}
+                {niveau.niveau + 1}
+              </span>
+            </div>
+          </div>
+        )}
 
         {erreur && (
           <p className="mt-4 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 font-mono text-xs text-accent">

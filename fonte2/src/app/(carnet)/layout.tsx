@@ -3,6 +3,7 @@ import { creerClientServeur } from '@/lib/supabase/server'
 import { BarreHaute, BarreBasse } from '@/components/Navigation'
 import { Notifications } from '@/components/social/Notifications'
 import { chargerNotifications } from '@/lib/donnees-notifs'
+import { chargerModeles } from '@/lib/donnees'
 import type { Profil } from '@/types/database'
 
 /**
@@ -38,7 +39,10 @@ export default async function CarnetLayout({
 
   if (!profil || !profil.onboarded || !profil.pseudo) redirect('/bienvenue')
 
-  const notifications = await chargerNotifications()
+  const [notifications, modeles] = await Promise.all([
+    chargerNotifications(),
+    chargerModeles(),
+  ])
   const cloche = <Notifications notifications={notifications} />
 
   return (
@@ -52,7 +56,11 @@ export default async function CarnetLayout({
       <div className="mx-auto max-w-5xl px-4 pb-28 md:px-6 md:pb-12">
         {children}
       </div>
-      <BarreBasse avatar={profil.avatar ?? '💪'} notifications={cloche} />
+      <BarreBasse
+        avatar={profil.avatar ?? '💪'}
+        notifications={cloche}
+        aDesModeles={modeles.length > 0}
+      />
     </>
   )
 }
