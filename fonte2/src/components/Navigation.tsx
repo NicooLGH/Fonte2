@@ -59,9 +59,8 @@ export function BarreHaute({
 
   return (
     <header
-      className="sticky top-3 z-40 mx-auto mb-6 hidden max-w-5xl items-center gap-4
-                 rounded-full border border-bordure bg-fond/85 px-5 py-2.5
-                 backdrop-blur md:flex"
+      className="sticky top-0 z-40 mx-auto mb-6 hidden max-w-5xl items-center gap-4
+                 border-b border-filet bg-fond/85 px-2 py-3 backdrop-blur md:flex"
     >
       <Link href="/" className="shrink-0 font-display text-2xl tracking-wide">
         FONTE<span className="text-accent">.</span>
@@ -75,8 +74,8 @@ export function BarreHaute({
               key={e.href}
               href={e.href}
               aria-current={actif ? 'page' : undefined}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                actif ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+              className={`rounded-bloc px-4 py-2 text-sm font-semibold transition-colors ${
+                actif ? 'bg-verre-fort text-encre' : 'text-encre-douce hover:text-encre'
               }`}
             >
               {e.libelle}
@@ -90,18 +89,17 @@ export function BarreHaute({
         <Link
           href="/profil"
           title={pseudo}
-          className="flex h-9 w-9 items-center justify-center rounded-full
-                     border border-bordure bg-verre text-base transition-colors
-                     hover:border-accent-2/60"
+          className="flex h-9 w-9 items-center justify-center rounded-bloc
+                     bg-verre text-base transition-colors hover:bg-verre-fort"
         >
           {avatar}
         </Link>
         <Link
           href="/reglages"
           aria-label="Réglages"
-          className="flex h-9 w-9 items-center justify-center rounded-full
-                     border border-bordure bg-verre text-encre-douce
-                     transition-colors hover:text-encre"
+          className="flex h-9 w-9 items-center justify-center rounded-bloc
+                     bg-verre text-encre-douce transition-colors
+                     hover:bg-verre-fort hover:text-encre"
         >
           {ENGRENAGE}
         </Link>
@@ -136,16 +134,17 @@ export function BarreBasse({
         <Link
           href="/reglages"
           aria-label="Réglages"
-          className="flex h-9 w-9 items-center justify-center rounded-full border
-                     border-bordure bg-fond/90 text-encre-douce backdrop-blur"
+          className="flex h-9 w-9 items-center justify-center rounded-bloc
+                     bg-verre text-encre-douce backdrop-blur"
         >
           {ENGRENAGE}
         </Link>
       </div>
 
       <nav
-        className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-around
-                   gap-1 rounded-3xl border border-bordure bg-fond/90 px-2 py-2
+        className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around
+                   gap-1 border-t border-filet bg-fond/95 px-2
+                   pb-[max(8px,env(safe-area-inset-bottom))] pt-2
                    backdrop-blur md:hidden"
       >
         <LienBas
@@ -165,9 +164,9 @@ export function BarreBasse({
           type="button"
           onClick={() => setAction(true)}
           aria-label="Ajouter"
-          className="mx-1 flex h-[52px] w-[52px] shrink-0 items-center justify-center
-                     rounded-full bg-accent text-3xl font-light leading-none text-white
-                     shadow-lg shadow-accent/40 transition-transform active:scale-95"
+          className="mx-1 flex h-12 w-12 shrink-0 items-center justify-center
+                     rounded-carte bg-accent text-3xl font-light leading-none
+                     text-white transition-transform active:scale-95"
         >
           +
         </button>
@@ -343,9 +342,8 @@ function Choix({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-2xl border border-bordure
-                 bg-verre px-5 py-4 text-left transition-colors
-                 hover:border-accent hover:bg-verre-fort"
+      className="flex w-full items-center gap-4 rounded-bloc bg-verre px-5 py-4
+                 text-left transition-colors hover:bg-verre-fort"
     >
       <span className="shrink-0 text-2xl leading-none">{ico}</span>
       <span className="min-w-0">

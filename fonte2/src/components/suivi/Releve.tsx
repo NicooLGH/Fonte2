@@ -123,7 +123,7 @@ export function Releve({
         <button
           type="button"
           onClick={supprimer}
-          className="mt-2 w-full rounded-full border border-bordure bg-verre py-2.5
+          className="mt-2 w-full rounded-bloc border border-bordure bg-verre py-2.5
                      text-xs font-semibold text-encre-douce transition-colors
                      hover:border-accent/50 hover:text-accent"
         >
@@ -159,7 +159,7 @@ export function Releve({
               maxLength={280}
               defaultValue={releve?.note ?? ''}
               placeholder="ex : semaine chargée, sommeil moyen"
-              className="w-full resize-y rounded-2xl border border-bordure bg-verre
+              className="w-full resize-y rounded-bloc border border-bordure bg-verre
                          px-4 py-3 text-sm focus:border-accent focus:outline-none"
             />
             <span className="mt-2 block font-mono text-[10.5px] leading-relaxed text-encre-douce">
@@ -298,7 +298,7 @@ function LigneChamp({
         inputMode="decimal"
         defaultValue={valeur ?? ''}
         placeholder="—"
-        className="w-28 shrink-0 rounded-xl border border-bordure bg-fond px-3 py-2.5
+        className="w-28 shrink-0 rounded-bloc border border-bordure bg-fond px-3 py-2.5
                    text-center font-display text-xl focus:border-accent focus:outline-none"
       />
     </label>

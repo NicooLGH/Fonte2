@@ -24,7 +24,7 @@ export default async function PageSeances() {
         {modeles.length > 0 && (
           <Link
             href="/live"
-            className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold
+            className="rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold
                        text-white transition-colors hover:bg-accent-clair"
           >
             ▶ Séance en direct

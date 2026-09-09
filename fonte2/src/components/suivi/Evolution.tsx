@@ -49,7 +49,7 @@ export function Evolution({
             type="button"
             onClick={() => setChamp(c.cle)}
             aria-pressed={champ === c.cle}
-            className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold
+            className={`rounded-bloc border px-3.5 py-1.5 text-xs font-semibold
               transition-colors ${
                 champ === c.cle
                   ? 'border-accent bg-accent/15 text-accent'

@@ -26,8 +26,10 @@
   --font-corps: var(--police-corps), sans-serif;
   --font-mono: var(--police-mono), monospace;
 
-  /* Arrondis : généreux, comme sur le carnet actuel */
-  --radius-carte: 24px;
+  /* Arrondis resserrés : 24px faisait « page web », 16 donne
+     la sensation d'une application. */
+  --radius-carte: 16px;
+  --radius-bloc: 12px;
   --radius-pilule: 999px;
 }
 
@@ -105,4 +107,39 @@ h1, h2, h3 {
 
 .bilan-entree {
   animation: bilan-entree 0.5s cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================
+   Direction retenue : des séparateurs plutôt que des boîtes
+   flottantes pour les flux — accueil, séance, profil. Les pages
+   de données gardent leurs blocs, parce qu'elles présentent des
+   ensembles distincts qu'il faut séparer visuellement.
+
+   L'orange est réservé aux actions principales et à quelques
+   repères. Partout ailleurs il devient du bruit, et il perd sa
+   force là où elle compte.
+   ============================================================ */
+
+.section {
+  border-bottom: 0.5px solid var(--color-filet);
+}
+.section:last-child {
+  border-bottom: none;
+}
+
+.section-titre {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-encre-douce);
+}
+
+/* Chiffre mis en avant : l'encre, pas l'orange. */
+.chiffre {
+  font-family: var(--font-display);
+  color: var(--color-encre);
+  line-height: 1;
 }

@@ -104,16 +104,16 @@ export default async function PageAnalyse() {
                       {icoGroupe(inconnu ? null : (g.cle as Groupe))}{' '}
                       {nomGroupe(inconnu ? null : (g.cle as Groupe))}
                     </span>
-                    <span className="font-display text-lg text-accent-2">
+                    <span className="font-display text-lg text-encre">
                       {Math.round(g.volume).toLocaleString('fr-FR')}
                       <span className="ml-1 font-mono text-[10px] text-encre-douce">
                         kg · {part} %
                       </span>
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-verre-fort">
+                  <div className="h-2 overflow-hidden rounded-bloc bg-verre-fort">
                     <div
-                      className={`h-full rounded-full ${inconnu ? 'bg-encre-douce' : 'bg-accent'}`}
+                      className={`h-full rounded-bloc ${inconnu ? 'bg-encre-douce' : 'bg-accent'}`}
                       style={{ width: `${(g.volume / volumeMax) * 100}%` }}
                     />
                   </div>
@@ -179,7 +179,7 @@ export default async function PageAnalyse() {
 
           <dl className="grid grid-cols-2 gap-5 border-t border-filet pt-5 sm:grid-cols-4">
             <div>
-              <dd className="font-display text-3xl text-accent">
+              <dd className="chiffre text-3xl">
                 {seances.length}
               </dd>
               <dt className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-encre-douce">
@@ -187,7 +187,7 @@ export default async function PageAnalyse() {
               </dt>
             </div>
             <div>
-              <dd className="font-display text-3xl text-accent">
+              <dd className="chiffre text-3xl">
                 {semainesActives}
               </dd>
               <dt className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-encre-douce">
@@ -195,7 +195,7 @@ export default async function PageAnalyse() {
               </dt>
             </div>
             <div className="col-span-2">
-              <dd className="font-display text-3xl text-accent">
+              <dd className="chiffre text-3xl">
                 {Math.round(volumeTotalTous).toLocaleString('fr-FR')}
               </dd>
               <dt className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-encre-douce">

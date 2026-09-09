@@ -102,13 +102,13 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
               onChange={(e) => setCorps(e.target.value)}
               rows={4}
               maxLength={600}
-              className="w-full resize-y rounded-2xl border border-bordure bg-verre
+              className="w-full resize-y rounded-bloc border border-bordure bg-verre
                          px-4 py-3 text-sm focus:border-accent focus:outline-none"
             />
           </label>
 
           <Reglage titre="Style" detail="Couleur de base du bandeau.">
-            <div className="flex gap-1 rounded-full border border-bordure bg-verre p-1">
+            <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
               {(['info', 'succes', 'alerte'] as Ton[]).map((t) => (
                 <button
                   key={t}
@@ -118,7 +118,7 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
                     setCouleur(null)
                   }}
                   aria-pressed={ton === t && !couleur}
-                  className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                  className={`flex-1 rounded-bloc px-3 py-1.5 text-xs font-semibold ${
                     ton === t && !couleur
                       ? 'bg-encre text-fond'
                       : 'text-encre-douce'
@@ -137,7 +137,7 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
                 value={couleur ?? '#ff4b2b'}
                 onChange={(e) => setCouleur(e.target.value)}
                 aria-label="Couleur personnalisée"
-                className="h-10 w-12 cursor-pointer rounded-xl border border-bordure bg-verre p-1"
+                className="h-10 w-12 cursor-pointer rounded-bloc border border-bordure bg-verre p-1"
               />
               <button
                 type="button"
@@ -189,14 +189,14 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
                 onChange={(e) => setLienTexte(e.target.value)}
                 placeholder="Texte"
                 maxLength={30}
-                className="min-w-0 flex-1 rounded-full border border-bordure bg-verre
+                className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
                            px-4 py-2 text-sm focus:border-accent focus:outline-none"
               />
               <input
                 value={lienUrl}
                 onChange={(e) => setLienUrl(e.target.value)}
                 placeholder="https://…"
-                className="min-w-0 flex-1 rounded-full border border-bordure bg-verre
+                className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
                            px-4 py-2 text-sm focus:border-accent focus:outline-none"
               />
             </div>
@@ -209,7 +209,7 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
               max={365}
               value={jours}
               onChange={(e) => setJours(Number(e.target.value))}
-              className="w-24 rounded-xl border border-bordure bg-fond px-3 py-2
+              className="w-24 rounded-bloc border border-bordure bg-fond px-3 py-2
                          text-center font-display text-xl focus:border-accent focus:outline-none"
             />
           </Reglage>
@@ -286,7 +286,7 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
                       type="button"
                       disabled={enCours}
                       onClick={() => agir(() => retirerAnnonce(a.id))}
-                      className="shrink-0 rounded-full border border-bordure px-4 py-1.5
+                      className="shrink-0 rounded-bloc border border-bordure px-4 py-1.5
                                  text-xs font-semibold text-encre-douce hover:text-encre"
                     >
                       Retirer
@@ -323,7 +323,7 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
               onChange={(e) => setNCorps(e.target.value)}
               rows={2}
               maxLength={200}
-              className="w-full resize-y rounded-2xl border border-bordure bg-verre
+              className="w-full resize-y rounded-bloc border border-bordure bg-verre
                          px-4 py-3 text-sm focus:border-accent focus:outline-none"
             />
           </label>
@@ -379,14 +379,14 @@ function Oui({
   onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex gap-1 rounded-full border border-bordure bg-verre p-1">
+    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
       {([true, false] as const).map((v) => (
         <button
           key={String(v)}
           type="button"
           onClick={() => onChange(v)}
           aria-pressed={valeur === v}
-          className={`flex-1 rounded-full px-4 py-1.5 text-xs font-semibold ${
+          className={`flex-1 rounded-bloc px-4 py-1.5 text-xs font-semibold ${
             valeur === v ? 'bg-encre text-fond' : 'text-encre-douce'
           }`}
         >

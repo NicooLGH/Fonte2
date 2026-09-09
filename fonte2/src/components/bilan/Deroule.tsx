@@ -52,7 +52,7 @@ export function DerouleBilan({
         {ecrans.map((_, i) => (
           <span
             key={i}
-            className={`h-[3px] flex-1 rounded-full ${
+            className={`h-[3px] flex-1 rounded-bloc ${
               i <= index ? 'bg-accent-2' : 'bg-white/20'
             }`}
           />
@@ -280,7 +280,7 @@ function Cartes({
           type="button"
           disabled={enCours !== null}
           onClick={() => telecharger(true)}
-          className="rounded-full bg-accent px-6 py-3.5 font-semibold text-white
+          className="rounded-bloc bg-accent px-6 py-3.5 font-semibold text-white
                      transition-colors hover:bg-accent-clair disabled:opacity-50"
         >
           {enCours === 'complete' ? 'Génération…' : 'Carte complète'}
@@ -289,7 +289,7 @@ function Cartes({
           type="button"
           disabled={enCours !== null}
           onClick={() => telecharger(false)}
-          className="rounded-full border border-bordure bg-verre px-6 py-3
+          className="rounded-bloc border border-bordure bg-verre px-6 py-3
                      text-sm font-semibold text-encre-douce transition-colors
                      hover:text-encre disabled:opacity-50"
         >

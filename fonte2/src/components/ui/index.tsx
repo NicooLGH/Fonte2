@@ -16,7 +16,7 @@ export function Champ({
       </span>
       <input
         {...props}
-        className="w-full rounded-2xl border border-bordure bg-verre px-4 py-3.5
+        className="w-full rounded-bloc border border-bordure bg-verre px-4 py-3.5
                    text-base text-encre placeholder:text-encre-douce/50
                    transition-colors focus:border-accent focus:outline-none"
       />
@@ -35,7 +35,7 @@ export function Bouton({
   ...props
 }: ComponentProps<'button'> & { variante?: 'principal' | 'discret' }) {
   const base =
-    'w-full rounded-full px-6 py-3.5 font-semibold transition-colors ' +
+    'w-full rounded-bloc px-6 py-3.5 font-semibold transition-colors ' +
     'disabled:cursor-not-allowed disabled:opacity-50'
   const styles =
     variante === 'principal'
@@ -51,7 +51,7 @@ export function Erreur({ children }: { children?: React.ReactNode }) {
   return (
     <p
       role="alert"
-      className="rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3
+      className="rounded-bloc border border-accent/40 bg-accent/10 px-4 py-3
                  font-mono text-xs leading-relaxed text-accent"
     >
       {children}
@@ -65,7 +65,7 @@ export function Succes({ children }: { children?: React.ReactNode }) {
   return (
     <p
       role="status"
-      className="rounded-2xl border border-accent-2/40 bg-accent-2/10 px-4 py-3
+      className="rounded-bloc border border-accent-2/40 bg-accent-2/10 px-4 py-3
                  font-mono text-xs leading-relaxed text-accent-2"
     >
       {children}

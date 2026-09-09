@@ -64,7 +64,7 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
             {visibles.map((exo) => (
               <li
                 key={exo.id}
-                className="rounded-2xl border border-bordure bg-verre px-4 py-3"
+                className="rounded-bloc border border-bordure bg-verre px-4 py-3"
               >
                 <p className="font-semibold">{exo.nom}</p>
                 <p className="mt-0.5 font-mono text-[10.5px] text-encre-douce">
@@ -78,7 +78,7 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
                       setEdite(exo)
                       setOuvert(true)
                     }}
-                    className="flex-1 rounded-full border border-bordure bg-verre
+                    className="flex-1 rounded-bloc border border-bordure bg-verre
                                px-3 py-1.5 text-xs font-semibold text-encre-douce
                                transition-colors hover:text-encre"
                   >
@@ -88,7 +88,7 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
                     type="button"
                     onClick={() => supprimer(exo)}
                     aria-label={`Supprimer ${exo.nom}`}
-                    className="rounded-full px-3 py-1.5 text-xs text-encre-douce
+                    className="rounded-bloc px-3 py-1.5 text-xs text-encre-douce
                                transition-colors hover:text-accent"
                   >
                     ✕
@@ -103,7 +103,7 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
           <button
             type="button"
             onClick={() => setTout(true)}
-            className="mt-3 w-full rounded-full border border-bordure bg-verre
+            className="mt-3 w-full rounded-bloc border border-bordure bg-verre
                        py-2.5 text-xs font-semibold text-encre-douce
                        transition-colors hover:text-encre"
           >
@@ -196,7 +196,7 @@ function FormulaireExercice({
               type="button"
               onClick={() => setGroupe(groupe === g.cle ? '' : g.cle)}
               aria-pressed={groupe === g.cle}
-              className={`rounded-full border px-3.5 py-2 text-xs font-semibold
+              className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
                 transition-colors ${
                   groupe === g.cle
                     ? 'border-accent-2 bg-accent-2/15 text-accent-2'

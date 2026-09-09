@@ -53,7 +53,7 @@ export default async function CarnetLayout({
         notifications={cloche}
       />
       {/* La marge basse laisse la place à la barre de navigation */}
-      <div className="mx-auto max-w-5xl px-4 pb-28 md:px-6 md:pb-12">
+      <div className="mx-auto max-w-5xl px-4 pb-32 md:px-6 md:pb-12">
         {children}
       </div>
       <BarreBasse

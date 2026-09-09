@@ -163,7 +163,7 @@ export function EcranLive({
           <button
             type="button"
             onClick={() => setEtape('seance')}
-            className="rounded-full bg-accent px-6 py-3.5 font-semibold text-white
+            className="rounded-bloc bg-accent px-6 py-3.5 font-semibold text-white
                        transition-colors hover:bg-accent-clair"
           >
             Reprendre
@@ -174,7 +174,7 @@ export function EcranLive({
               enregistrer(null)
               setEtape('choix')
             }}
-            className="rounded-full border border-bordure bg-verre px-6 py-3
+            className="rounded-bloc border border-bordure bg-verre px-6 py-3
                        text-sm font-semibold text-encre-douce transition-colors
                        hover:text-encre"
           >
@@ -202,7 +202,7 @@ export function EcranLive({
               type="button"
               onClick={() => setMinutes(m)}
               aria-pressed={minutes === m}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold
+              className={`rounded-bloc border px-4 py-2 text-sm font-semibold
                 transition-colors ${
                   minutes === m
                     ? 'border-accent bg-accent/15 text-accent'
@@ -222,7 +222,7 @@ export function EcranLive({
           <button
             type="button"
             onClick={lancer}
-            className="rounded-full bg-accent px-6 py-3.5 font-semibold text-white
+            className="rounded-bloc bg-accent px-6 py-3.5 font-semibold text-white
                        transition-colors hover:bg-accent-clair"
           >
             Commencer
@@ -233,7 +233,7 @@ export function EcranLive({
               setModeleChoisi(null)
               setEtape('choix')
             }}
-            className="rounded-full border border-bordure bg-verre px-6 py-3
+            className="rounded-bloc border border-bordure bg-verre px-6 py-3
                        text-sm font-semibold text-encre-douce hover:text-encre"
           >
             Changer de modèle
@@ -257,7 +257,7 @@ export function EcranLive({
             <button
               type="button"
               onClick={() => router.push('/seances')}
-              className="w-full rounded-full bg-accent px-6 py-3.5 font-semibold
+              className="w-full rounded-bloc bg-accent px-6 py-3.5 font-semibold
                          text-white transition-colors hover:bg-accent-clair"
             >
               Créer un modèle
@@ -275,7 +275,7 @@ export function EcranLive({
                   key={m.id}
                   type="button"
                   onClick={() => choisirModele(m)}
-                  className="rounded-2xl border border-bordure bg-verre p-4 text-left
+                  className="rounded-bloc border border-bordure bg-verre p-4 text-left
                              transition-colors hover:border-accent"
                 >
                   <p className="font-semibold">{m.nom}</p>
@@ -443,7 +443,7 @@ export function EcranLive({
           <button
             type="button"
             onClick={() => enregistrer({ ...live, echauffementFin: null })}
-            className={`rounded-full px-6 py-3.5 font-semibold transition-colors ${
+            className={`rounded-bloc px-6 py-3.5 font-semibold transition-colors ${
               fini
                 ? 'bg-accent text-white hover:bg-accent-clair'
                 : 'border border-bordure bg-verre text-encre-douce hover:text-encre'
@@ -519,7 +519,7 @@ export function EcranLive({
             rows={3}
             maxLength={280}
             placeholder="ex : jambes lourdes mais PR au squat"
-            className="w-full resize-y rounded-2xl border border-bordure bg-verre
+            className="w-full resize-y rounded-bloc border border-bordure bg-verre
                        px-4 py-3 text-sm focus:border-accent focus:outline-none"
           />
         </label>
@@ -531,7 +531,7 @@ export function EcranLive({
             type="button"
             disabled={enCours}
             onClick={terminer}
-            className="rounded-full bg-accent px-6 py-3.5 font-semibold text-white
+            className="rounded-bloc bg-accent px-6 py-3.5 font-semibold text-white
                        transition-colors hover:bg-accent-clair disabled:opacity-50"
           >
             {enCours ? 'Enregistrement…' : 'Enregistrer la séance'}
@@ -550,7 +550,7 @@ export function EcranLive({
                 ),
               })
             }}
-            className="rounded-full border border-bordure bg-verre px-6 py-3 text-sm
+            className="rounded-bloc border border-bordure bg-verre px-6 py-3 text-sm
                        font-semibold text-encre-douce transition-colors hover:text-encre"
           >
             Revenir en arrière
@@ -574,18 +574,16 @@ export function EcranLive({
   return (
     <div className="flex min-h-dvh flex-col">
       {/* En-tête */}
-      <header className="shrink-0 border-b border-filet px-5 pb-3 pt-4">
+      {/* En-tête réduit au strict nécessaire : tout l'espace
+          vertical gagné va aux charges. */}
+      <header className="shrink-0 border-b border-filet px-5 py-3">
         <div className="flex items-baseline justify-between gap-4 pr-12">
-          <p className="truncate font-display text-2xl uppercase">{live.nom}</p>
+          <p className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-encre-douce">
+            {live.nom} · {live.index + 1}/{total}
+          </p>
           <p className="shrink-0 font-mono text-sm text-accent-2">
             {mmss(live.fin ? dureeLive(live) : maintenant - live.debut)}
           </p>
-        </div>
-        <div className="mt-3 h-1 overflow-hidden rounded-full bg-verre-fort">
-          <div
-            className="h-full rounded-full bg-accent transition-[width] duration-500"
-            style={{ width: `${(faits / total) * 100}%` }}
-          />
         </div>
       </header>
 
@@ -593,108 +591,100 @@ export function EcranLive({
         type="button"
         onClick={() => router.push('/seances')}
         aria-label="Quitter"
-        className="absolute right-4 top-3 z-10 flex h-9 w-9 items-center justify-center
-                   rounded-full bg-verre text-xs text-encre-douce hover:text-encre"
+        className="absolute right-3 top-2 z-10 flex h-9 w-9 items-center justify-center
+                   text-sm text-encre-douce hover:text-encre"
       >
         ✕
       </button>
 
       {/* Corps */}
       <div className="mx-auto w-full max-w-xl flex-1 overflow-y-auto px-5 pb-8 pt-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-accent-2">
-          Exercice {live.index + 1} sur {total}
+        <h1 className="text-4xl leading-[1.05] sm:text-5xl">
+          {nomExo(bloc.exerciceId)}
+        </h1>
+        <p className="mt-2 font-mono text-[11px] text-encre-douce">
+          {derniere
+            ? `dernière fois : ${derniere.series.map((x) => `${x.poids}×${x.reps}`).join(', ')}`
+            : 'première fois sur cet exercice'}
         </p>
-        <h1 className="mt-2 text-4xl sm:text-5xl">{nomExo(bloc.exerciceId)}</h1>
 
-        <div className="mt-5 rounded-2xl border border-accent-2/30 bg-accent-2/[0.07] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-encre-douce">
-            {derniere ? `La dernière fois · ${derniere.date}` : 'Première fois sur cet exercice'}
-          </p>
-          {derniere && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {derniere.series.map((s, i) => (
-                <span
-                  key={i}
-                  className="rounded-lg bg-accent-2/10 px-2.5 py-1 font-mono text-xs text-accent-2"
-                >
-                  {s.poids} kg × {s.reps}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Séries */}
-        <div className="mt-5 flex flex-col gap-2.5">
+        {/* Séries en lignes séparées plutôt qu'en cartes. Les
+            chiffres gagnent en taille, ce qui compte quand
+            l'écran est posé sur un banc à un mètre. */}
+        <div className="mt-6 flex flex-col">
           {bloc.series.map((s, i) => (
             <div
               key={i}
-              className={`flex items-center gap-2 rounded-2xl border p-3 ${
-                s.faite
-                  ? 'border-accent-2/40 bg-accent-2/[0.07]'
-                  : 'border-bordure bg-verre'
-              }`}
+              className="flex items-center gap-3 border-b border-filet py-3"
             >
-              <span className="w-6 shrink-0 font-mono text-[11px] text-encre-douce">
-                #{i + 1}
+              <span
+                className={`w-4 shrink-0 font-mono text-[11px] ${
+                  s.faite ? 'text-accent-2' : 'text-encre-douce'
+                }`}
+              >
+                {i + 1}
               </span>
-              <input
-                type="number"
-                step="0.5"
-                inputMode="decimal"
-                value={s.poids}
-                onChange={(e) =>
-                  majBloc(live.index, (b) => ({
-                    ...b,
-                    series: b.series.map((x, k) =>
-                      k === i ? { ...x, poids: e.target.value } : x
-                    ),
-                  }))
-                }
-                placeholder={
-                  derniere?.series[i]
-                    ? String(derniere.series[i].poids)
-                    : (derniere?.series.at(-1)?.poids.toString() ?? 'kg')
-                }
-                aria-label={`Poids série ${i + 1}`}
-                className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond px-2 py-3
-                           text-center font-display text-2xl focus:border-accent focus:outline-none"
-              />
-              <span className="font-mono text-xs text-encre-douce">×</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={s.reps}
-                onChange={(e) =>
-                  majBloc(live.index, (b) => ({
-                    ...b,
-                    series: b.series.map((x, k) =>
-                      k === i ? { ...x, reps: e.target.value } : x
-                    ),
-                  }))
-                }
-                placeholder={
-                  derniere?.series[i]
-                    ? String(derniere.series[i].reps)
-                    : (derniere?.series.at(-1)?.reps.toString() ?? 'reps')
-                }
-                aria-label={`Répétitions série ${i + 1}`}
-                className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond px-2 py-3
-                           text-center font-display text-2xl focus:border-accent focus:outline-none"
-              />
+
+              <label className="min-w-0 flex-1">
+                <span className="sr-only">Poids série {i + 1}</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  inputMode="decimal"
+                  value={s.poids}
+                  onChange={(e) =>
+                    majBloc(live.index, (b) => ({
+                      ...b,
+                      series: b.series.map((x, k) =>
+                        k === i ? { ...x, poids: e.target.value } : x
+                      ),
+                    }))
+                  }
+                  placeholder={
+                    derniere?.series[i]
+                      ? String(derniere.series[i].poids)
+                      : (derniere?.series.at(-1)?.poids.toString() ?? 'kg')
+                  }
+                  className="w-full bg-transparent font-display text-3xl text-encre
+                             placeholder:text-encre-douce/35 focus:outline-none"
+                />
+              </label>
+
+              <label className="min-w-0 flex-1">
+                <span className="sr-only">Répétitions série {i + 1}</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={s.reps}
+                  onChange={(e) =>
+                    majBloc(live.index, (b) => ({
+                      ...b,
+                      series: b.series.map((x, k) =>
+                        k === i ? { ...x, reps: e.target.value } : x
+                      ),
+                    }))
+                  }
+                  placeholder={
+                    derniere?.series[i]
+                      ? String(derniere.series[i].reps)
+                      : (derniere?.series.at(-1)?.reps.toString() ?? 'reps')
+                  }
+                  className="w-full bg-transparent font-display text-3xl text-encre
+                             placeholder:text-encre-douce/35 focus:outline-none"
+                />
+              </label>
+
               <button
                 type="button"
                 onClick={() => validerSerie(i)}
                 aria-label={s.faite ? 'Annuler la série' : 'Valider la série'}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-                  border text-base ${
-                    s.faite
-                      ? 'border-accent-2 bg-accent-2 text-fond'
-                      : 'border-bordure bg-verre text-encre-douce'
-                  }`}
+                className={`shrink-0 text-2xl leading-none ${
+                  s.faite ? 'text-accent-2' : 'text-encre-douce/40'
+                }`}
               >
-                ✓
+                {s.faite ? '\u2713' : '\u25CB'}
               </button>
+
               <button
                 type="button"
                 onClick={() =>
@@ -707,7 +697,7 @@ export function EcranLive({
                   }))
                 }
                 aria-label={`Supprimer la série ${i + 1}`}
-                className="shrink-0 px-1 text-xs text-encre-douce hover:text-accent"
+                className="shrink-0 text-xs text-encre-douce/40 hover:text-accent"
               >
                 ✕
               </button>
@@ -716,9 +706,9 @@ export function EcranLive({
         </div>
 
         {derniere && (
-          <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-encre-douce">
+          <p className="mt-3 font-mono text-[10px] leading-relaxed text-encre-douce/70">
             Les chiffres grisés rappellent ta dernière séance. Ils ne
-            s'enregistrent pas : à toi de saisir ce que tu viens de faire.
+            s&apos;enregistrent pas.
           </p>
         )}
 
@@ -737,25 +727,23 @@ export function EcranLive({
               ],
             }))
           }
-          className="mt-3 rounded-full border border-bordure bg-verre px-4 py-2
-                     text-xs font-semibold text-encre-douce hover:text-encre"
+          className="w-full border-b border-filet py-3.5 text-left font-mono
+                     text-[11px] text-encre-douce transition-colors hover:text-encre"
         >
-          + Ajouter une série
+          + ajouter une série
         </button>
 
         {alternatives.length > 0 && (
-          <div className="mt-5 rounded-2xl border border-bordure bg-verre p-4">
-            <p className="mb-2.5 font-mono text-[10px] uppercase tracking-[0.08em] text-encre-douce">
-              Alternatives si la machine est prise
-            </p>
+          <div className="mt-6">
+            <p className="section-titre mb-2.5">Si la machine est prise</p>
             <div className="flex flex-wrap gap-2">
               {alternatives.map((id) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => remplacer(id)}
-                  className="rounded-full border border-bordure bg-fond px-4 py-2
-                             text-sm font-semibold hover:border-accent-2 hover:text-accent-2"
+                  className="rounded-bloc bg-verre px-4 py-2 text-sm font-semibold
+                             transition-colors hover:bg-verre-fort hover:text-accent-2"
                 >
                   {nomExo(id)}
                 </button>
@@ -764,34 +752,9 @@ export function EcranLive({
           </div>
         )}
 
-        {erreur && <div className="mt-4"><Alerte>{erreur}</Alerte></div>}
-
-        <div className="mt-6 grid grid-cols-2 gap-2.5">
-          <BoutonAction onClick={repousser}>↻ Repousser</BoutonAction>
-          <BoutonAction
-            onClick={() => {
-              const suivant = disponibles.find((e) => e.id !== bloc.exerciceId)
-              if (suivant) remplacer(suivant.id)
-            }}
-            desactive={disponibles.length === 0}
-          >
-            Remplacer
-          </BoutonAction>
-          <button
-            type="button"
-            onClick={exerciceSuivant}
-            className="col-span-2 rounded-full bg-accent px-6 py-3.5 font-semibold
-                       text-white transition-colors hover:bg-accent-clair"
-          >
-            Exercice suivant
-          </button>
-        </div>
-
         {/* Récapitulatif */}
-        <div className="mt-8 border-t border-filet pt-5">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.08em] text-encre-douce">
-            Séance
-          </p>
+        <div className="mt-8">
+          <p className="section-titre mb-3">Séance</p>
           <ul className="flex flex-col gap-2">
             {live.blocs.map((b, i) => (
               <li
@@ -819,25 +782,69 @@ export function EcranLive({
         </div>
       </div>
 
-      {/* Repos */}
+      {/* Repos : bande pleine largeur, lisible de loin. */}
       {live.reposDebut && (
-        <div className="shrink-0 border-t border-filet bg-accent-2/[0.07] px-5 py-4 text-center">
-          <p className="font-display text-4xl text-accent-2">
-            {mmss(maintenant - live.reposDebut)}
-          </p>
-          <p className="mb-3 mt-1 font-mono text-[10px] uppercase tracking-[0.08em] text-encre-douce">
-            Repos en cours
-          </p>
+        <div className="flex shrink-0 items-center justify-between gap-4
+                        border-t border-accent-2/30 bg-accent-2/[0.09] px-5 py-3">
+          <div>
+            <p className="font-display text-4xl leading-none text-accent-2">
+              {mmss(maintenant - live.reposDebut)}
+            </p>
+            <p className="section-titre mt-1">Repos</p>
+          </div>
           <button
             type="button"
             onClick={() => enregistrer({ ...live, reposDebut: null })}
-            className="rounded-full border border-bordure bg-verre px-5 py-2 text-xs
-                       font-semibold text-encre-douce hover:text-encre"
+            className="shrink-0 rounded-bloc border border-bordure px-4 py-2.5
+                       text-xs font-semibold text-encre transition-colors
+                       hover:bg-verre"
           >
-            Terminer le repos
+            Terminer
           </button>
         </div>
       )}
+
+      {erreur && (
+        <p className="shrink-0 border-t border-accent/40 bg-accent/10 px-5 py-2.5
+                      font-mono text-xs text-accent">
+          {erreur}
+        </p>
+      )}
+
+      {/* Actions collées en bas, atteignables au pouce. Un seul
+          bouton orange : c'est le geste principal. */}
+      <div className="shrink-0">
+        <div className="grid grid-cols-2 gap-px bg-filet">
+          <button
+            type="button"
+            onClick={repousser}
+            className="bg-fond py-3.5 text-[13px] font-semibold text-encre-douce
+                       transition-colors hover:text-encre"
+          >
+            Repousser
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const suivant = disponibles.find((e) => e.id !== bloc.exerciceId)
+              if (suivant) remplacer(suivant.id)
+            }}
+            disabled={disponibles.length === 0}
+            className="bg-fond py-3.5 text-[13px] font-semibold text-encre-douce
+                       transition-colors hover:text-encre disabled:opacity-40"
+          >
+            Remplacer
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={exerciceSuivant}
+          className="w-full bg-accent py-4 text-sm font-semibold text-white
+                     transition-colors hover:bg-accent-clair"
+        >
+          Exercice suivant
+        </button>
+      </div>
     </div>
   )
 }
@@ -859,34 +866,11 @@ function Alerte({ children }: { children: React.ReactNode }) {
   return (
     <p
       role="alert"
-      className="mb-4 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3
+      className="mb-4 rounded-bloc border border-accent/40 bg-accent/10 px-4 py-3
                  font-mono text-xs text-accent"
     >
       {children}
     </p>
-  )
-}
-
-function BoutonAction({
-  children,
-  onClick,
-  desactive,
-}: {
-  children: React.ReactNode
-  onClick: () => void
-  desactive?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={desactive}
-      className="rounded-full border border-bordure bg-verre px-4 py-3 text-sm
-                 font-semibold transition-colors hover:bg-verre-fort
-                 disabled:opacity-40"
-    >
-      {children}
-    </button>
   )
 }
 

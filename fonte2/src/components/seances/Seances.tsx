@@ -103,7 +103,7 @@ export function Seances({
           <button
             type="button"
             onClick={() => setTout(true)}
-            className="mt-3 w-full rounded-full border border-bordure bg-verre
+            className="mt-3 w-full rounded-bloc border border-bordure bg-verre
                        py-2.5 text-xs font-semibold text-encre-douce
                        transition-colors hover:text-encre"
           >
@@ -216,7 +216,7 @@ function SaisieSeance({
                 type="button"
                 onClick={() => changerJour(j.iso)}
                 aria-pressed={date === j.iso}
-                className={`flex items-center justify-between rounded-2xl border px-4 py-3
+                className={`flex items-center justify-between rounded-bloc border px-4 py-3
                   text-left text-sm transition-colors ${
                     date === j.iso
                       ? 'border-accent bg-accent/10'
@@ -243,7 +243,7 @@ function SaisieSeance({
         const derniere = dernierPassage(seances, bloc.exerciceId, date)
 
         return (
-          <div key={bloc.exerciceId} className="rounded-2xl border border-bordure p-4">
+          <div key={bloc.exerciceId} className="rounded-bloc border border-bordure p-4">
             <div className="mb-2 flex items-center justify-between gap-3">
               <p className="font-semibold">{exo?.nom}</p>
               <button
@@ -281,7 +281,7 @@ function SaisieSeance({
                         : (derniere?.at(-1)?.poids.toString() ?? 'kg')
                     }
                     aria-label={`Poids série ${iSerie + 1}`}
-                    className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond
+                    className="min-w-0 flex-1 rounded-bloc border border-bordure bg-fond
                                px-3 py-2.5 text-center font-display text-xl
                                focus:border-accent focus:outline-none"
                   />
@@ -297,7 +297,7 @@ function SaisieSeance({
                         : (derniere?.at(-1)?.reps.toString() ?? 'reps')
                     }
                     aria-label={`Répétitions série ${iSerie + 1}`}
-                    className="min-w-0 flex-1 rounded-xl border border-bordure bg-fond
+                    className="min-w-0 flex-1 rounded-bloc border border-bordure bg-fond
                                px-3 py-2.5 text-center font-display text-xl
                                focus:border-accent focus:outline-none"
                   />
@@ -344,7 +344,7 @@ function SaisieSeance({
                   )
                 )
               }
-              className="mt-3 rounded-full border border-bordure bg-verre px-4 py-2
+              className="mt-3 rounded-bloc border border-bordure bg-verre px-4 py-2
                          text-xs font-semibold text-encre-douce transition-colors
                          hover:text-encre"
             >
@@ -366,7 +366,7 @@ function SaisieSeance({
                 key={e.id}
                 type="button"
                 onClick={() => ajouterExercice(e.id)}
-                className="rounded-full border border-bordure bg-verre px-4 py-2
+                className="rounded-bloc border border-bordure bg-verre px-4 py-2
                            text-xs font-semibold text-encre-douce transition-colors
                            hover:border-accent hover:text-encre"
               >
@@ -388,7 +388,7 @@ function SaisieSeance({
           rows={2}
           maxLength={280}
           placeholder="ex : jambes lourdes mais PR au squat"
-          className="w-full resize-y rounded-2xl border border-bordure bg-verre
+          className="w-full resize-y rounded-bloc border border-bordure bg-verre
                      px-4 py-3 text-sm focus:border-accent focus:outline-none"
         />
       </label>

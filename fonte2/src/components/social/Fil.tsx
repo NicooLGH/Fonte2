@@ -63,8 +63,8 @@ export function Fil({
 
   if (nbAmis === 0) {
     return (
-      <section className="rounded-carte border border-bordure bg-verre p-6">
-        <h2 className="mb-2 text-2xl">Fil d&apos;actualité</h2>
+      <section>
+        <p className="section-titre mb-3">Fil d&apos;actualité</p>
         <p className="text-sm leading-relaxed text-encre-douce">
           Tu n&apos;as pas encore d&apos;amis. Cherche quelqu&apos;un par son
           pseudo dans l&apos;onglet{' '}
@@ -78,10 +78,10 @@ export function Fil({
   }
 
   return (
-    <section className="rounded-carte border border-bordure bg-verre p-5 sm:p-6">
-      <h2 className="mb-2 text-2xl">Fil d&apos;actualité</h2>
+    <section>
+      <p className="section-titre mb-3">Fil d&apos;actualité</p>
 
-      <p className="mb-5 text-sm text-encre-douce">
+      <p className="mb-4 text-sm text-encre-douce">
         {actifs === 0 ? (
           "Personne ne s'est entraîné cette semaine. À toi d'ouvrir le bal."
         ) : actifs === nbAmis ? (
@@ -100,7 +100,7 @@ export function Fil({
       </p>
 
       {erreur && (
-        <p className="mb-4 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 font-mono text-xs text-accent">
+        <p className="mb-4 rounded-bloc border border-accent/40 bg-accent/10 px-4 py-3 font-mono text-xs text-accent">
           {erreur}
         </p>
       )}
@@ -129,9 +129,8 @@ export function Fil({
         <button
           type="button"
           onClick={() => setVisibles(visibles + PAS)}
-          className="mt-5 w-full rounded-full border border-bordure bg-verre py-2.5
-                     text-xs font-semibold text-encre-douce transition-colors
-                     hover:text-encre"
+          className="mt-4 w-full border-t border-filet py-3.5 font-mono text-[11px]
+                     text-encre-douce transition-colors hover:text-encre"
         >
           Voir {reste === 1 ? "l'autre" : `les ${reste} autres`}
         </button>
@@ -157,9 +156,8 @@ function Publication({
       <header className="mb-3 flex items-center gap-3">
         <Link
           href={`/u/${encodeURIComponent(p.pseudo)}`}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full
-                     border border-bordure bg-verre text-xl transition-colors
-                     hover:border-accent-2/60"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-bloc
+                     bg-verre text-lg transition-colors hover:bg-verre-fort"
         >
           {p.avatar ?? '💪'}
         </Link>
@@ -192,7 +190,7 @@ function Publication({
           </button>
 
           {detail && (
-            <div className="mt-3 rounded-2xl border border-bordure bg-verre p-4">
+            <div className="mt-3 border-l border-filet pl-4">
               {p.blocs.map((b) => (
                 <div
                   key={b.nom}
@@ -205,7 +203,7 @@ function Publication({
                       {b.series.map((s, i) => (
                         <span
                           key={i}
-                          className="rounded-lg border border-bordure bg-verre-fort
+                          className="rounded-bloc border border-bordure bg-verre-fort
                                      px-2 py-0.5 font-mono text-[11px]"
                         >
                           {s.poids}kg×{s.reps}
@@ -227,7 +225,7 @@ function Publication({
         {Object.entries(p.reactions).map(([signe, n]) => (
           <span
             key={signe}
-            className="rounded-full bg-verre px-3 py-1 font-mono text-xs text-encre-douce"
+            className="rounded-bloc bg-verre px-3 py-1.5 font-mono text-xs text-encre-douce"
           >
             {signe} {n}
           </span>
@@ -242,11 +240,11 @@ function Publication({
               onClick={() => onReagir(p.seanceId, signe, choisi)}
               aria-pressed={choisi}
               aria-label={choisi ? `Retirer ${signe}` : `Réagir ${signe}`}
-              className={`flex h-9 w-9 items-center justify-center rounded-full border
+              className={`flex h-9 w-9 items-center justify-center rounded-bloc
                 text-base transition-colors ${
                   choisi
-                    ? 'border-accent-2 bg-accent-2/15'
-                    : 'border-bordure bg-verre hover:bg-verre-fort'
+                    ? 'bg-accent-2/20'
+                    : 'bg-verre hover:bg-verre-fort'
                 }`}
             >
               {signe}

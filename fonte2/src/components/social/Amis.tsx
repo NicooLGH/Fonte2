@@ -41,7 +41,7 @@ export function GestionAmis({ liste }: { liste: ListeAmis }) {
         <section className="rounded-carte border border-accent/40 bg-accent/5 p-5">
           <h2 className="mb-4 text-2xl">
             Demandes reçues
-            <span className="ml-2 rounded-full bg-accent px-2 py-0.5 align-middle font-mono text-xs text-white">
+            <span className="ml-2 rounded-bloc bg-accent px-2 py-0.5 align-middle font-mono text-xs text-white">
               {liste.attente.length}
             </span>
           </h2>
@@ -60,7 +60,7 @@ export function GestionAmis({ liste }: { liste: ListeAmis }) {
                     type="button"
                     disabled={enCours}
                     onClick={() => agir(() => accepterAmi(p.id))}
-                    className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold
+                    className="rounded-bloc bg-accent px-4 py-1.5 text-xs font-semibold
                                text-white transition-colors hover:bg-accent-clair"
                   >
                     Accepter
@@ -69,7 +69,7 @@ export function GestionAmis({ liste }: { liste: ListeAmis }) {
                     type="button"
                     disabled={enCours}
                     onClick={() => agir(() => retirerAmi(p.id))}
-                    className="rounded-full border border-bordure px-4 py-1.5 text-xs
+                    className="rounded-bloc border border-bordure px-4 py-1.5 text-xs
                                font-semibold text-encre-douce transition-colors hover:text-encre"
                   >
                     Refuser
@@ -100,7 +100,7 @@ export function GestionAmis({ liste }: { liste: ListeAmis }) {
                   type="button"
                   disabled={enCours}
                   onClick={() => agir(() => retirerAmi(p.id))}
-                  className="shrink-0 rounded-full border border-bordure px-4 py-1.5
+                  className="shrink-0 rounded-bloc border border-bordure px-4 py-1.5
                              text-xs font-semibold text-encre-douce transition-colors
                              hover:text-encre"
                 >
@@ -160,14 +160,14 @@ function Recherche({
           }}
           placeholder="Pseudo à rechercher…"
           aria-label="Pseudo à rechercher"
-          className="min-w-0 flex-1 rounded-full border border-bordure bg-verre px-5 py-2.5
+          className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre px-5 py-2.5
                      text-sm focus:border-accent focus:outline-none"
         />
         <button
           type="button"
           onClick={chercher}
           disabled={cherche}
-          className="shrink-0 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold
+          className="shrink-0 rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold
                      text-white transition-colors hover:bg-accent-clair disabled:opacity-50"
         >
           {cherche ? '…' : 'Chercher'}
@@ -201,7 +201,7 @@ function Recherche({
                     type="button"
                     disabled={enCours}
                     onClick={() => onAgir(() => accepterAmi(r.id))}
-                    className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-xs
+                    className="shrink-0 rounded-bloc bg-accent px-4 py-1.5 text-xs
                                font-semibold text-white hover:bg-accent-clair"
                   >
                     Accepter
@@ -212,7 +212,7 @@ function Recherche({
                     type="button"
                     disabled={enCours}
                     onClick={() => onAgir(() => demanderAmi(r.id))}
-                    className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-xs
+                    className="shrink-0 rounded-bloc bg-accent px-4 py-1.5 text-xs
                                font-semibold text-white hover:bg-accent-clair"
                   >
                     Ajouter
@@ -289,7 +289,7 @@ function MesAmis({
                     if (confirm(`Retirer ${a.pseudo} de tes amis ?`))
                       onAgir(() => retirerAmi(a.id))
                   }}
-                  className="shrink-0 rounded-full border border-bordure px-4 py-1.5
+                  className="shrink-0 rounded-bloc border border-bordure px-4 py-1.5
                              text-xs font-semibold text-encre-douce transition-colors
                              hover:border-accent/50 hover:text-accent"
                 >

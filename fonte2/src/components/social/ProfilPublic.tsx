@@ -58,12 +58,12 @@ export function VueProfil({
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <section className="rounded-carte border border-bordure bg-verre p-6">
+      <section className="border-b border-filet pb-6">
         <div className="flex flex-wrap items-center gap-5">
           <span
             aria-hidden
-            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full
-                       border border-bordure bg-verre text-4xl"
+            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center
+                       rounded-carte bg-verre text-4xl"
           >
             {profil.avatar ?? '💪'}
           </span>
@@ -100,9 +100,9 @@ export function VueProfil({
 
         {niveau && (
           <div className="mt-6">
-            <div className="h-2 overflow-hidden rounded-full bg-verre-fort">
+            <div className="h-2 overflow-hidden rounded-bloc bg-verre-fort">
               <div
-                className="h-full rounded-full bg-accent transition-[width] duration-500"
+                className="h-full rounded-bloc bg-accent transition-[width] duration-500"
                 style={{ width: `${Math.round(niveau.progression * 100)}%` }}
               />
             </div>
@@ -117,14 +117,14 @@ export function VueProfil({
         )}
 
         {erreur && (
-          <p className="mt-4 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 font-mono text-xs text-accent">
+          <p className="mt-4 rounded-bloc border border-accent/40 bg-accent/10 px-4 py-3 font-mono text-xs text-accent">
             {erreur}
           </p>
         )}
       </section>
 
       {!profil.detail ? (
-        <section className="rounded-carte border border-bordure bg-verre p-6">
+        <section>
           <h2 className="mb-3 text-2xl">Profil privé</h2>
           <p className="text-sm leading-relaxed text-encre-douce">
             Deviens ami avec cette personne pour voir ses statistiques, ses
@@ -134,8 +134,8 @@ export function VueProfil({
         </section>
       ) : (
         <>
-          <section className="rounded-carte border border-bordure bg-verre p-6">
-            <h2 className="mb-4 text-2xl">Statistiques</h2>
+          <section className="section pb-6">
+            <p className="section-titre mb-4">Statistiques</p>
             <dl className="grid grid-cols-2 gap-5 sm:grid-cols-4">
               <Stat valeur={profil.semaines ?? 0} libelle="Semaines suivies" />
               <Stat valeur={profil.exercices ?? 0} libelle="Exercices suivis" />
@@ -148,8 +148,8 @@ export function VueProfil({
           </section>
 
           {profil.relation === 'ami' && (
-            <section className="rounded-carte border border-bordure bg-verre p-6">
-              <h2 className="mb-1 text-2xl">Encourager</h2>
+            <section className="section pb-6">
+              <p className="section-titre mb-2">Encourager</p>
               <p className="mb-4 text-sm leading-relaxed text-encre-douce">
                 Un signe pour lui dire que tu suis sa progression. Un par ami et
                 par semaine.
@@ -165,11 +165,11 @@ export function VueProfil({
                       agir(() => encourager(profil.id, s))
                     }}
                     aria-pressed={signe === s}
-                    className={`flex h-12 w-12 items-center justify-center rounded-full
-                      border text-xl transition-colors ${
+                    className={`flex h-12 w-12 items-center justify-center rounded-bloc
+                      text-xl transition-colors ${
                         signe === s
-                          ? 'border-accent-2 bg-accent-2/15'
-                          : 'border-bordure bg-verre hover:bg-verre-fort'
+                          ? 'bg-accent-2/20'
+                          : 'bg-verre hover:bg-verre-fort'
                       }`}
                   >
                     {s}
@@ -184,8 +184,8 @@ export function VueProfil({
             </section>
           )}
 
-          <section className="rounded-carte border border-bordure bg-verre p-6">
-            <h2 className="mb-4 text-2xl">Séances de la semaine</h2>
+          <section className="section pb-6">
+            <p className="section-titre mb-4">Séances de la semaine</p>
             {!profil.partageSeances && profil.relation !== 'moi' ? (
               <p className="text-sm italic text-encre-douce">
                 Cette personne ne partage pas ses séances.
@@ -226,8 +226,8 @@ export function VueProfil({
             )}
           </section>
 
-          <section className="rounded-carte border border-bordure bg-verre p-6">
-            <h2 className="mb-4 text-2xl">Records personnels</h2>
+          <section className="section pb-6">
+            <p className="section-titre mb-4">Records personnels</p>
             {(profil.records ?? []).length === 0 ? (
               <p className="text-sm italic text-encre-douce">
                 Aucun record enregistré.
@@ -269,7 +269,7 @@ function BoutonRelation({
   onAgir: (a: () => Promise<{ erreur?: string }>) => void
 }) {
   const classe =
-    'rounded-full px-5 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50'
+    'rounded-bloc px-5 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50'
 
   if (profil.relation === 'moi') return null
 
@@ -325,7 +325,7 @@ function Etiquette({
       : 'border-bordure bg-verre text-encre-douce'
 
   return (
-    <span className={`rounded-full border px-3 py-1 font-mono text-[11px] ${couleur}`}>
+    <span className={`rounded-bloc border px-3 py-1 font-mono text-[11px] ${couleur}`}>
       {children}
     </span>
   )
@@ -334,7 +334,7 @@ function Etiquette({
 function Stat({ valeur, libelle }: { valeur: number; libelle: string }) {
   return (
     <div>
-      <dd className="font-display text-3xl text-accent">{valeur}</dd>
+      <dd className="chiffre text-3xl">{valeur}</dd>
       <dt className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-encre-douce">
         {libelle}
       </dt>

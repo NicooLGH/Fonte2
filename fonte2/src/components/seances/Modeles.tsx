@@ -44,7 +44,7 @@ export function Modeles({
             {visibles.map((m) => (
               <li
                 key={m.id}
-                className="rounded-2xl border border-bordure bg-verre px-4 py-3"
+                className="rounded-bloc border border-bordure bg-verre px-4 py-3"
               >
                 <p className="font-semibold">{m.nom}</p>
                 <p className="mt-0.5 truncate font-mono text-[10.5px] text-encre-douce">
@@ -53,7 +53,7 @@ export function Modeles({
                 <div className="mt-3 flex gap-2">
                   <Link
                     href="/live"
-                    className="flex-1 rounded-full bg-accent px-3 py-1.5 text-center
+                    className="flex-1 rounded-bloc bg-accent px-3 py-1.5 text-center
                                text-xs font-semibold text-white hover:bg-accent-clair"
                   >
                     Démarrer
@@ -68,7 +68,7 @@ export function Modeles({
                         if (r.erreur) setErreur(r.erreur)
                       })
                     }}
-                    className="rounded-full px-3 py-1.5 text-xs text-encre-douce
+                    className="rounded-bloc px-3 py-1.5 text-xs text-encre-douce
                                transition-colors hover:text-accent"
                   >
                     ✕
@@ -83,7 +83,7 @@ export function Modeles({
           <button
             type="button"
             onClick={() => setTout(true)}
-            className="mt-3 w-full rounded-full border border-bordure bg-verre py-2.5
+            className="mt-3 w-full rounded-bloc border border-bordure bg-verre py-2.5
                        text-xs font-semibold text-encre-douce hover:text-encre"
           >
             Voir {reste === 1 ? "l'autre" : `les ${reste} autres`}
@@ -185,7 +185,7 @@ function FormulaireModele({
                 type="button"
                 onClick={() => basculer(e.id)}
                 aria-pressed={i >= 0}
-                className={`rounded-full border px-3.5 py-2 text-xs font-semibold
+                className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
                   transition-colors ${
                     i >= 0
                       ? 'border-accent bg-accent/15 text-accent'
@@ -224,7 +224,7 @@ function FormulaireModele({
                         type="button"
                         onClick={() => basculerAlt(id, e.id)}
                         aria-pressed={(alts[id] ?? []).includes(e.id)}
-                        className={`rounded-full border px-3 py-1.5 text-[11px]
+                        className={`rounded-bloc border px-3 py-1.5 text-[11px]
                           transition-colors ${
                             (alts[id] ?? []).includes(e.id)
                               ? 'border-accent-2 bg-accent-2/15 text-accent-2'

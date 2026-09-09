@@ -103,13 +103,13 @@ export function Reglages({
               name="pseudo"
               defaultValue={pseudo}
               maxLength={24}
-              className="min-w-0 flex-1 rounded-full border border-bordure bg-verre
+              className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
                          px-5 py-2.5 text-sm focus:border-accent focus:outline-none"
             />
             <button
               type="submit"
               disabled={enCours}
-              className="shrink-0 rounded-full border border-bordure bg-verre px-5 py-2.5
+              className="shrink-0 rounded-bloc border border-bordure bg-verre px-5 py-2.5
                          text-sm font-semibold text-encre-douce hover:text-encre"
             >
               Enregistrer
@@ -157,7 +157,7 @@ export function Reglages({
               disabled={enCours}
               onClick={() => agir(() => definirJourRappel(null))}
               aria-pressed={jourRappel === null}
-              className={`rounded-full border px-3.5 py-2 text-xs font-semibold
+              className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
                 transition-colors ${
                   jourRappel === null
                     ? 'border-accent bg-accent/15 text-accent'
@@ -173,7 +173,7 @@ export function Reglages({
                 disabled={enCours}
                 onClick={() => agir(() => definirJourRappel(j.valeur))}
                 aria-pressed={jourRappel === j.valeur}
-                className={`rounded-full border px-3.5 py-2 text-xs font-semibold
+                className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
                   transition-colors ${
                     jourRappel === j.valeur
                       ? 'border-accent bg-accent/15 text-accent'
@@ -224,13 +224,13 @@ export function Reglages({
               minLength={8}
               required
               placeholder="Nouveau mot de passe"
-              className="min-w-0 flex-1 rounded-full border border-bordure bg-verre
+              className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
                          px-5 py-2.5 text-sm focus:border-accent focus:outline-none"
             />
             <button
               type="submit"
               disabled={enCours}
-              className="shrink-0 rounded-full border border-bordure bg-verre px-5 py-2.5
+              className="shrink-0 rounded-bloc border border-bordure bg-verre px-5 py-2.5
                          text-sm font-semibold text-encre-douce hover:text-encre"
             >
               Modifier
@@ -247,7 +247,7 @@ export function Reglages({
           >
             <a
               href="/admin"
-              className="inline-block rounded-full bg-accent px-5 py-2.5 text-sm
+              className="inline-block rounded-bloc bg-accent px-5 py-2.5 text-sm
                          font-semibold text-white transition-colors hover:bg-accent-clair"
             >
               Ouvrir l'administration
@@ -284,7 +284,7 @@ function ChoixTheme() {
   }
 
   return (
-    <div className="flex gap-1 rounded-full border border-bordure bg-verre p-1">
+    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
       {(
         [
           ['sombre', '🌙 Sombre'],
@@ -297,7 +297,7 @@ function ChoixTheme() {
           type="button"
           onClick={() => appliquer(cle)}
           aria-pressed={theme === cle}
-          className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
+          className={`rounded-bloc px-4 py-1.5 text-xs font-semibold transition-colors ${
             theme === cle ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
           }`}
         >
@@ -334,7 +334,7 @@ function ZoneDeDanger({
         <button
           type="button"
           onClick={() => setOuvert(true)}
-          className="rounded-full border border-accent/50 px-5 py-2.5 text-sm
+          className="rounded-bloc border border-accent/50 px-5 py-2.5 text-sm
                      font-semibold text-accent transition-colors hover:bg-accent/10"
         >
           Supprimer mon compte
@@ -355,7 +355,7 @@ function ZoneDeDanger({
                 setOuvert(false)
                 setConfirmation('')
               }}
-              className="flex-1 rounded-full border border-bordure bg-verre px-5 py-2.5
+              className="flex-1 rounded-bloc border border-bordure bg-verre px-5 py-2.5
                          text-sm font-semibold text-encre-douce hover:text-encre"
             >
               Annuler
@@ -364,7 +364,7 @@ function ZoneDeDanger({
               type="button"
               disabled={enCours || confirmation.trim().toUpperCase() !== 'SUPPRIMER'}
               onClick={() => onAgir(() => supprimerCompte(confirmation))}
-              className="flex-1 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold
+              className="flex-1 rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold
                          text-white disabled:opacity-40"
             >
               Supprimer définitivement
@@ -427,7 +427,7 @@ function Bascule({
   onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex gap-1 rounded-full border border-bordure bg-verre p-1">
+    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
       {([true, false] as const).map((v, i) => (
         <button
           key={String(v)}
@@ -435,7 +435,7 @@ function Bascule({
           disabled={desactive}
           onClick={() => onChange(v)}
           aria-pressed={valeur === v}
-          className={`flex-1 rounded-full px-4 py-1.5 text-xs font-semibold
+          className={`flex-1 rounded-bloc px-4 py-1.5 text-xs font-semibold
             transition-colors ${
               valeur === v ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
             }`}

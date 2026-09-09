@@ -32,7 +32,7 @@ export function Rappel() {
       <div className="flex shrink-0 gap-2">
         <Link
           href="/suivi"
-          className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white
+          className="rounded-bloc bg-accent px-4 py-2 text-xs font-semibold text-white
                      transition-colors hover:bg-accent-clair"
         >
           Remplir
@@ -45,7 +45,7 @@ export function Rappel() {
               await ecarterRappel()
             })
           }}
-          className="rounded-full border border-bordure px-4 py-2 text-xs
+          className="rounded-bloc border border-bordure px-4 py-2 text-xs
                      font-semibold text-encre-douce transition-colors hover:text-encre"
         >
           Plus tard

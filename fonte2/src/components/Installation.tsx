@@ -81,7 +81,7 @@ export function BoutonInstallation() {
         await invite.userChoice
         setInvite(null)
       }}
-      className="w-full rounded-full bg-accent px-6 py-2.5 text-sm font-semibold
+      className="w-full rounded-bloc bg-accent px-6 py-2.5 text-sm font-semibold
                  text-white transition-colors hover:bg-accent-clair"
     >
       Installer l&apos;application

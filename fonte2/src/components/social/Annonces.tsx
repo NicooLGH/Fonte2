@@ -96,7 +96,7 @@ export function Annonces({ annonces }: { annonces: Annonce[] }) {
               href={a.lienUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-block rounded-full border border-bordure bg-verre
+              className="mt-3 inline-block rounded-bloc border border-bordure bg-verre
                          px-4 py-2 text-xs font-semibold transition-colors
                          hover:border-accent hover:text-accent"
             >

@@ -58,7 +58,7 @@ export default async function PageSuivi() {
                 {releves.map((r) => (
                   <tr key={r.id} className="border-b border-filet last:border-0">
                     <td className="py-2.5 pr-4 font-mono text-xs">
-                      <span className="mr-2 rounded-full bg-accent/15 px-2 py-0.5 text-accent">
+                      <span className="mr-2 rounded-bloc bg-accent/15 px-2 py-0.5 text-accent">
                         {libelleCourt(r.semaine)}
                       </span>
                       {r.date}
