@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Bebas_Neue, Inter, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { ServiceWorker } from '@/components/Installation'
+import { Gestes } from '@/components/Gestes'
 
 /*
  * next/font télécharge les polices au moment de la compilation et
@@ -91,6 +92,7 @@ export default function RootLayout({
       </head>
       <body>
         <ServiceWorker />
+        <Gestes />
         {children}
       </body>
     </html>

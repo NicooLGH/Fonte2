@@ -16,6 +16,11 @@
   --color-accent: #ff4b2b;
   --color-accent-clair: #ff8a63;
   --color-accent-2: #4cc9f0;
+  /* Deux couleurs réservées à la validation des séries. Le vert
+     se distingue mieux du bleu du carnet, qui sert déjà à trop
+     de choses pour porter aussi « c'est fait ». */
+  --color-valide: #22c55e;
+  --color-refus: #ef4444;
   --color-verre: rgb(255 255 255 / 0.045);
   --color-verre-fort: rgb(255 255 255 / 0.08);
   --color-bordure: rgb(255 255 255 / 0.1);
@@ -36,6 +41,8 @@
 /* Mode clair, activé par la classe `clair` sur <html> */
 .clair {
   --color-fond: #f2f1ed;
+  --color-valide: #16a34a;
+  --color-refus: #dc2626;
   --color-encre: #16181b;
   --color-encre-douce: #5f6368;
   --color-accent: #e13a18;
@@ -153,16 +160,21 @@ h1, h2, h3 {
 /* La barre de défilement disparaît. Le contenu défile toujours,
    seul l'indicateur est masqué — c'est ce que font les
    applications natives. */
-html {
+html,
+body,
+* {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
-*::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+*::-webkit-scrollbar,
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-thumb {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
 }
 
 /* Plus de sélection de texte au toucher prolongé : dans une
