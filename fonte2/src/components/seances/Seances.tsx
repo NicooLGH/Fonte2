@@ -51,9 +51,9 @@ export function Seances({
   }
 
   return (
-    <section className="flex flex-col rounded-carte border border-bordure bg-verre p-5">
-      <h2 className="mb-1 text-2xl">Mes séances</h2>
-      <p className="mb-4 text-sm leading-relaxed text-encre-douce">
+    <section className="section pb-5">
+      <p className="section-titre mb-2">Mes séances</p>
+      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
         Les exercices travaillés, série par série. Saisie possible sur les trois
         derniers jours.
       </p>

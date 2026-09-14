@@ -15,22 +15,23 @@ export default async function PageSuivi() {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-          Semaine {libelleSemaine(semaine)}
+      <header className="flex flex-wrap items-baseline justify-between gap-3
+                         border-b border-filet pb-5">
+        <h1 className="text-4xl sm:text-5xl">Suivi hebdo</h1>
+        <p className="font-mono text-[11px] text-encre-douce">
+          semaine {libelleSemaine(semaine)}
         </p>
-        <h1 className="mt-2 text-4xl sm:text-5xl">Suivi hebdo</h1>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="flex flex-col">
         <Releve releve={courant} semaine={libelleSemaine(semaine)} />
         <BlocObjectifs objectifs={objectifs} />
       </div>
 
       <Evolution releves={releves} objectifs={objectifs} />
 
-      <section className="rounded-carte border border-bordure bg-verre p-5">
-        <h2 className="mb-4 text-2xl">Historique</h2>
+      <section className="section pb-5">
+        <p className="section-titre mb-4">Historique</p>
 
         {releves.length === 0 ? (
           <p className="text-sm italic text-encre-douce">

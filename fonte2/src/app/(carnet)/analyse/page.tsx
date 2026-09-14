@@ -73,16 +73,13 @@ export default async function PageAnalyse() {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-          Ce que disent tes données
-        </p>
-        <h1 className="mt-2 text-4xl sm:text-5xl">Analyse</h1>
+      <header className="border-b border-filet pb-5">
+        <h1 className="text-4xl sm:text-5xl">Analyse</h1>
       </header>
 
-      <section className="rounded-carte border border-bordure bg-verre p-5">
-        <h2 className="mb-1 text-2xl">Équilibre musculaire</h2>
-        <p className="mb-5 text-sm leading-relaxed text-encre-douce">
+      <section className="section pb-5">
+        <p className="section-titre mb-2">Équilibre musculaire · 4 semaines</p>
+        <p className="mb-5 text-[13px] leading-relaxed text-encre-douce">
           Le volume soulevé sur les quatre dernières semaines, réparti par
           groupe. Un déséquilibre n&apos;est pas forcément un défaut : ça dépend
           de ton programme.
@@ -134,9 +131,9 @@ export default async function PageAnalyse() {
         )}
       </section>
 
-      <section className="rounded-carte border border-bordure bg-verre p-5">
+      <section className="section pb-5">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="text-2xl">Assiduité</h2>
+          <p className="section-titre">Assiduité</p>
           <p className="font-mono text-[11px] text-encre-douce">
             <span className="text-accent-2">{pourcentage} %</span> des semaines
             écoulées en {annee}

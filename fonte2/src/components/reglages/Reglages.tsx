@@ -52,11 +52,8 @@ export function Reglages({
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-          Ton carnet, tes règles
-        </p>
-        <h1 className="mt-2 text-4xl sm:text-5xl">Réglages</h1>
+      <header className="border-b border-filet pb-5">
+        <h1 className="text-4xl sm:text-5xl">Réglages</h1>
       </header>
 
       {(message.ok || message.ko) && (
@@ -386,8 +383,8 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-carte border border-bordure bg-verre p-5">
-      <h2 className="mb-4 text-2xl">{titre}</h2>
+    <section className="section pb-6">
+      <p className="section-titre mb-4">{titre}</p>
       <div className="flex flex-col divide-y divide-filet">{children}</div>
     </section>
   )

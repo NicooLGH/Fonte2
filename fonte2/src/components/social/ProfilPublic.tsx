@@ -59,23 +59,26 @@ export function VueProfil({
   return (
     <div className="flex flex-col gap-6 py-4">
       <section className="border-b border-filet pb-6">
-        <div className="flex flex-wrap items-center gap-5">
+        {/* Le bouton passe sous le nom sur petit écran : à côté,
+            il écrasait le bloc du milieu et les étiquettes se
+            chevauchaient. */}
+        <div className="flex flex-wrap items-start gap-4 sm:items-center sm:gap-5">
           <span
             aria-hidden
-            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center
-                       rounded-carte bg-verre text-4xl"
+            className="flex h-16 w-16 shrink-0 items-center justify-center
+                       rounded-carte bg-verre text-3xl sm:h-[72px] sm:w-[72px] sm:text-4xl"
           >
             {profil.avatar ?? '💪'}
           </span>
 
-          <div className="min-w-0 flex-1">
-            <h1 className="text-4xl sm:text-5xl">{profil.pseudo}</h1>
+          <div className="min-w-[180px] flex-1">
+            <h1 className="break-words text-3xl sm:text-4xl">{profil.pseudo}</h1>
             {niveau && (
               <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-accent-2">
                 Niveau {niveau.niveau} · {niveau.rang}
               </p>
             )}
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               <Etiquette accent>
                 {profil.streak > 0
                   ? `🔥 ${profil.streak} semaine${profil.streak > 1 ? 's' : ''} d'affilée`
@@ -93,7 +96,7 @@ export function VueProfil({
             </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="w-full shrink-0 sm:w-auto">
             <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
           </div>
         </div>
@@ -269,7 +272,8 @@ function BoutonRelation({
   onAgir: (a: () => Promise<{ erreur?: string }>) => void
 }) {
   const classe =
-    'rounded-bloc px-5 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50'
+    'w-full rounded-bloc px-5 py-2.5 text-sm font-semibold transition-colors ' +
+    'disabled:opacity-50 sm:w-auto'
 
   if (profil.relation === 'moi') return null
 
@@ -325,7 +329,10 @@ function Etiquette({
       : 'border-bordure bg-verre text-encre-douce'
 
   return (
-    <span className={`rounded-bloc border px-3 py-1 font-mono text-[11px] ${couleur}`}>
+    <span
+      className={`inline-flex whitespace-nowrap rounded-bloc border px-2.5 py-1
+                  font-mono text-[10.5px] ${couleur}`}
+    >
       {children}
     </span>
   )

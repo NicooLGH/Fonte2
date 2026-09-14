@@ -6,11 +6,8 @@ export default async function PageAmis() {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-          Comparaison douce
-        </p>
-        <h1 className="mt-2 text-4xl sm:text-5xl">Amis</h1>
+      <header className="border-b border-filet pb-5">
+        <h1 className="text-4xl sm:text-5xl">Amis</h1>
       </header>
 
       <GestionAmis liste={liste} />

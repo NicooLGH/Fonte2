@@ -13,29 +13,28 @@ export default async function PageSeances() {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-            Carnet
-          </p>
-          <h1 className="mt-2 text-4xl sm:text-5xl">Séances</h1>
-        </div>
+      <header className="flex flex-wrap items-center justify-between gap-4
+                         border-b border-filet pb-5">
+        <h1 className="text-4xl sm:text-5xl">Séances</h1>
 
         {modeles.length > 0 && (
           <Link
             href="/live"
-            className="rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold
-                       text-white transition-colors hover:bg-accent-clair"
+            className="shrink-0 rounded-bloc bg-accent px-5 py-2.5 text-sm
+                       font-semibold text-white transition-colors hover:bg-accent-clair"
           >
-            ▶ Séance en direct
+            Séance en direct
           </Link>
         )}
       </header>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Exercices exercices={exercices} />
+      {/* Une seule colonne, quelle que soit la largeur.
+          La grille à trois colonnes tassait les modèles sur
+          téléphone et laissait des vides sur grand écran. */}
+      <div className="flex flex-col">
         <Modeles modeles={modeles} exercices={exercices} />
         <Seances seances={seances} exercices={exercices} />
+        <Exercices exercices={exercices} />
       </div>
     </div>
   )

@@ -191,3 +191,40 @@ select,
 body {
   overscroll-behavior-y: none;
 }
+
+/* ============================================================
+   IPHONE
+   ============================================================ */
+
+/* Safari zoome automatiquement sur un champ dont le texte fait
+   moins de 16 px. Ce zoom ne se défait pas tout seul, et la mise
+   en page reste décalée ensuite. On impose donc 16 px minimum
+   aux champs — l'affichage peut rester plus petit ailleurs. */
+input,
+textarea,
+select {
+  font-size: max(16px, 1em);
+}
+
+/* `100vh` compte la barre d'adresse de Safari, qui se rétracte
+   au défilement : un écran « plein » débordait donc du bas.
+   `100dvh` suit la hauteur réellement visible. */
+.plein-ecran {
+  height: 100dvh;
+  min-height: 100dvh;
+}
+
+/* Les encoches et la barre d'accueil des iPhone récents. */
+.marge-basse {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.marge-haute {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+/* Le défilement à l'intérieur d'une fenêtre ne doit pas
+   entraîner la page derrière. */
+.defilement-isole {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}

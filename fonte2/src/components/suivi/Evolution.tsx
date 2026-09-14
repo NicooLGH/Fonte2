@@ -39,8 +39,8 @@ export function Evolution({
   const cible = champ === 'calories' ? undefined : objectifs[champ]
 
   return (
-    <section className="rounded-carte border border-bordure bg-verre p-5">
-      <h2 className="mb-4 text-2xl">Évolution</h2>
+    <section className="section pb-5">
+      <p className="section-titre mb-4">Évolution</p>
 
       <div className="mb-5 flex flex-wrap gap-2">
         {CHAMPS_SUIVI.map((c) => (

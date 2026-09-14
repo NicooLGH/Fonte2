@@ -93,7 +93,7 @@ export function Modale({
 
         {/* `break-words` évite qu'un mot très long déborde
             au lieu de passer à la ligne. */}
-        <div className="min-h-0 flex-1 overflow-y-auto break-words">
+        <div className="defilement-isole min-h-0 flex-1 overflow-y-auto break-words">
           {children}
         </div>
       </div>

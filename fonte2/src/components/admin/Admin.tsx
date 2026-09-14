@@ -61,11 +61,8 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-          Réservé aux administrateurs
-        </p>
-        <h1 className="mt-2 text-4xl sm:text-5xl">Administration</h1>
+      <header className="border-b border-filet pb-5">
+        <h1 className="text-4xl sm:text-5xl">Administration</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-encre-douce">
           Un administrateur publie et notifie. Il n&apos;a aucun accès aux
           données des membres : ni mensurations, ni poids, ni séances, ni
@@ -81,8 +78,8 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
       )}
 
       {/* ---- Publier ---- */}
-      <section className="rounded-carte border border-bordure bg-verre p-5">
-        <h2 className="mb-4 text-2xl">Publier une annonce</h2>
+      <section className="section pb-6">
+        <p className="section-titre mb-4">Publier une annonce</p>
 
         <div className="flex flex-col gap-4">
           <Champ
@@ -252,8 +249,8 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
       </section>
 
       {/* ---- Liste ---- */}
-      <section className="rounded-carte border border-bordure bg-verre p-5">
-        <h2 className="mb-4 text-2xl">Annonces</h2>
+      <section className="section pb-6">
+        <p className="section-titre mb-4">Annonces</p>
         {annonces.length === 0 ? (
           <p className="text-sm italic text-encre-douce">Aucune annonce.</p>
         ) : (
@@ -300,8 +297,8 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
       </section>
 
       {/* ---- Notification seule ---- */}
-      <section className="rounded-carte border border-bordure bg-verre p-5">
-        <h2 className="mb-1 text-2xl">Notification seule</h2>
+      <section className="section pb-6">
+        <p className="section-titre mb-2">Notification seule</p>
         <p className="mb-4 text-sm leading-relaxed text-encre-douce">
           Une notification à tous les membres, sans créer d&apos;annonce.
         </p>

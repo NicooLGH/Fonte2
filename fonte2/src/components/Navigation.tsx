@@ -125,7 +125,7 @@ export function BarreBasse({
     <>
       {/* Cloche et réglages en haut : la barre basse n'a de place
           que pour les sections principales. */}
-      <div className="fixed right-3 top-3 z-40 flex items-center gap-2 md:hidden">
+      <div className="marge-haute fixed right-3 top-0 z-40 flex items-center gap-2 md:hidden">
         {notifications}
         <Link
           href="/reglages"

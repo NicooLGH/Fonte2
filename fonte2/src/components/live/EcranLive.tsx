@@ -572,7 +572,7 @@ export function EcranLive({
   )
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="plein-ecran flex flex-col">
       {/* En-tête */}
       {/* En-tête réduit au strict nécessaire : tout l'espace
           vertical gagné va aux charges. */}
@@ -813,7 +813,7 @@ export function EcranLive({
 
       {/* Actions collées en bas, atteignables au pouce. Un seul
           bouton orange : c'est le geste principal. */}
-      <div className="shrink-0">
+      <div className="shrink-0 marge-basse pb-0">
         <div className="grid grid-cols-2 gap-px bg-filet">
           <button
             type="button"

@@ -84,8 +84,8 @@ export function GestionAmis({ liste }: { liste: ListeAmis }) {
       <MesAmis liste={liste} onAgir={agir} enCours={enCours} />
 
       {liste.envoyes.length > 0 && (
-        <section className="rounded-carte border border-bordure bg-verre p-5">
-          <h2 className="mb-4 text-2xl">Demandes envoyées</h2>
+        <section className="section pb-5">
+          <p className="section-titre mb-4">Demandes envoyées</p>
           <ul className="divide-y divide-filet">
             {liste.envoyes.map((p) => (
               <li key={p.id} className="flex items-center gap-3 py-3">
@@ -140,9 +140,9 @@ function Recherche({
   }
 
   return (
-    <section className="rounded-carte border border-bordure bg-verre p-5">
-      <h2 className="mb-1 text-2xl">Trouver quelqu&apos;un</h2>
-      <p className="mb-4 text-sm leading-relaxed text-encre-douce">
+    <section className="section pb-5">
+      <p className="section-titre mb-2">Trouver quelqu&apos;un</p>
+      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
         Cherche par pseudo pour envoyer une demande. Sans être ton ami, une
         personne ne voit que ton pseudo, ton niveau et ta série — jamais tes
         mensurations ni ton poids.
@@ -242,9 +242,9 @@ function MesAmis({
   const reste = liste.amis.length - visibles.length
 
   return (
-    <section className="rounded-carte border border-bordure bg-verre p-5">
-      <h2 className="mb-1 text-2xl">Mes amis</h2>
-      <p className="mb-4 text-sm leading-relaxed text-encre-douce">
+    <section className="section pb-5">
+      <p className="section-titre mb-2">Mes amis</p>
+      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
         Leur régularité, pas leurs charges : comparer des poids entre gabarits
         différents n&apos;apprend rien d&apos;utile.
       </p>
@@ -262,7 +262,8 @@ function MesAmis({
                 <Avatar valeur={a.avatar} pseudo={a.pseudo} />
                 <div className="min-w-0 flex-1">
                   <Nom pseudo={a.pseudo} />
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-encre-douce">
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5
+                                font-mono text-[10.5px] leading-snug text-encre-douce">
                     {presence && (
                       <span className={estEnLigne(a.presenceSec) ? 'text-accent-2' : ''}>
                         {estEnLigne(a.presenceSec) && '● '}
@@ -289,11 +290,12 @@ function MesAmis({
                     if (confirm(`Retirer ${a.pseudo} de tes amis ?`))
                       onAgir(() => retirerAmi(a.id))
                   }}
-                  className="shrink-0 rounded-bloc border border-bordure px-4 py-1.5
-                             text-xs font-semibold text-encre-douce transition-colors
-                             hover:border-accent/50 hover:text-accent"
+                  aria-label={`Retirer ${a.pseudo} de tes amis`}
+                  className="shrink-0 rounded-bloc px-3 py-2 text-xs font-semibold
+                             text-encre-douce transition-colors hover:text-accent"
                 >
-                  Retirer
+                  <span className="hidden sm:inline">Retirer</span>
+                  <span className="sm:hidden">✕</span>
                 </button>
               </li>
             )

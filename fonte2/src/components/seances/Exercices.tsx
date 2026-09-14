@@ -47,9 +47,9 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
   }
 
   return (
-    <section className="flex flex-col rounded-carte border border-bordure bg-verre p-5">
-      <h2 className="mb-1 text-2xl">Mes exercices</h2>
-      <p className="mb-4 text-sm leading-relaxed text-encre-douce">
+    <section className="section pb-5">
+      <p className="section-titre mb-2">Mes exercices</p>
+      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
         Les mouvements que tu pratiques. Ils deviennent sélectionnables dans tes
         séances.
       </p>
@@ -64,7 +64,7 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
             {visibles.map((exo) => (
               <li
                 key={exo.id}
-                className="rounded-bloc border border-bordure bg-verre px-4 py-3"
+                className="border-b border-filet py-3 last:border-0"
               >
                 <p className="font-semibold">{exo.nom}</p>
                 <p className="mt-0.5 font-mono text-[10.5px] text-encre-douce">

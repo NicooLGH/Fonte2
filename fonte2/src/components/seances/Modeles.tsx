@@ -27,9 +27,9 @@ export function Modeles({
   const nomExo = (id: string) => exercices.find((e) => e.id === id)?.nom ?? '—'
 
   return (
-    <section className="flex flex-col rounded-carte border border-bordure bg-verre p-5">
-      <h2 className="mb-1 text-2xl">Modèles</h2>
-      <p className="mb-4 text-sm leading-relaxed text-encre-douce">
+    <section className="section pb-5">
+      <p className="section-titre mb-2">Modèles</p>
+      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
         Tes séances types, enregistrées une fois et relancées en un geste.
       </p>
 
@@ -44,7 +44,7 @@ export function Modeles({
             {visibles.map((m) => (
               <li
                 key={m.id}
-                className="rounded-bloc border border-bordure bg-verre px-4 py-3"
+                className="border-b border-filet py-3 last:border-0"
               >
                 <p className="font-semibold">{m.nom}</p>
                 <p className="mt-0.5 truncate font-mono text-[10.5px] text-encre-douce">
