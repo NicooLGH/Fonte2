@@ -4,6 +4,19 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Modale } from '@/components/ui/Modale'
+import {
+  IconeAccueil,
+  IconeSeances,
+  IconeSuivi,
+  IconeAnalyse,
+  IconeAmis,
+  IconeProfil,
+  IconePlus,
+  IconeMenu,
+  IconeReglages,
+  IconeLecture,
+  IconeCrayon,
+} from '@/components/Icones'
 
 /* ============================================================
    Navigation
@@ -16,31 +29,16 @@ import { Modale } from '@/components/ui/Modale'
    lui, Suivi et Analyse deviendraient inaccessibles.
    ============================================================ */
 
-type Entree = { href: string; libelle: string; ico: string }
+type Icone = (p: { className?: string }) => React.ReactNode
+type Entree = { href: string; libelle: string; Ico: Icone }
 
 const ONGLETS: Entree[] = [
-  { href: '/', libelle: 'Accueil', ico: '🏠' },
-  { href: '/seances', libelle: 'Séances', ico: '🏋️' },
-  { href: '/suivi', libelle: 'Suivi', ico: '⚖️' },
-  { href: '/analyse', libelle: 'Analyse', ico: '📊' },
-  { href: '/amis', libelle: 'Amis', ico: '👥' },
+  { href: '/', libelle: 'Accueil', Ico: IconeAccueil },
+  { href: '/seances', libelle: 'Séances', Ico: IconeSeances },
+  { href: '/suivi', libelle: 'Suivi', Ico: IconeSuivi },
+  { href: '/analyse', libelle: 'Analyse', Ico: IconeAnalyse },
+  { href: '/amis', libelle: 'Amis', Ico: IconeAmis },
 ]
-
-const ENGRENAGE = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.9"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-4 w-4"
-    aria-hidden
-  >
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-)
 
 /* ============================================================
    Barre haute — grand écran
@@ -101,7 +99,7 @@ export function BarreHaute({
                      bg-verre text-encre-douce transition-colors
                      hover:bg-verre-fort hover:text-encre"
         >
-          {ENGRENAGE}
+          <IconeReglages className="h-[18px] w-[18px]" />
         </Link>
       </div>
     </header>
@@ -113,11 +111,9 @@ export function BarreHaute({
    ============================================================ */
 
 export function BarreBasse({
-  avatar,
   notifications,
   aDesModeles,
 }: {
-  avatar: string
   notifications: React.ReactNode
   aDesModeles: boolean
 }) {
@@ -137,7 +133,7 @@ export function BarreBasse({
           className="flex h-9 w-9 items-center justify-center rounded-bloc
                      bg-verre text-encre-douce backdrop-blur"
         >
-          {ENGRENAGE}
+          <IconeReglages className="h-[18px] w-[18px]" />
         </Link>
       </div>
 
@@ -147,12 +143,9 @@ export function BarreBasse({
                    pb-[max(8px,env(safe-area-inset-bottom))] pt-2
                    backdrop-blur md:hidden"
       >
-        <LienBas
-          entree={ONGLETS[0]}
-          actif={estActif(chemin, '/')}
-        />
+        <LienBas entree={ONGLETS[0]} actif={estActif(chemin, '/')} />
         <BoutonBas
-          ico="☰"
+          Ico={IconeMenu}
           libelle="Plus"
           actif={['/suivi', '/analyse', '/amis'].some((h) =>
             chemin.startsWith(h)
@@ -168,12 +161,12 @@ export function BarreBasse({
                      rounded-carte bg-accent text-3xl font-light leading-none
                      text-white transition-transform active:scale-95"
         >
-          +
+          <IconePlus className="h-6 w-6" />
         </button>
 
         <LienBas entree={ONGLETS[1]} actif={estActif(chemin, '/seances')} />
         <LienBas
-          entree={{ href: '/profil', libelle: 'Profil', ico: avatar }}
+          entree={{ href: '/profil', libelle: 'Profil', Ico: IconeProfil }}
           actif={estActif(chemin, '/profil')}
         />
       </nav>
@@ -202,11 +195,11 @@ function MenuPlus({
   const router = useRouter()
 
   const entrees = [
-    { href: '/suivi', ico: '⚖️', titre: 'Suivi hebdo', sous: 'Poids, calories et mensurations' },
-    { href: '/analyse', ico: '📊', titre: 'Analyse', sous: 'Équilibre musculaire et assiduité' },
-    { href: '/amis', ico: '👥', titre: 'Amis', sous: 'Fil, demandes et recherche' },
-    { href: '/profil', ico: '👤', titre: 'Mon profil', sous: 'Niveau, statistiques et records' },
-    { href: '/reglages', ico: '⚙️', titre: 'Réglages', sous: 'Compte, apparence, confidentialité' },
+    { href: '/suivi', Ico: IconeSuivi, titre: 'Suivi hebdo', sous: 'Poids, calories et mensurations' },
+    { href: '/analyse', Ico: IconeAnalyse, titre: 'Analyse', sous: 'Équilibre musculaire et assiduité' },
+    { href: '/amis', Ico: IconeAmis, titre: 'Amis', sous: 'Fil, demandes et recherche' },
+    { href: '/profil', Ico: IconeProfil, titre: 'Mon profil', sous: 'Niveau, statistiques et records' },
+    { href: '/reglages', Ico: IconeReglages, titre: 'Réglages', sous: 'Compte, apparence, confidentialité' },
   ]
 
   return (
@@ -215,7 +208,7 @@ function MenuPlus({
         {entrees.map((e) => (
           <Choix
             key={e.href}
-            ico={e.ico}
+            Ico={e.Ico}
             titre={e.titre}
             sous={e.sous}
             onClick={() => {
@@ -253,7 +246,7 @@ function ActionRapide({
     <Modale titre="Que veux-tu faire ?" ouverte={ouvert} onFermer={onFermer}>
       <div className="flex flex-col gap-2.5">
         <Choix
-          ico="▶"
+          Ico={IconeLecture}
           titre={aDesModeles ? 'Séance en direct' : 'Créer un modèle'}
           sous={
             aDesModeles
@@ -263,13 +256,13 @@ function ActionRapide({
           onClick={() => aller(aDesModeles ? '/live' : '/seances')}
         />
         <Choix
-          ico="✏️"
+          Ico={IconeCrayon}
           titre="Saisir une séance"
           sous="Sans mode direct, après coup"
           onClick={() => aller('/seances')}
         />
         <Choix
-          ico="⚖️"
+          Ico={IconeSuivi}
           titre="Mon relevé hebdo"
           sous="Poids, calories et mensurations"
           onClick={() => aller('/suivi')}
@@ -288,27 +281,28 @@ function estActif(chemin: string, href: string): boolean {
 }
 
 function LienBas({ entree, actif }: { entree: Entree; actif: boolean }) {
+  const { Ico } = entree
   return (
     <Link
       href={entree.href}
       aria-current={actif ? 'page' : undefined}
       className={`flex flex-1 flex-col items-center gap-1 py-1.5 transition-colors ${
-        actif ? 'text-accent' : 'text-encre-douce'
+        actif ? 'text-encre' : 'text-encre-douce'
       }`}
     >
-      <span className="text-lg leading-none">{entree.ico}</span>
+      <Ico className="h-[21px] w-[21px]" />
       <span className="text-[10px] font-semibold">{entree.libelle}</span>
     </Link>
   )
 }
 
 function BoutonBas({
-  ico,
+  Ico,
   libelle,
   actif,
   onClick,
 }: {
-  ico: string
+  Ico: Icone
   libelle: string
   actif: boolean
   onClick: () => void
@@ -318,22 +312,22 @@ function BoutonBas({
       type="button"
       onClick={onClick}
       className={`flex flex-1 flex-col items-center gap-1 py-1.5 transition-colors ${
-        actif ? 'text-accent' : 'text-encre-douce'
+        actif ? 'text-encre' : 'text-encre-douce'
       }`}
     >
-      <span className="text-lg leading-none">{ico}</span>
+      <Ico className="h-[21px] w-[21px]" />
       <span className="text-[10px] font-semibold">{libelle}</span>
     </button>
   )
 }
 
 function Choix({
-  ico,
+  Ico,
   titre,
   sous,
   onClick,
 }: {
-  ico: string
+  Ico: Icone
   titre: string
   sous: string
   onClick: () => void
@@ -345,7 +339,9 @@ function Choix({
       className="flex w-full items-center gap-4 rounded-bloc bg-verre px-5 py-4
                  text-left transition-colors hover:bg-verre-fort"
     >
-      <span className="shrink-0 text-2xl leading-none">{ico}</span>
+      <span className="shrink-0 text-encre-douce">
+        <Ico className="h-[22px] w-[22px]" />
+      </span>
       <span className="min-w-0">
         <span className="block font-semibold">{titre}</span>
         <span className="mt-0.5 block font-mono text-[10.5px] text-encre-douce">

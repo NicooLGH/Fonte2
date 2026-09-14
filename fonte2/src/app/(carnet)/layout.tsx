@@ -56,11 +56,7 @@ export default async function CarnetLayout({
       <div className="mx-auto max-w-5xl px-4 pb-32 md:px-6 md:pb-12">
         {children}
       </div>
-      <BarreBasse
-        avatar={profil.avatar ?? '💪'}
-        notifications={cloche}
-        aDesModeles={modeles.length > 0}
-      />
+      <BarreBasse notifications={cloche} aDesModeles={modeles.length > 0} />
     </>
   )
 }

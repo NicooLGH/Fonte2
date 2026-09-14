@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Modale } from '@/components/ui/Modale'
 import { dateRelative } from '@/lib/social'
+import { IconeCloche } from '@/components/Icones'
 import type { Notification } from '@/lib/notifs'
 import { marquerNotifsLues } from '@/app/(carnet)/reglages/notifs'
 
@@ -39,22 +40,10 @@ export function Notifications({ notifications }: { notifications: Notification[]
           nonLues > 0 ? `Notifications, ${nonLues} non lues` : 'Notifications'
         }
         className="relative flex h-9 w-9 shrink-0 items-center justify-center
-                   rounded-full border border-bordure bg-verre text-encre-douce
-                   transition-colors hover:text-encre"
+                   rounded-bloc bg-verre text-encre-douce transition-colors
+                   hover:bg-verre-fort hover:text-encre"
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-4 w-4"
-          aria-hidden
-        >
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
+        <IconeCloche className="h-[18px] w-[18px]" />
 
         {nonLues > 0 && (
           <span

@@ -143,3 +143,51 @@ h1, h2, h3 {
   color: var(--color-encre);
   line-height: 1;
 }
+
+/* ============================================================
+   COMPORTEMENTS D'APPLICATION
+   ============================================================
+   Trois réglages qui séparent une application d'une page web.
+   ============================================================ */
+
+/* La barre de défilement disparaît. Le contenu défile toujours,
+   seul l'indicateur est masqué — c'est ce que font les
+   applications natives. */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Plus de sélection de texte au toucher prolongé : dans une
+   application, appuyer sur un titre ne doit pas proposer de le
+   copier. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Les champs de saisie font exception, sinon on ne pourrait plus
+   corriger ce qu'on tape. Les notes de séance aussi : elles sont
+   faites pour être relues et reprises. */
+input,
+textarea,
+select,
+[contenteditable='true'],
+.selectionnable {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* Le rebond élastique en bout de page trahit le navigateur. */
+body {
+  overscroll-behavior-y: none;
+}

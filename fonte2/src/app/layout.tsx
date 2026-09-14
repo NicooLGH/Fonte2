@@ -63,6 +63,17 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  /*
+   * Zoom désactivé, comme dans une application native.
+   *
+   * À savoir : ça retire aussi la possibilité d'agrandir pour
+   * quelqu'un qui voit mal. C'est pour ça que les textes du
+   * carnet ne descendent jamais sous 10 px et que les zones
+   * tactiles font au moins 36 px — le confort doit venir de la
+   * mise en page, puisqu'il ne viendra plus du zoom.
+   */
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
