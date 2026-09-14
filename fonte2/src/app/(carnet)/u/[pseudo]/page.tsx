@@ -1,5 +1,11 @@
 import Link from 'next/link'
-import { chargerProfilParPseudo, chargerEncouragementsEnvoyes } from '@/lib/donnees-social'
+import {
+  chargerProfilParPseudo,
+  chargerEncouragementsEnvoyes,
+  chargerHistorique,
+  compterSeances,
+} from '@/lib/donnees-social'
+import { Historique } from '@/components/social/Historique'
 import { VueProfil } from '@/components/social/ProfilPublic'
 import type { Metadata } from 'next'
 
@@ -41,14 +47,34 @@ export default async function ProfilPublicPage({
         </p>
         <Link
           href="/amis"
-          className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white"
+          className="rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold text-white"
         >
           Chercher quelqu&apos;un
         </Link>
       </div>
     )
 
+  // L'historique n'est chargé que si la base accepte de le
+  // montrer : inutile de le demander pour un profil fermé.
+  const [historique, total] = profil.detail
+    ? await Promise.all([
+        chargerHistorique(profil.id),
+        compterSeances(profil.id),
+      ])
+    : [[], 0]
+
   return (
-    <VueProfil profil={profil} encouragementEnvoye={envoyes[profil.id] ?? null} />
+    <VueProfil
+      profil={profil}
+      encouragementEnvoye={envoyes[profil.id] ?? null}
+      historique={
+        <Historique
+          cible={profil.id}
+          initiales={historique}
+          total={total}
+          moi={profil.relation === 'moi'}
+        />
+      }
+    />
   )
 }

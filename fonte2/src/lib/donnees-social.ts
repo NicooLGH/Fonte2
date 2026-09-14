@@ -199,3 +199,34 @@ export async function chargerProfilParPseudo(
   if (error || !data) return null
   return versProfil(data as Brut)
 }
+
+/* ============================================================
+   Historique des séances
+   ============================================================
+   Par pages : renvoyer deux ans de séances d'un coup serait
+   lourd à charger, et personne ne descend aussi loin d'un seul
+   geste.
+============================================================ */
+
+export const PAGE_HISTORIQUE = 10
+
+export async function chargerHistorique(
+  cible: string,
+  decalage = 0,
+  limite = PAGE_HISTORIQUE
+): Promise<PublicationSeance[]> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase.rpc('historique_seances', {
+    target: cible,
+    decalage,
+    limite,
+  })
+  if (error || !data) return []
+  return (data as Brut[]).map(versPublication)
+}
+
+export async function compterSeances(cible: string): Promise<number> {
+  const supabase = await creerClientServeur()
+  const { data } = await supabase.rpc('nb_seances_visibles', { target: cible })
+  return Number(data ?? 0)
+}

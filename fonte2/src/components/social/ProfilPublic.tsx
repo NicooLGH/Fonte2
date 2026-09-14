@@ -6,7 +6,6 @@ import {
   anciennete,
   presenceLisible,
   estEnLigne,
-  dureeLisible,
   type ProfilPublic as Profil,
   type Signe,
 } from '@/lib/social'
@@ -29,9 +28,11 @@ export function VueProfil({
   profil,
   encouragementEnvoye,
   niveau,
+  historique,
 }: {
   profil: Profil
   encouragementEnvoye: Signe | null
+  historique?: React.ReactNode
   /* Seulement pour son propre profil : l'XP des autres ne
      regarde personne. */
   niveau?: {
@@ -188,45 +189,8 @@ export function VueProfil({
           )}
 
           <section className="section pb-6">
-            <p className="section-titre mb-4">Séances de la semaine</p>
-            {!profil.partageSeances && profil.relation !== 'moi' ? (
-              <p className="text-sm italic text-encre-douce">
-                Cette personne ne partage pas ses séances.
-              </p>
-            ) : (profil.seances ?? []).length === 0 ? (
-              <p className="text-sm italic text-encre-douce">
-                Aucune séance enregistrée cette semaine.
-              </p>
-            ) : (
-              <ul className="divide-y divide-filet">
-                {(profil.seances ?? []).map((s) => (
-                  <li key={s.seanceId} className="py-3">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-mono text-xs text-encre-douce">
-                          {s.date}
-                          {s.dureeSec && ` · ⏱ ${dureeLisible(s.dureeSec)}`}
-                        </p>
-                        <p className="mt-0.5 truncate text-sm">
-                          {s.blocs.map((b) => b.nom).join(', ')}
-                        </p>
-                      </div>
-                      <p className="shrink-0 font-display text-xl">
-                        {Math.round(s.volume)}
-                        <span className="ml-1 font-corps text-[10px] text-encre-douce">
-                          kg
-                        </span>
-                      </p>
-                    </div>
-                    {s.note && (
-                      <p className="mt-1.5 text-xs italic text-encre-douce">
-                        📝 {s.note}
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <p className="section-titre mb-4">Séances</p>
+            {historique}
           </section>
 
           <section className="section pb-6">
