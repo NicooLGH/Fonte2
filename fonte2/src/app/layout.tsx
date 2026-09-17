@@ -3,6 +3,8 @@ import { Bebas_Neue, Inter, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { ServiceWorker } from '@/components/Installation'
 import { Gestes } from '@/components/Gestes'
+import { Progression } from '@/components/Progression'
+import { Demarrage } from '@/components/Demarrage'
 
 /*
  * next/font télécharge les polices au moment de la compilation et
@@ -93,6 +95,8 @@ export default function RootLayout({
       <body>
         <ServiceWorker />
         <Gestes />
+        <Progression />
+        <Demarrage />
         {children}
       </body>
     </html>
