@@ -2,7 +2,8 @@
 
 import { useActionState, useState } from 'react'
 import { finirBienvenue, type Etat } from '@/app/auth/actions'
-import { Champ, Bouton, Erreur } from '@/components/ui'
+import { Bouton, Erreur } from '@/components/ui'
+import { ChampEpure } from '@/components/ui/ChampEpure'
 import { REGLES_PSEUDO } from '@/lib/messages'
 
 const AVATARS = [
@@ -18,8 +19,8 @@ export default function Bienvenue() {
 
   return (
     <main className="flex min-h-dvh items-center justify-center px-5 py-12">
-      <form action={action} className="w-full max-w-[440px]">
-        <div className="rounded-carte border border-bordure bg-verre p-6">
+      <form action={action} className="w-full max-w-[400px]">
+        <div>
           <p className="mb-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-accent-2">
             Bienvenue
           </p>
@@ -30,7 +31,7 @@ export default function Bienvenue() {
           </p>
 
           <div className="flex flex-col gap-5">
-            <Champ
+            <ChampEpure
               libelle="Pseudo"
               name="pseudo"
               type="text"

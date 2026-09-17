@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { Suspense, useActionState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
 import { seConnecter, type Etat } from '@/app/auth/actions'
-import { Champ, Bouton, Erreur } from '@/components/ui'
+import { ChampEpure } from '@/components/ui/ChampEpure'
+import { Bouton, Erreur } from '@/components/ui'
 
 const VIDE: Etat = {}
 
@@ -13,62 +13,58 @@ function Formulaire() {
   const [etat, action, enCours] = useActionState(seConnecter, VIDE)
   const params = useSearchParams()
 
-  // Erreurs renvoyées par un lien email périmé ou déjà utilisé
-  const codeErreur = params.get('erreur')
+  const code = params.get('erreur')
   const erreurLien =
-    codeErreur === 'lien-expire'
-      ? "Ce lien a expiré ou a déjà servi. Demande-en un nouveau."
-      : codeErreur === 'lien-invalide'
+    code === 'lien-expire'
+      ? 'Ce lien a expiré ou a déjà servi. Demande-en un nouveau.'
+      : code === 'lien-invalide'
         ? "Ce lien est incomplet. Ouvre-le directement depuis l'email."
         : null
 
   return (
-    <form action={action} className="flex flex-col gap-4">
-      <div className="rounded-carte border border-bordure bg-verre p-6">
-        <h2 className="mb-1 text-2xl">Connexion</h2>
-        <p className="mb-6 text-sm text-encre-douce">
-          Retrouve ton carnet et ta progression.
-        </p>
+    <form action={action} className="flex flex-col gap-6">
+      <header>
+        <h1 className="text-[32px] leading-none tracking-wide">
+          Fonte<span className="text-accent">.</span>
+        </h1>
+        <p className="section-titre mt-1.5">Carnet de performance</p>
+      </header>
 
-        <div className="flex flex-col gap-4">
-          <Champ
-            libelle="Adresse email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="toi@exemple.fr"
-          />
-          <Champ
-            libelle="Mot de passe"
-            name="motDePasse"
-            type="password"
-            autoComplete="current-password"
-            required
-            placeholder="••••••••"
-          />
-
-          <Erreur>{etat.erreur ?? erreurLien}</Erreur>
-
-          <Bouton type="submit" disabled={enCours}>
-            {enCours ? 'Connexion…' : 'Se connecter'}
-          </Bouton>
-        </div>
+      <div className="flex flex-col gap-5">
+        <ChampEpure
+          libelle="Adresse email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="toi@exemple.fr"
+        />
+        <ChampEpure
+          libelle="Mot de passe"
+          name="motDePasse"
+          type="password"
+          autoComplete="current-password"
+          required
+          placeholder="••••••••"
+        />
       </div>
 
-      <div className="flex flex-col gap-2 text-center text-sm">
+      <Erreur>{etat.erreur ?? erreurLien}</Erreur>
+
+      <Bouton type="submit" disabled={enCours}>
+        {enCours ? 'Connexion…' : 'Se connecter'}
+      </Bouton>
+
+      <div className="flex items-center justify-between gap-4 text-[12.5px]">
         <Link
           href="/mot-de-passe"
-          className="text-encre-douce underline-offset-4 hover:text-encre hover:underline"
+          className="text-encre-douce transition-colors hover:text-encre"
         >
           Mot de passe oublié
         </Link>
-        <p className="text-encre-douce">
-          Pas encore de carnet ?{' '}
-          <Link href="/inscription" className="font-semibold text-accent">
-            Créer un compte
-          </Link>
-        </p>
+        <Link href="/inscription" className="font-semibold text-accent">
+          Créer un carnet
+        </Link>
       </div>
     </form>
   )

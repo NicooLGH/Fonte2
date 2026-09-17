@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { envoyerReinitialisation, type Etat } from '@/app/auth/actions'
-import { Champ, Bouton, Erreur, Succes } from '@/components/ui'
+import { ChampEpure } from '@/components/ui/ChampEpure'
+import { Bouton, Erreur, Succes } from '@/components/ui'
 
 const VIDE: Etat = {}
 
@@ -11,38 +12,40 @@ export default function MotDePasse() {
   const [etat, action, enCours] = useActionState(envoyerReinitialisation, VIDE)
 
   return (
-    <form action={action} className="flex flex-col gap-4">
-      <div className="rounded-carte border border-bordure bg-verre p-6">
-        <h2 className="mb-1 text-2xl">Mot de passe oublié</h2>
-        <p className="mb-6 text-sm leading-relaxed text-encre-douce">
-          Indique ton adresse : tu recevras un lien pour en choisir un nouveau.
-        </p>
+    <form action={action} className="flex flex-col gap-6">
+      <header>
+        <h1 className="text-[32px] leading-none tracking-wide">
+          Fonte<span className="text-accent">.</span>
+        </h1>
+        <p className="section-titre mt-1.5">Mot de passe oublié</p>
+      </header>
 
-        <div className="flex flex-col gap-4">
-          <Champ
-            libelle="Adresse email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="toi@exemple.fr"
-          />
+      <p className="text-sm leading-relaxed text-encre-douce">
+        Indique ton adresse : tu recevras un lien pour en choisir un nouveau.
+      </p>
 
-          <Erreur>{etat.erreur}</Erreur>
-          <Succes>{etat.succes}</Succes>
+      <ChampEpure
+        libelle="Adresse email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        placeholder="toi@exemple.fr"
+      />
 
-          {!etat.succes && (
-            <Bouton type="submit" disabled={enCours}>
-              {enCours ? 'Envoi…' : 'Envoyer le lien'}
-            </Bouton>
-          )}
-        </div>
-      </div>
+      <Erreur>{etat.erreur}</Erreur>
+      <Succes>{etat.succes}</Succes>
 
-      <p className="text-center text-sm">
+      {!etat.succes && (
+        <Bouton type="submit" disabled={enCours}>
+          {enCours ? 'Envoi…' : 'Envoyer le lien'}
+        </Bouton>
+      )}
+
+      <p className="text-center text-[12.5px]">
         <Link
           href="/connexion"
-          className="text-encre-douce underline-offset-4 hover:text-encre hover:underline"
+          className="text-encre-douce transition-colors hover:text-encre"
         >
           Retour à la connexion
         </Link>
