@@ -59,17 +59,17 @@ export function VueProfil({
   }
 
   return (
-    <div className="flex flex-col gap-6 py-4">
-      {/* La bannière déborde des marges de la page pour aller
-          d'un bord à l'autre — c'est ce qui la fait ressembler à
-          un en-tête plutôt qu'à une image posée. */}
+    <div className="relative -mx-4 flex flex-col gap-6 overflow-hidden px-4 py-4 md:-mx-6 md:px-6">
+      {/* La teinte émane du haut et se dissout dans le fond.
+          Elle déborde des marges pour aller d'un bord à l'autre,
+          mais n'a ni bord ni bande : il n'y a rien à raccorder. */}
       <div
         aria-hidden
-        className="-mx-4 -mt-4 h-28 md:-mx-6 sm:h-32"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[280px]"
         style={{ background: fondBanniere(profil.banniere) }}
       />
 
-      <section className="-mt-12 border-b border-filet pb-6">
+      <section className="relative border-b border-filet pb-6">
         {/* Le bouton passe sous le nom sur petit écran : à côté,
             il écrasait le bloc du milieu et les étiquettes se
             chevauchaient. */}
@@ -77,7 +77,7 @@ export function VueProfil({
           <span
             aria-hidden
             className="flex h-16 w-16 shrink-0 items-center justify-center
-                       rounded-carte border border-bordure bg-fond text-3xl
+                       rounded-carte border border-bordure bg-verre text-3xl
                        sm:h-[72px] sm:w-[72px] sm:text-4xl"
           >
             {profil.avatar ?? '💪'}
@@ -155,7 +155,7 @@ export function VueProfil({
         </section>
       ) : (
         <>
-          <section className="section pb-6">
+          <section className="section relative pb-6">
             <p className="section-titre mb-4">Statistiques</p>
             <dl className="grid grid-cols-2 gap-5 sm:grid-cols-4">
               <Stat valeur={profil.semaines ?? 0} libelle="Semaines suivies" />
@@ -169,7 +169,7 @@ export function VueProfil({
           </section>
 
           {profil.relation === 'ami' && (
-            <section className="section pb-6">
+            <section className="section relative pb-6">
               <p className="section-titre mb-2">Encourager</p>
               <p className="mb-4 text-sm leading-relaxed text-encre-douce">
                 Un signe pour lui dire que tu suis sa progression. Un par ami et
@@ -205,12 +205,12 @@ export function VueProfil({
             </section>
           )}
 
-          <section className="section pb-6">
+          <section className="section relative pb-6">
             <p className="section-titre mb-4">Séances</p>
             {historique}
           </section>
 
-          <section className="section pb-6">
+          <section className="section relative pb-6">
             <p className="section-titre mb-4">Records personnels</p>
             {(profil.records ?? []).length === 0 ? (
               <p className="text-sm italic text-encre-douce">

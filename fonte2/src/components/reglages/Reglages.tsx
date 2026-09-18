@@ -388,11 +388,20 @@ function ChoixBanniere({
             setChoisie(b.cle)
             onAgir(() => changerPersonnalisation(bio, b.cle))
           }}
-          className={`appui h-11 w-16 rounded-bloc border-2 transition-colors ${
-            choisie === b.cle ? 'border-accent' : 'border-transparent'
-          }`}
-          style={{ background: fondBanniere(b.cle) }}
-        />
+          className={`appui relative h-11 w-16 overflow-hidden rounded-bloc
+            border transition-colors ${
+              choisie === b.cle ? 'border-accent' : 'border-bordure'
+            }`}
+          style={{ backgroundColor: 'var(--color-fond)' }}
+        >
+          {/* Le même dégradé que sur le profil, pour que l'aperçu
+              dise la vérité. */}
+          <span
+            aria-hidden
+            className="absolute inset-0"
+            style={{ background: fondBanniere(b.cle) }}
+          />
+        </button>
       ))}
     </div>
   )
