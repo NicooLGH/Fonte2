@@ -110,7 +110,7 @@ export function Fil({
           Rien à afficher pour l&apos;instant.
         </p>
       ) : (
-        <div className="divide-y divide-filet">
+        <div className="entree-liste divide-y divide-filet">
           {elements.slice(0, visibles).map((e, i) =>
             e.genre === 'seance' ? (
               <Publication

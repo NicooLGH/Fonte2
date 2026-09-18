@@ -58,7 +58,7 @@ export function Modale({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4"
+      className="voile fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onFermer()
       }}
@@ -69,8 +69,8 @@ export function Modale({
         role="dialog"
         aria-modal="true"
         aria-label={titre}
-        className="flex max-h-[85vh] w-full max-w-md flex-col rounded-carte
-                   border border-bordure bg-fond p-6 outline-none"
+        className="carte-monte flex max-h-[85vh] w-full max-w-md flex-col
+                   rounded-carte border border-bordure bg-fond p-6 outline-none"
       >
         <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
           <div className="min-w-0">

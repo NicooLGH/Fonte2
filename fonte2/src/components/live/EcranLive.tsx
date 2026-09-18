@@ -15,6 +15,14 @@ import {
 } from '@/lib/live'
 import type { Exercice, SeanceComplete } from '@/lib/carnet'
 import { IconeCoche, IconeCroix } from '@/components/Icones'
+import {
+  sonValide,
+  sonRefus,
+  sonFinRepos,
+  sonExerciceSuivant,
+  sonSeanceFinie,
+  vibrer,
+} from '@/lib/sons'
 import { enregistrerSeanceLive } from '@/app/(carnet)/seances/actions'
 
 /* ============================================================
@@ -53,6 +61,7 @@ export function EcranLive({
   // qu'au moment où l'on tente de valider un champ vide, pas sur
   // toutes les séries à venir.
   const [refusees, setRefusees] = useState<number[]>([])
+  const [echauffementAnnonce, setEchauffementAnnonce] = useState(false)
   const [enCours, demarrer] = useTransition()
 
   const cle = cleLive(userId)
@@ -323,6 +332,8 @@ export function EcranLive({
     const s = bloc.series[iSerie]
 
     if (s.poids === '' || s.reps === '') {
+      sonRefus()
+      vibrer(40)
       setRefusees((r) => [...new Set([...r, iSerie])])
       // Le rouge s'efface après un instant : c'est un signal, pas
       // un état durable.
@@ -332,6 +343,11 @@ export function EcranLive({
 
     setRefusees((r) => r.filter((x) => x !== iSerie))
     setErreur(null)
+
+    if (!s.faite) {
+      sonValide()
+      vibrer(12)
+    }
 
     const faite = !s.faite
     const blocs = live!.blocs.map((b, j) =>
@@ -377,6 +393,8 @@ export function EcranLive({
       index: prochain === -1 ? blocs.length : prochain,
     })
     setRefusees([])
+    sonExerciceSuivant()
+    vibrer(18)
     window.scrollTo({ top: 0 })
   }
 
@@ -420,6 +438,8 @@ export function EcranLive({
         setErreur(r.erreur)
         return
       }
+      sonSeanceFinie()
+      vibrer(30)
       enregistrer(null)
       router.push('/seances')
       router.refresh()
@@ -430,6 +450,14 @@ export function EcranLive({
   if (live.echauffementFin) {
     const restant = live.echauffementFin - maintenant
     const fini = restant <= 0
+
+    // Le son ne part qu'une fois : sans ce garde-fou il se
+    // rejouerait à chaque battement du chrono.
+    if (fini && !echauffementAnnonce) {
+      setEchauffementAnnonce(true)
+      sonFinRepos()
+      vibrer(60)
+    }
 
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
@@ -697,12 +725,12 @@ export function EcranLive({
                 type="button"
                 onClick={() => validerSerie(i)}
                 aria-label={s.faite ? 'Annuler la série' : 'Valider la série'}
-                className={`flex h-8 w-8 shrink-0 items-center justify-center
+                className={`appui flex h-8 w-8 shrink-0 items-center justify-center
                   rounded-full border transition-colors ${
                     refusees.includes(i)
-                      ? 'border-refus bg-refus text-fond'
+                      ? 'tremblement border-refus bg-refus text-fond'
                       : s.faite
-                        ? 'border-valide bg-valide text-fond'
+                        ? 'impulsion border-valide bg-valide text-fond'
                         : 'border-bordure text-encre-douce/50'
                   }`}
               >
@@ -817,8 +845,8 @@ export function EcranLive({
         <div className="shrink-0 border-t border-accent-2/40 bg-accent-2/[0.12]
                         px-5 py-5 text-center">
           <p className="section-titre text-accent-2">Repos</p>
-          <p className="mt-1.5 font-display text-6xl leading-none tracking-tight
-                        text-accent-2">
+          <p className="arrivee-valeur mt-1.5 font-display text-6xl leading-none
+                        tracking-tight text-accent-2">
             {mmss(maintenant - live.reposDebut)}
           </p>
           <div className="mt-4 flex justify-center gap-2">
@@ -879,7 +907,7 @@ export function EcranLive({
         <button
           type="button"
           onClick={exerciceSuivant}
-          className="w-full bg-accent py-4 text-sm font-semibold text-white
+          className="appui w-full bg-accent py-4 text-sm font-semibold text-white
                      transition-colors hover:bg-accent-clair"
         >
           Exercice suivant

@@ -85,7 +85,7 @@ export function Historique({
         </p>
       )}
 
-      <div className="divide-y divide-filet">
+      <div className="entree-liste divide-y divide-filet">
         {seances.map((s) => (
           <Seance key={s.seanceId} s={s} moi={moi} onReagir={reagir} />
         ))}

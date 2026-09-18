@@ -6,6 +6,8 @@ import { REGLES_PSEUDO } from '@/lib/messages'
 import { BoutonInstallation } from '@/components/Installation'
 import { JOURS } from '@/lib/rappel'
 import { definirJourRappel } from '@/app/(carnet)/reglages/rappel'
+import { seDeconnecter } from '@/app/auth/actions'
+import { sonsActifs, definirSons, sonValide } from '@/lib/sons'
 import {
   changerPseudo,
   changerAvatar,
@@ -78,7 +80,7 @@ export function Reglages({
                 onClick={() => agir(() => changerAvatar(a))}
                 aria-pressed={avatar === a}
                 aria-label={`Avatar ${a}`}
-                className={`flex h-11 w-11 items-center justify-center rounded-full
+                className={`appui flex h-11 w-11 items-center justify-center rounded-full
                   border text-xl transition-colors ${
                     avatar === a
                       ? 'border-accent bg-accent/15'
@@ -189,6 +191,13 @@ export function Reglages({
         <Ligne titre="Thème" detail="Ce réglage est propre à cet appareil.">
           <ChoixTheme />
         </Ligne>
+
+        <Ligne
+          titre="Sons"
+          detail="Un retour sonore en séance : série validée, fin du repos, séance enregistrée. Désactivés par défaut."
+        >
+          <ChoixSons />
+        </Ligne>
       </Section>
 
       {/* ---- Application ---- */}
@@ -207,6 +216,22 @@ export function Reglages({
           <span className="font-mono text-[11px] text-encre-douce">
             Non modifiable ici
           </span>
+        </Ligne>
+
+        <Ligne
+          titre="Session"
+          detail="Tu devras te reconnecter ensuite."
+        >
+          <form action={seDeconnecter}>
+            <button
+              type="submit"
+              className="appui w-full rounded-bloc border border-bordure bg-verre
+                         px-5 py-2.5 text-sm font-semibold text-encre-douce
+                         transition-colors hover:text-encre sm:w-auto"
+            >
+              Se déconnecter
+            </button>
+          </form>
         </Ligne>
 
         <Ligne titre="Mot de passe" detail="Au moins 8 caractères.">
@@ -299,6 +324,41 @@ function ChoixTheme() {
           }`}
         >
           {libelle}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/* ---- Sons ---- */
+
+function ChoixSons() {
+  const [actifs, setActifs] = useState(false)
+
+  useEffect(() => setActifs(sonsActifs()), [])
+
+  function basculer(valeur: boolean) {
+    setActifs(valeur)
+    definirSons(valeur)
+    // Un aperçu immédiat : sans lui, on ne sait pas à quoi on
+    // vient de dire oui.
+    if (valeur) sonValide()
+  }
+
+  return (
+    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
+      {([true, false] as const).map((v) => (
+        <button
+          key={String(v)}
+          type="button"
+          onClick={() => basculer(v)}
+          aria-pressed={actifs === v}
+          className={`appui flex-1 rounded-bloc px-4 py-1.5 text-xs font-semibold
+            transition-colors ${
+              actifs === v ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+            }`}
+        >
+          {v ? 'Activés' : 'Coupés'}
         </button>
       ))}
     </div>

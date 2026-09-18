@@ -157,9 +157,8 @@ export function BarreBasse({
           type="button"
           onClick={() => setAction(true)}
           aria-label="Ajouter"
-          className="mx-1 flex h-12 w-12 shrink-0 items-center justify-center
-                     rounded-carte bg-accent text-3xl font-light leading-none
-                     text-white transition-transform active:scale-95"
+          className="appui mx-1 flex h-12 w-12 shrink-0 items-center justify-center
+                     rounded-carte bg-accent text-white"
         >
           <IconePlus className="h-6 w-6" />
         </button>

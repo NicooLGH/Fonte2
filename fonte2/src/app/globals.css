@@ -259,3 +259,149 @@ select {
 .demarrage-respire {
   animation: demarrage-respire 1.8s ease-in-out infinite;
 }
+
+/* ============================================================
+   MOUVEMENT
+   ============================================================
+   Tout reste sous 350 ms, avec une courbe qui démarre vite et
+   finit doucement. Au-delà, une animation devient une attente.
+
+   Le réglage système « animations réduites » est déjà respecté
+   plus haut dans ce fichier : il neutralise tout ce qui suit.
+   ============================================================ */
+
+:root {
+  --courbe: cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+
+/* ---- Entrée de page ---- */
+@keyframes entree-page {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.entree-page {
+  animation: entree-page 0.34s var(--courbe) both;
+}
+
+/* ---- Éléments de liste ---- */
+/* Le décalage suggère un ordre de lecture sans faire attendre :
+   au-delà de six éléments il devient nul, sinon le bas de la
+   liste arriverait trop tard. */
+@keyframes entree-element {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.entree-liste > * {
+  animation: entree-element 0.3s var(--courbe) both;
+}
+.entree-liste > *:nth-child(1) { animation-delay: 0s; }
+.entree-liste > *:nth-child(2) { animation-delay: 0.05s; }
+.entree-liste > *:nth-child(3) { animation-delay: 0.1s; }
+.entree-liste > *:nth-child(4) { animation-delay: 0.14s; }
+.entree-liste > *:nth-child(5) { animation-delay: 0.17s; }
+.entree-liste > *:nth-child(n + 6) { animation-delay: 0.19s; }
+
+/* ---- Chiffre qui change ---- */
+/* Il arrive par le haut : on comprend qu'il vient de bouger. */
+@keyframes arrivee-valeur {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.arrivee-valeur {
+  animation: arrivee-valeur 0.35s var(--courbe) both;
+}
+
+/* ---- Barre qui se remplit ---- */
+@keyframes remplissage {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.remplissage {
+  transform-origin: left;
+  animation: remplissage 0.6s var(--courbe) both;
+}
+
+/* ---- Appui ---- */
+/* Sur les appareils tactiles uniquement : au clavier et à la
+   souris, le focus et le survol suffisent. */
+@media (hover: none) {
+  .appui:active {
+    transform: scale(0.97);
+  }
+}
+.appui {
+  transition: transform 0.12s ease-out;
+}
+
+/* ---- Modale ---- */
+@keyframes voile {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes carte-monte {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.voile {
+  animation: voile 0.2s ease-out both;
+}
+.carte-monte {
+  animation: carte-monte 0.28s var(--courbe) both;
+}
+
+/* ---- Série validée ---- */
+/* Une impulsion brève, pour confirmer sans distraire. */
+@keyframes impulsion {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+}
+
+.impulsion {
+  animation: impulsion 0.3s var(--courbe);
+}
+
+/* ---- Refus ---- */
+/* Un tremblement court : le geste dit « non » mieux qu'un
+   message, et il n'occupe pas d'espace. */
+@keyframes tremblement {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.tremblement {
+  animation: tremblement 0.26s ease-in-out;
+}

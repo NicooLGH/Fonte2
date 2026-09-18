@@ -35,7 +35,7 @@ export function Bouton({
   ...props
 }: ComponentProps<'button'> & { variante?: 'principal' | 'discret' }) {
   const base =
-    'w-full rounded-bloc px-6 py-3.5 font-semibold transition-colors ' +
+    'appui w-full rounded-bloc px-6 py-3.5 font-semibold transition-colors ' +
     'disabled:cursor-not-allowed disabled:opacity-50'
   const styles =
     variante === 'principal'
