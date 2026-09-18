@@ -107,3 +107,28 @@ export async function supprimerCompte(confirmation: string): Promise<Reponse> {
   await supabase.auth.signOut()
   redirect('/connexion')
 }
+
+/**
+ * Bio et bannière.
+ *
+ * Elles sont visibles de tous, même sans être amis : c'est la
+ * vitrine, au même titre que le pseudo et l'avatar.
+ */
+export async function changerPersonnalisation(
+  bio: string,
+  banniere: string
+): Promise<Reponse> {
+  if (bio.length > 140)
+    return { erreur: 'La description ne peut pas dépasser 140 caractères.' }
+
+  const { supabase } = await moi()
+  const { error } = await supabase.rpc('set_personnalisation', {
+    p_bio: bio.trim(),
+    p_banniere: banniere,
+  })
+
+  if (error) return { erreur: messageErreur(error.message) }
+
+  rafraichir()
+  return { succes: 'Profil mis à jour' }
+}

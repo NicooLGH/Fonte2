@@ -83,6 +83,8 @@ export type ProfilPublic = {
   id: string
   pseudo: string
   avatar: string | null
+  bio: string | null
+  banniere: string | null
   streak: number
   relation: Relation
   amiDepuis: string | null

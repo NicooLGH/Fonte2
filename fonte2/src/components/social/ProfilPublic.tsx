@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { fondBanniere } from '@/lib/bannieres'
 import {
   SIGNES_ENCOURAGEMENT,
   anciennete,
@@ -59,7 +60,16 @@ export function VueProfil({
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <section className="border-b border-filet pb-6">
+      {/* La bannière déborde des marges de la page pour aller
+          d'un bord à l'autre — c'est ce qui la fait ressembler à
+          un en-tête plutôt qu'à une image posée. */}
+      <div
+        aria-hidden
+        className="-mx-4 -mt-4 h-28 md:-mx-6 sm:h-32"
+        style={{ background: fondBanniere(profil.banniere) }}
+      />
+
+      <section className="-mt-12 border-b border-filet pb-6">
         {/* Le bouton passe sous le nom sur petit écran : à côté,
             il écrasait le bloc du milieu et les étiquettes se
             chevauchaient. */}
@@ -67,7 +77,8 @@ export function VueProfil({
           <span
             aria-hidden
             className="flex h-16 w-16 shrink-0 items-center justify-center
-                       rounded-carte bg-verre text-3xl sm:h-[72px] sm:w-[72px] sm:text-4xl"
+                       rounded-carte border border-bordure bg-fond text-3xl
+                       sm:h-[72px] sm:w-[72px] sm:text-4xl"
           >
             {profil.avatar ?? '💪'}
           </span>
@@ -79,6 +90,12 @@ export function VueProfil({
                 Niveau {niveau.niveau} · {niveau.rang}
               </p>
             )}
+            {profil.bio && (
+              <p className="mt-2 max-w-md text-[13.5px] leading-relaxed text-encre-douce">
+                {profil.bio}
+              </p>
+            )}
+
             <div className="mt-3 flex flex-wrap gap-1.5">
               <Etiquette accent>
                 {profil.streak > 0

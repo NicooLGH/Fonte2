@@ -8,6 +8,8 @@ import { JOURS } from '@/lib/rappel'
 import { definirJourRappel } from '@/app/(carnet)/reglages/rappel'
 import { seDeconnecter } from '@/app/auth/actions'
 import { sonsActifs, definirSons, sonValide } from '@/lib/sons'
+import { BANNIERES, fondBanniere } from '@/lib/bannieres'
+import { changerPersonnalisation } from '@/app/(carnet)/reglages/actions'
 import {
   changerPseudo,
   changerAvatar,
@@ -32,6 +34,8 @@ export function Reglages({
   partagePresence,
   admin,
   jourRappel,
+  bio,
+  banniere,
 }: {
   pseudo: string
   avatar: string
@@ -40,6 +44,8 @@ export function Reglages({
   partagePresence: boolean
   admin: boolean
   jourRappel: number | null
+  bio: string
+  banniere: string
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
@@ -91,6 +97,30 @@ export function Reglages({
               </button>
             ))}
           </div>
+        </Ligne>
+
+        <Ligne
+          titre="Bannière"
+          detail="Le fond de ton profil. Visible de tous."
+        >
+          <ChoixBanniere
+            actuelle={banniere}
+            bio={bio}
+            enCours={enCours}
+            onAgir={agir}
+          />
+        </Ligne>
+
+        <Ligne
+          titre="Description"
+          detail="Une ligne sur toi, visible de tous. 140 caractères maximum."
+        >
+          <ChampBio
+            valeur={bio}
+            banniere={banniere}
+            enCours={enCours}
+            onAgir={agir}
+          />
         </Ligne>
 
         <Ligne
@@ -326,6 +356,88 @@ function ChoixTheme() {
           {libelle}
         </button>
       ))}
+    </div>
+  )
+}
+
+/* ---- Personnalisation ---- */
+
+function ChoixBanniere({
+  actuelle,
+  bio,
+  enCours,
+  onAgir,
+}: {
+  actuelle: string
+  bio: string
+  enCours: boolean
+  onAgir: (a: () => Promise<{ erreur?: string; succes?: string }>) => void
+}) {
+  const [choisie, setChoisie] = useState(actuelle)
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {BANNIERES.map((b) => (
+        <button
+          key={b.cle}
+          type="button"
+          disabled={enCours}
+          aria-label={b.nom}
+          aria-pressed={choisie === b.cle}
+          onClick={() => {
+            setChoisie(b.cle)
+            onAgir(() => changerPersonnalisation(bio, b.cle))
+          }}
+          className={`appui h-11 w-16 rounded-bloc border-2 transition-colors ${
+            choisie === b.cle ? 'border-accent' : 'border-transparent'
+          }`}
+          style={{ background: fondBanniere(b.cle) }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function ChampBio({
+  valeur,
+  banniere,
+  enCours,
+  onAgir,
+}: {
+  valeur: string
+  banniere: string
+  enCours: boolean
+  onAgir: (a: () => Promise<{ erreur?: string; succes?: string }>) => void
+}) {
+  const [texte, setTexte] = useState(valeur)
+  const restant = 140 - texte.length
+
+  return (
+    <div>
+      <textarea
+        value={texte}
+        onChange={(e) => setTexte(e.target.value.slice(0, 140))}
+        rows={2}
+        placeholder="ex : powerlifting, 3 séances par semaine"
+        className="w-full resize-y rounded-bloc border border-bordure bg-verre
+                   px-4 py-3 text-sm focus:border-accent focus:outline-none"
+      />
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <span className="font-mono text-[10px] text-encre-douce">
+          {restant} caractère{restant > 1 ? 's' : ''} restant
+          {restant > 1 ? 's' : ''}
+        </span>
+        <button
+          type="button"
+          disabled={enCours || texte === valeur}
+          onClick={() => onAgir(() => changerPersonnalisation(texte, banniere))}
+          className="appui rounded-bloc border border-bordure bg-verre px-4 py-2
+                     text-xs font-semibold text-encre-douce transition-colors
+                     hover:text-encre disabled:opacity-40"
+        >
+          Enregistrer
+        </button>
+      </div>
     </div>
   )
 }

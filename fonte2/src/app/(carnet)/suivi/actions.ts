@@ -136,3 +136,46 @@ export async function enregistrerObjectifs(
   revalidatePath('/analyse')
   return { succes: 'Objectifs enregistrés' }
 }
+
+/**
+ * Note qu'une photo existe pour cette semaine.
+ *
+ * Le fichier vit dans le rangement, la colonne `photo_path` dit
+ * seulement s'il y en a un — ça évite d'interroger le stockage
+ * à chaque affichage de la page.
+ */
+export async function marquerPhoto(
+  semaine: string,
+  presente: boolean
+): Promise<Reponse> {
+  const { supabase, user } = await moi()
+  if (!user) return { erreur: 'Session expirée.' }
+
+  const { data: existant } = await supabase
+    .from('suivi')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('week_key', semaine)
+    .maybeSingle()
+
+  // Une photo peut arriver avant le relevé : on crée la ligne.
+  if (!existant) {
+    const { error } = await supabase.from('suivi').insert({
+      user_id: user.id,
+      date: aujourdhui(),
+      week_key: semaine,
+      bonus_dimanche: false,
+      photo_path: presente ? `${user.id}/${semaine}.jpg` : null,
+    })
+    if (error) return { erreur: messageErreur(error.message) }
+  } else {
+    const { error } = await supabase
+      .from('suivi')
+      .update({ photo_path: presente ? `${user.id}/${semaine}.jpg` : null })
+      .eq('id', existant.id as string)
+    if (error) return { erreur: messageErreur(error.message) }
+  }
+
+  revalidatePath('/suivi')
+  return { succes: presente ? 'Photo enregistrée' : 'Photo supprimée' }
+}

@@ -16,14 +16,16 @@ export default async function PageReglages() {
 
   const { data } = await supabase
     .from('profiles')
-    .select('pseudo, avatar, partage_seances, partage_presence')
+    .select('pseudo, avatar, partage_seances, partage_presence, bio, banniere')
     .eq('id', user.id)
     .maybeSingle()
 
-  const profil = data as Pick<
-    Profil,
-    'pseudo' | 'avatar' | 'partage_seances' | 'partage_presence'
-  > | null
+  const profil = data as
+    | (Pick<Profil, 'pseudo' | 'avatar' | 'partage_seances' | 'partage_presence'> & {
+        bio: string | null
+        banniere: string | null
+      })
+    | null
 
   return (
     <Reglages
@@ -34,6 +36,8 @@ export default async function PageReglages() {
       partagePresence={profil?.partage_presence ?? true}
       admin={admin}
       jourRappel={rappel.jour}
+      bio={profil?.bio ?? ''}
+      banniere={profil?.banniere ?? 'braise'}
     />
   )
 }

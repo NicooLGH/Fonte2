@@ -156,6 +156,8 @@ function versProfil(d: Brut): ProfilPublic {
     id: texte(d.id),
     pseudo: texte(d.pseudo),
     avatar: texteOuNull(d.avatar),
+    bio: texteOuNull(d.bio),
+    banniere: texteOuNull(d.banniere),
     streak: nombre(d.streak),
     relation: texte(d.relation) as ProfilPublic['relation'],
     amiDepuis: texteOuNull(d.ami_depuis),
