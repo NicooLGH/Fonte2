@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { fondBanniere } from '@/lib/bannieres'
+import { CarteProfil } from '@/components/social/CarteProfil'
 import {
   SIGNES_ENCOURAGEMENT,
   anciennete,
@@ -115,7 +116,17 @@ export function VueProfil({
           </div>
 
           <div className="w-full shrink-0 sm:w-auto">
-            <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
+            {profil.relation === 'moi' && niveau ? (
+              <CarteProfil
+                pseudo={profil.pseudo}
+                avatar={profil.avatar ?? '💪'}
+                niveau={niveau.niveau}
+                rang={niveau.rang}
+                banniere={profil.banniere}
+              />
+            ) : (
+              <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
+            )}
           </div>
         </div>
 
