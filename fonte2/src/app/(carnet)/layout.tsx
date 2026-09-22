@@ -46,7 +46,18 @@ export default async function CarnetLayout({
   const cloche = <Notifications notifications={notifications} />
 
   return (
-    <>
+    /*
+     * `viewport-fit=cover` place le haut de la fenêtre SOUS
+     * l'encoche. Une barre collée en haut du flux s'y retrouve
+     * donc cachée, et son `sticky` la fait descendre sans
+     * réserver la place correspondante — d'où le contenu qui
+     * passait dessous.
+     *
+     * Cette marge réserve la hauteur. Elle vaut exactement le
+     * décalage du `sticky` des deux barres, pour qu'elles ne
+     * bougent pas au repos.
+     */
+    <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
       <BarreHaute
         avatar={profil.avatar ?? '💪'}
         pseudo={profil.pseudo}
@@ -63,6 +74,6 @@ export default async function CarnetLayout({
         {children}
       </div>
       <BarreBasse aDesModeles={modeles.length > 0} />
-    </>
+    </div>
   )
 }
