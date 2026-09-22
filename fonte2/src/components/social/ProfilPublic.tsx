@@ -2,9 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { fondBanniere } from '@/lib/bannieres'
-import Link from 'next/link'
 import { CarteProfil } from '@/components/social/CarteProfil'
-import { IconeReglages } from '@/components/Icones'
 import {
   SIGNES_ENCOURAGEMENT,
   anciennete,
@@ -62,7 +60,7 @@ export function VueProfil({
   }
 
   return (
-    <div className="relative -mx-4 flex flex-col gap-6 px-4 py-4 md:-mx-6 md:px-6">
+    <div className="relative -mx-4 flex flex-col gap-6 px-4 pb-4 md:-mx-6 md:px-6">
       {/* La teinte émane du haut et se dissout dans le fond.
           Elle remonte derrière la barre de navigation jusqu'au
           bord de l'écran : sinon elle démarrait sous la barre,
@@ -78,35 +76,7 @@ export function VueProfil({
       />
 
       <section className="relative border-b border-filet pb-6">
-        {/* Sur son propre profil, les deux icônes se calent en
-            haut à droite : elles sont compactes, donc elles
-            n'écrasent rien, contrairement au bouton de relation
-            qui doit passer à la ligne. */}
-        {profil.relation === 'moi' && (
-          <div className="mb-2 flex justify-end gap-2">
-            {niveau && (
-              <CarteProfil
-                pseudo={profil.pseudo}
-                avatar={profil.avatar ?? '💪'}
-                niveau={niveau.niveau}
-                rang={niveau.rang}
-                banniere={profil.banniere}
-              />
-            )}
-            <Link
-              href="/reglages"
-              aria-label="Réglages"
-              title="Réglages"
-              className="appui flex h-10 w-10 items-center justify-center
-                         rounded-bloc bg-verre text-encre-douce transition-colors
-                         hover:bg-verre-fort hover:text-encre"
-            >
-              <IconeReglages className="h-[18px] w-[18px]" />
-            </Link>
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-start gap-4 sm:items-center sm:gap-5">
+        <div className="flex flex-wrap items-start gap-4 sm:gap-5">
           <span
             aria-hidden
             className="flex h-16 w-16 shrink-0 items-center justify-center
@@ -116,7 +86,7 @@ export function VueProfil({
             {profil.avatar ?? '💪'}
           </span>
 
-          <div className="min-w-[180px] flex-1">
+          <div className="min-w-[150px] flex-1">
             <h1 className="break-words text-3xl sm:text-4xl">{profil.pseudo}</h1>
             {niveau && (
               <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-accent-2">
@@ -147,11 +117,25 @@ export function VueProfil({
             </div>
           </div>
 
-          {profil.relation !== 'moi' && (
-            <div className="w-full shrink-0 sm:w-auto">
-              <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
-            </div>
-          )}
+          {/* Le partage tient sur la même ligne que l'avatar et
+              le pseudo : il est compact, donc il n'écrase rien.
+              Le bouton de relation, lui, est trop large et doit
+              passer à la ligne sur petit écran. */}
+          {profil.relation === 'moi'
+            ? niveau && (
+                <CarteProfil
+                  pseudo={profil.pseudo}
+                  avatar={profil.avatar ?? '💪'}
+                  niveau={niveau.niveau}
+                  rang={niveau.rang}
+                  banniere={profil.banniere}
+                />
+              )
+            : (
+                <div className="w-full shrink-0 sm:w-auto">
+                  <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
+                </div>
+              )}
         </div>
 
         {niveau && (

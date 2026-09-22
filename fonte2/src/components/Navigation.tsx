@@ -126,8 +126,7 @@ export function BarreHaute({
  * navigation n'en est pas : c'est de l'habillage, qui reste
  * au-dessus pendant que le reste défile.
  *
- * Elle ne porte que la cloche. Les réglages vivent sur le
- * profil, là où on les cherche naturellement.
+ * Elle porte la cloche et les réglages, à droite du logo.
  */
 export function BarreMobile({
   notifications,
@@ -144,7 +143,18 @@ export function BarreMobile({
       <Link href="/" className="font-display text-xl tracking-wide">
         FONTE<span className="text-accent">.</span>
       </Link>
-      {notifications}
+
+      <div className="flex items-center gap-1">
+        {notifications}
+        <Link
+          href="/reglages"
+          aria-label="Réglages"
+          className="appui flex h-9 w-9 items-center justify-center rounded-bloc
+                     text-encre-douce transition-colors hover:text-encre"
+        >
+          <IconeReglages className="h-[18px] w-[18px]" />
+        </Link>
+      </div>
     </header>
   )
 }
@@ -221,7 +231,6 @@ function MenuPlus({
     { href: '/analyse', Ico: IconeAnalyse, titre: 'Analyse', sous: 'Équilibre musculaire et assiduité' },
     { href: '/amis', Ico: IconeAmis, titre: 'Amis', sous: 'Fil, demandes et recherche' },
     { href: '/profil', Ico: IconeProfil, titre: 'Mon profil', sous: 'Niveau, statistiques et records' },
-    { href: '/reglages', Ico: IconeReglages, titre: 'Réglages', sous: 'Compte, apparence, confidentialité' },
   ]
 
   return (
