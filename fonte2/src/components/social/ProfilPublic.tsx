@@ -60,7 +60,7 @@ export function VueProfil({
   }
 
   return (
-    <div className="relative -mx-4 flex flex-col gap-6 px-4 pb-4 md:-mx-6 md:px-6">
+    <div className="relative -mx-4 flex flex-col gap-6 px-4 pb-4 pt-5 md:-mx-6 md:px-6">
       {/* La teinte émane du haut et se dissout dans le fond.
           Elle remonte derrière la barre de navigation jusqu'au
           bord de l'écran : sinon elle démarrait sous la barre,
@@ -69,8 +69,8 @@ export function VueProfil({
         aria-hidden
         className="pointer-events-none absolute inset-x-0"
         style={{
-          top: 'calc(-1 * (5rem + env(safe-area-inset-top)))',
-          height: 'calc(300px + 5rem + env(safe-area-inset-top))',
+          top: 'calc(-1 * (6.25rem + env(safe-area-inset-top)))',
+          height: 'calc(300px + 6.25rem + env(safe-area-inset-top))',
           background: fondBanniere(profil.banniere),
         }}
       />
