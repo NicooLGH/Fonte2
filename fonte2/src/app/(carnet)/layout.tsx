@@ -54,7 +54,12 @@ export default async function CarnetLayout({
       />
       <BarreMobile notifications={cloche} />
       {/* La marge basse laisse la place à la barre de navigation */}
-      <div className="mx-auto max-w-5xl px-4 pb-32 md:px-6 md:pb-12">
+      {/* La marge basse dégage la barre flottante : sa hauteur,
+          plus la marge du bord, plus la barre d'accueil. */}
+      <div
+        className="mx-auto max-w-5xl px-4 md:px-6 md:pb-12"
+        style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}
+      >
         {children}
       </div>
       <BarreBasse aDesModeles={modeles.length > 0} />

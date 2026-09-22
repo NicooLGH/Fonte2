@@ -57,8 +57,9 @@ export function BarreHaute({
 
   return (
     <header
-      className="sticky top-0 z-40 mx-auto mb-4 hidden max-w-5xl items-center gap-4
-                 border-b border-filet bg-fond/85 px-2 py-3 backdrop-blur md:flex"
+      className="sticky top-3 z-40 mx-auto mb-6 hidden max-w-5xl items-center gap-4
+                 rounded-carte border border-bordure bg-fond/80 px-5 py-2.5
+                 backdrop-blur-xl md:flex"
     >
       <Link href="/" className="shrink-0 font-display text-2xl tracking-wide">
         FONTE<span className="text-accent">.</span>
@@ -113,17 +114,16 @@ export function BarreHaute({
 /**
  * Barre du haut, sur téléphone.
  *
- * Une vraie barre plutôt que des icônes flottantes : elles
- * passaient par-dessus les titres au défilement, et sur iPhone
- * elles se retrouvaient sous l'encoche.
+ * Flottante, avec un fond translucide et flou : le contenu passe
+ * dessous et se devine sur les bords, ce qui détache la barre de
+ * la page au lieu de l'y fondre.
+ *
+ * La règle « pas de blocs flottants » visait le contenu. La
+ * navigation n'en est pas : c'est de l'habillage, qui reste
+ * au-dessus pendant que le reste défile.
  *
  * Elle ne porte que la cloche. Les réglages vivent sur le
- * profil, là où on les cherche naturellement — ils ne s'ouvrent
- * pas assez souvent pour occuper une place permanente.
- *
- * `sticky` et non `fixed` : la barre reste dans le flux, donc le
- * contenu commence naturellement en dessous. La marge du haut
- * réserve la place de l'encoche.
+ * profil, là où on les cherche naturellement.
  */
 export function BarreMobile({
   notifications,
@@ -132,9 +132,10 @@ export function BarreMobile({
 }) {
   return (
     <header
-      className="marge-haute sticky top-0 z-40 mb-2 flex items-center
-                 justify-between border-b border-filet bg-fond/95 px-4 pb-2.5
-                 backdrop-blur md:hidden"
+      className="sticky z-40 mx-3 mb-3 flex items-center justify-between
+                 rounded-carte border border-bordure bg-fond/80 px-4 py-2.5
+                 backdrop-blur-xl md:hidden"
+      style={{ top: 'max(0.75rem, env(safe-area-inset-top))' }}
     >
       <Link href="/" className="font-display text-xl tracking-wide">
         FONTE<span className="text-accent">.</span>
@@ -156,10 +157,10 @@ export function BarreBasse({
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around
-                   gap-1 border-t border-filet bg-fond/95 px-2
-                   pb-[max(8px,env(safe-area-inset-bottom))] pt-2
-                   backdrop-blur md:hidden"
+        className="fixed inset-x-3 z-40 flex items-center justify-around gap-1
+                   rounded-carte border border-bordure bg-fond/80 px-2 py-2
+                   backdrop-blur-xl md:hidden"
+        style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
         <LienBas entree={ONGLETS[0]} actif={estActif(chemin, '/')} />
         <BoutonBas

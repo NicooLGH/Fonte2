@@ -73,9 +73,34 @@ export function VueProfil({
       />
 
       <section className="relative border-b border-filet pb-6">
-        {/* Le bouton passe sous le nom sur petit écran : à côté,
-            il écrasait le bloc du milieu et les étiquettes se
-            chevauchaient. */}
+        {/* Sur son propre profil, les deux icônes se calent en
+            haut à droite : elles sont compactes, donc elles
+            n'écrasent rien, contrairement au bouton de relation
+            qui doit passer à la ligne. */}
+        {profil.relation === 'moi' && (
+          <div className="mb-2 flex justify-end gap-2">
+            {niveau && (
+              <CarteProfil
+                pseudo={profil.pseudo}
+                avatar={profil.avatar ?? '💪'}
+                niveau={niveau.niveau}
+                rang={niveau.rang}
+                banniere={profil.banniere}
+              />
+            )}
+            <Link
+              href="/reglages"
+              aria-label="Réglages"
+              title="Réglages"
+              className="appui flex h-10 w-10 items-center justify-center
+                         rounded-bloc bg-verre text-encre-douce transition-colors
+                         hover:bg-verre-fort hover:text-encre"
+            >
+              <IconeReglages className="h-[18px] w-[18px]" />
+            </Link>
+          </div>
+        )}
+
         <div className="flex flex-wrap items-start gap-4 sm:items-center sm:gap-5">
           <span
             aria-hidden
@@ -117,35 +142,11 @@ export function VueProfil({
             </div>
           </div>
 
-          <div className="w-full shrink-0 sm:w-auto">
-            {profil.relation === 'moi' ? (
-              /* Partage et réglages sur le profil : c'est là
-                 qu'on les cherche, et ça désencombre la barre. */
-              <div className="flex gap-2">
-                {niveau && (
-                  <CarteProfil
-                    pseudo={profil.pseudo}
-                    avatar={profil.avatar ?? '💪'}
-                    niveau={niveau.niveau}
-                    rang={niveau.rang}
-                    banniere={profil.banniere}
-                  />
-                )}
-                <Link
-                  href="/reglages"
-                  aria-label="Réglages"
-                  title="Réglages"
-                  className="appui flex h-10 w-10 items-center justify-center
-                             rounded-bloc bg-verre text-encre-douce
-                             transition-colors hover:bg-verre-fort hover:text-encre"
-                >
-                  <IconeReglages className="h-[18px] w-[18px]" />
-                </Link>
-              </div>
-            ) : (
+          {profil.relation !== 'moi' && (
+            <div className="w-full shrink-0 sm:w-auto">
               <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {niveau && (

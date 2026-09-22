@@ -156,12 +156,19 @@ export function IconeCoche(p: Props) {
   )
 }
 
+/**
+ * Partage : trois points reliés, le motif universel sur Android
+ * et le web. Celui d'iOS — une flèche sortant d'un rectangle —
+ * n'est pas reconnu ailleurs.
+ */
 export function IconePartage(p: Props) {
   return (
     <Svg {...p}>
-      <path d="M12 3v13" />
-      <path d="M8 7l4-4 4 4" />
-      <path d="M6 13H5a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-1" />
+      <circle cx="18" cy="5" r="2.6" />
+      <circle cx="6" cy="12" r="2.6" />
+      <circle cx="18" cy="19" r="2.6" />
+      <path d="M8.3 10.8 15.7 6.4" />
+      <path d="M8.3 13.2 15.7 17.6" />
     </Svg>
   )
 }
