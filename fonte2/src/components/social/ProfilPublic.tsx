@@ -62,14 +62,19 @@ export function VueProfil({
   }
 
   return (
-    <div className="relative -mx-4 flex flex-col gap-6 overflow-hidden px-4 py-4 md:-mx-6 md:px-6">
+    <div className="relative -mx-4 flex flex-col gap-6 px-4 py-4 md:-mx-6 md:px-6">
       {/* La teinte émane du haut et se dissout dans le fond.
-          Elle déborde des marges pour aller d'un bord à l'autre,
-          mais n'a ni bord ni bande : il n'y a rien à raccorder. */}
+          Elle remonte derrière la barre de navigation jusqu'au
+          bord de l'écran : sinon elle démarrait sous la barre,
+          et la coupure se voyait. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[280px]"
-        style={{ background: fondBanniere(profil.banniere) }}
+        className="pointer-events-none absolute inset-x-0"
+        style={{
+          top: 'calc(-1 * (5rem + env(safe-area-inset-top)))',
+          height: 'calc(300px + 5rem + env(safe-area-inset-top))',
+          background: fondBanniere(profil.banniere),
+        }}
       />
 
       <section className="relative border-b border-filet pb-6">

@@ -58,8 +58,8 @@ export function BarreHaute({
   return (
     <header
       className="sticky top-3 z-40 mx-auto mb-6 hidden max-w-5xl items-center gap-4
-                 rounded-carte border border-bordure bg-fond/80 px-5 py-2.5
-                 backdrop-blur-xl md:flex"
+                 rounded-carte border border-bordure bg-fond/70 px-5 py-2.5
+                 backdrop-blur-sm md:flex"
     >
       <Link href="/" className="shrink-0 font-display text-2xl tracking-wide">
         FONTE<span className="text-accent">.</span>
@@ -114,9 +114,13 @@ export function BarreHaute({
 /**
  * Barre du haut, sur téléphone.
  *
- * Flottante, avec un fond translucide et flou : le contenu passe
- * dessous et se devine sur les bords, ce qui détache la barre de
- * la page au lieu de l'y fondre.
+ * Flottante, avec un fond translucide et un flou léger : le
+ * contenu passe dessous et se devine sur les bords, ce qui
+ * détache la barre de la page au lieu de l'y fondre.
+ *
+ * Le flou reste discret. Plus prononcé, il transformait le fond
+ * en voile laiteux et on ne devinait plus rien derrière — ce qui
+ * lui faisait perdre sa raison d'être.
  *
  * La règle « pas de blocs flottants » visait le contenu. La
  * navigation n'en est pas : c'est de l'habillage, qui reste
@@ -133,8 +137,8 @@ export function BarreMobile({
   return (
     <header
       className="sticky z-40 mx-3 mb-3 flex items-center justify-between
-                 rounded-carte border border-bordure bg-fond/80 px-4 py-2.5
-                 backdrop-blur-xl md:hidden"
+                 rounded-carte border border-bordure bg-fond/70 px-4 py-2.5
+                 backdrop-blur-sm md:hidden"
       style={{ top: 'max(0.75rem, env(safe-area-inset-top))' }}
     >
       <Link href="/" className="font-display text-xl tracking-wide">
@@ -158,8 +162,8 @@ export function BarreBasse({
     <>
       <nav
         className="fixed inset-x-3 z-40 flex items-center justify-around gap-1
-                   rounded-carte border border-bordure bg-fond/80 px-2 py-2
-                   backdrop-blur-xl md:hidden"
+                   rounded-carte border border-bordure bg-fond/70 px-2 py-2
+                   backdrop-blur-sm md:hidden"
         style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
         <LienBas entree={ONGLETS[0]} actif={estActif(chemin, '/')} />
