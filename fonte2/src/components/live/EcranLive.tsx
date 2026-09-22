@@ -460,7 +460,7 @@ export function EcranLive({
     }
 
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+      <main className="securise flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
           {fini ? 'Prêt' : 'Échauffement'}
         </p>
@@ -612,7 +612,7 @@ export function EcranLive({
   )
 
   return (
-    <div className="plein-ecran flex flex-col">
+    <div className="plein-ecran securise-haut flex flex-col">
       {/* En-tête */}
       {/* En-tête réduit au strict nécessaire : tout l'espace
           vertical gagné va aux charges. */}
@@ -631,7 +631,7 @@ export function EcranLive({
         type="button"
         onClick={() => router.push('/seances')}
         aria-label="Quitter"
-        className="absolute right-3 top-2 z-10 flex h-9 w-9 items-center justify-center
+        className="securise-haut absolute right-3 top-0 z-10 flex h-9 w-9 items-center justify-center
                    text-sm text-encre-douce hover:text-encre"
       >
         ✕
@@ -921,7 +921,7 @@ export function EcranLive({
 
 function Cadre({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
-    <main className="flex min-h-dvh items-center justify-center px-5 py-12">
+    <main className="securise flex min-h-dvh items-center justify-center px-5 py-12">
       <div className="w-full max-w-md rounded-carte border border-bordure bg-verre p-6">
         <h1 className="mb-4 text-3xl">{titre}</h1>
         {children}

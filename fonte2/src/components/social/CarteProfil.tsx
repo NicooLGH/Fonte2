@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import QRCode from 'qrcode'
-import { IconeCroix } from '@/components/Icones'
+import { IconeCroix, IconePartage } from '@/components/Icones'
 
 /* ============================================================
    Carte de profil partageable
@@ -49,6 +50,9 @@ export function CarteProfil({
   const [enCours, setEnCours] = useState(false)
   const [apercu, setApercu] = useState<string | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [monte, setMonte] = useState(false)
+
+  useEffect(() => setMonte(true), [])
 
   async function generer(): Promise<Blob | null> {
     // Calculée ici et non au rendu : le composant passe d'abord
@@ -188,49 +192,65 @@ export function CarteProfil({
         type="button"
         onClick={ouvrir}
         disabled={enCours}
-        className="appui w-full rounded-bloc border border-bordure bg-verre px-5 py-2.5
-                   text-sm font-semibold text-encre transition-colors
-                   hover:bg-verre-fort disabled:opacity-50 sm:w-auto"
+        aria-label="Partager mon profil"
+        title="Partager mon profil"
+        className="appui flex h-10 w-10 items-center justify-center rounded-bloc
+                   bg-verre text-encre-douce transition-colors
+                   hover:bg-verre-fort hover:text-encre disabled:opacity-50"
       >
-        {enCours ? 'Préparation…' : 'Partager mon profil'}
+        <IconePartage className="h-[18px] w-[18px]" />
       </button>
 
       {erreur && <p className="mt-2 font-mono text-[11px] text-accent">{erreur}</p>}
 
-      {apercu && (
-        <div
-          className="voile fixed inset-0 z-[100] flex flex-col items-center justify-center
-                     gap-5 bg-black/80 p-6"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) fermer()
-          }}
-        >
-          <button
-            type="button"
-            onClick={fermer}
-            aria-label="Fermer"
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center
-                       rounded-bloc bg-verre text-encre"
+      {/* L'aperçu est déplacé à la racine du document. Sans ça, un
+          parent qui borne ses descendants l'empêchait de couvrir
+          tout l'écran — même cause que pour les notifications. */}
+      {apercu &&
+        monte &&
+        createPortal(
+          <div
+            className="voile fixed inset-0 z-[150] flex flex-col items-center
+                       justify-center gap-4 bg-black/85 p-5"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) fermer()
+            }}
           >
-            <IconeCroix className="h-4 w-4" />
-          </button>
+            <button
+              type="button"
+              onClick={fermer}
+              aria-label="Fermer"
+              className="absolute right-4 top-4 flex h-10 w-10 items-center
+                         justify-center rounded-bloc bg-verre text-encre"
+              style={{ top: 'max(1rem, env(safe-area-inset-top))' }}
+            >
+              <IconeCroix className="h-4 w-4" />
+            </button>
 
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={apercu}
-            alt="Aperçu de ta carte de profil"
-            className="carte-monte max-h-[70vh] w-auto max-w-full rounded-carte"
-          />
+            {/* `min-h-0` est indispensable : sans lui, l'image
+                déborde du conteneur au lieu de se réduire, et la
+                page se met à défiler. */}
+            <div className="flex min-h-0 flex-1 items-center justify-center py-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={apercu}
+                alt="Aperçu de ta carte de profil"
+                className="carte-monte max-h-full w-auto max-w-full rounded-carte
+                           object-contain"
+              />
+            </div>
 
-          <button
-            type="button"
-            onClick={partager}
-            className="appui rounded-bloc bg-accent px-8 py-3.5 font-semibold text-white"
-          >
-            Partager
-          </button>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={partager}
+              className="appui mb-[env(safe-area-inset-bottom)] shrink-0 rounded-bloc
+                         bg-accent px-8 py-3.5 font-semibold text-white"
+            >
+              Partager
+            </button>
+          </div>,
+          document.body
+        )}
     </>
   )
 }

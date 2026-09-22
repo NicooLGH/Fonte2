@@ -57,7 +57,7 @@ export function BarreHaute({
 
   return (
     <header
-      className="sticky top-0 z-40 mx-auto mb-6 hidden max-w-5xl items-center gap-4
+      className="sticky top-0 z-40 mx-auto mb-4 hidden max-w-5xl items-center gap-4
                  border-b border-filet bg-fond/85 px-2 py-3 backdrop-blur md:flex"
     >
       <Link href="/" className="shrink-0 font-display text-2xl tracking-wide">
@@ -110,11 +110,43 @@ export function BarreHaute({
    Barre basse — téléphone
    ============================================================ */
 
-export function BarreBasse({
+/**
+ * Barre du haut, sur téléphone.
+ *
+ * Une vraie barre plutôt que des icônes flottantes : elles
+ * passaient par-dessus les titres au défilement, et sur iPhone
+ * elles se retrouvaient sous l'encoche.
+ *
+ * Elle ne porte que la cloche. Les réglages vivent sur le
+ * profil, là où on les cherche naturellement — ils ne s'ouvrent
+ * pas assez souvent pour occuper une place permanente.
+ *
+ * `sticky` et non `fixed` : la barre reste dans le flux, donc le
+ * contenu commence naturellement en dessous. La marge du haut
+ * réserve la place de l'encoche.
+ */
+export function BarreMobile({
   notifications,
-  aDesModeles,
 }: {
   notifications: React.ReactNode
+}) {
+  return (
+    <header
+      className="marge-haute sticky top-0 z-40 mb-2 flex items-center
+                 justify-between border-b border-filet bg-fond/95 px-4 pb-2.5
+                 backdrop-blur md:hidden"
+    >
+      <Link href="/" className="font-display text-xl tracking-wide">
+        FONTE<span className="text-accent">.</span>
+      </Link>
+      {notifications}
+    </header>
+  )
+}
+
+export function BarreBasse({
+  aDesModeles,
+}: {
   aDesModeles: boolean
 }) {
   const chemin = usePathname()
@@ -123,20 +155,6 @@ export function BarreBasse({
 
   return (
     <>
-      {/* Cloche et réglages en haut : la barre basse n'a de place
-          que pour les sections principales. */}
-      <div className="marge-haute fixed right-3 top-0 z-40 flex items-center gap-2 md:hidden">
-        {notifications}
-        <Link
-          href="/reglages"
-          aria-label="Réglages"
-          className="flex h-9 w-9 items-center justify-center rounded-bloc
-                     bg-verre text-encre-douce backdrop-blur"
-        >
-          <IconeReglages className="h-[18px] w-[18px]" />
-        </Link>
-      </div>
-
       <nav
         className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around
                    gap-1 border-t border-filet bg-fond/95 px-2

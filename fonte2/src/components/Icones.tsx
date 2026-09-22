@@ -155,3 +155,13 @@ export function IconeCoche(p: Props) {
     </Svg>
   )
 }
+
+export function IconePartage(p: Props) {
+  return (
+    <Svg {...p}>
+      <path d="M12 3v13" />
+      <path d="M8 7l4-4 4 4" />
+      <path d="M6 13H5a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-1" />
+    </Svg>
+  )
+}

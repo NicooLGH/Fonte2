@@ -35,7 +35,7 @@ export function DerouleBilan({
   }
 
   return (
-    <main className="relative min-h-dvh overflow-hidden">
+    <main className="securise relative min-h-dvh overflow-hidden">
       {/* Halos, plus marqués que sur le reste du carnet */}
       <div
         aria-hidden

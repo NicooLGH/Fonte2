@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { fondBanniere } from '@/lib/bannieres'
+import Link from 'next/link'
 import { CarteProfil } from '@/components/social/CarteProfil'
+import { IconeReglages } from '@/components/Icones'
 import {
   SIGNES_ENCOURAGEMENT,
   anciennete,
@@ -116,14 +118,30 @@ export function VueProfil({
           </div>
 
           <div className="w-full shrink-0 sm:w-auto">
-            {profil.relation === 'moi' && niveau ? (
-              <CarteProfil
-                pseudo={profil.pseudo}
-                avatar={profil.avatar ?? '💪'}
-                niveau={niveau.niveau}
-                rang={niveau.rang}
-                banniere={profil.banniere}
-              />
+            {profil.relation === 'moi' ? (
+              /* Partage et réglages sur le profil : c'est là
+                 qu'on les cherche, et ça désencombre la barre. */
+              <div className="flex gap-2">
+                {niveau && (
+                  <CarteProfil
+                    pseudo={profil.pseudo}
+                    avatar={profil.avatar ?? '💪'}
+                    niveau={niveau.niveau}
+                    rang={niveau.rang}
+                    banniere={profil.banniere}
+                  />
+                )}
+                <Link
+                  href="/reglages"
+                  aria-label="Réglages"
+                  title="Réglages"
+                  className="appui flex h-10 w-10 items-center justify-center
+                             rounded-bloc bg-verre text-encre-douce
+                             transition-colors hover:bg-verre-fort hover:text-encre"
+                >
+                  <IconeReglages className="h-[18px] w-[18px]" />
+                </Link>
+              </div>
             ) : (
               <BoutonRelation profil={profil} enCours={enCours} onAgir={agir} />
             )}

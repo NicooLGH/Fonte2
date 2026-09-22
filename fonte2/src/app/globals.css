@@ -226,12 +226,26 @@ select {
   min-height: 100dvh;
 }
 
-/* Les encoches et la barre d'accueil des iPhone récents. */
+/* ---- Encoche et barre d'accueil ----
+   `viewport-fit=cover` fait courir la page jusqu'aux bords de
+   l'écran, encoche comprise. C'est ce qu'on veut pour le fond,
+   mais pas pour le contenu : sans ces marges, le haut d'une page
+   passe sous l'encoche et le bas sous la barre d'accueil. */
 .marge-basse {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 .marge-haute {
   padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+/* Écrans sans barre du haut — mode direct, connexion, bilan :
+   ils doivent réserver la place eux-mêmes. */
+.securise {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.securise-haut {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Le défilement à l'intérieur d'une fenêtre ne doit pas
