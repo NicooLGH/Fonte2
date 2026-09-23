@@ -15,6 +15,7 @@ import {
 } from '@/lib/live'
 import type { Exercice, SeanceComplete } from '@/lib/carnet'
 import { IconeCoche, IconeCroix } from '@/components/Icones'
+import { meilleur1RM } from '@/lib/rm'
 import {
   sonValide,
   sonRefus,
@@ -604,6 +605,13 @@ export function EcranLive({
 
   const bloc = live.blocs[live.index]
   const derniere = dernierPassage(seances, bloc.exerciceId)
+  const saisies = bloc.series
+    .map((x) => ({ poids: parseFloat(x.poids), reps: parseInt(x.reps, 10) }))
+    .filter((x) => Number.isFinite(x.poids) && Number.isFinite(x.reps))
+
+  const rmSeance = meilleur1RM(saisies)
+  const rmPasse = derniere ? meilleur1RM(derniere.series) : null
+
   const disponibles = exercices.filter(
     (e) => !live.blocs.some((b) => b.exerciceId === e.id)
   )
@@ -674,6 +682,7 @@ export function EcranLive({
 
               <label className="min-w-0 flex-1">
                 <span className="sr-only">Poids série {i + 1}</span>
+                <span className="flex items-baseline gap-1">
                 <input
                   type="number"
                   step="0.5"
@@ -692,13 +701,21 @@ export function EcranLive({
                       ? String(derniere.series[i].poids)
                       : (derniere?.series.at(-1)?.poids.toString() ?? 'kg')
                   }
-                  className="w-full bg-transparent font-display text-3xl text-encre
-                             placeholder:text-encre-douce/35 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent font-display text-3xl
+                             text-encre placeholder:text-encre-douce/35
+                             focus:outline-none"
                 />
+                {/* L'unité juste après le chiffre : deux champs
+                    nus côte à côte ne disent pas lequel est quoi. */}
+                <span className="shrink-0 font-mono text-[10px] text-encre-douce">
+                  kg
+                </span>
+                </span>
               </label>
 
               <label className="min-w-0 flex-1">
                 <span className="sr-only">Répétitions série {i + 1}</span>
+                <span className="flex items-baseline gap-1">
                 <input
                   type="number"
                   inputMode="numeric"
@@ -716,9 +733,14 @@ export function EcranLive({
                       ? String(derniere.series[i].reps)
                       : (derniere?.series.at(-1)?.reps.toString() ?? 'reps')
                   }
-                  className="w-full bg-transparent font-display text-3xl text-encre
-                             placeholder:text-encre-douce/35 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent font-display text-3xl
+                             text-encre placeholder:text-encre-douce/35
+                             focus:outline-none"
                 />
+                <span className="shrink-0 font-mono text-[10px] text-encre-douce">
+                  rep
+                </span>
+                </span>
               </label>
 
               <button
@@ -761,10 +783,37 @@ export function EcranLive({
           ))}
         </div>
 
+        {/* Le 1RM se met à jour pendant la saisie : il donne un
+            repère immédiat sur la valeur de la série qu'on vient
+            de faire, sans attendre la fin de la séance. */}
+        {rmSeance !== null && (
+          <div className="mt-4 flex items-baseline justify-between gap-3
+                          border-b border-filet pb-3">
+            <span className="section-titre">1RM estimé</span>
+            <span className="text-right">
+              <span className="font-display text-2xl text-accent-2">
+                {rmSeance}
+                <span className="ml-1 font-corps text-[10px] text-encre-douce">
+                  kg
+                </span>
+              </span>
+              {rmPasse !== null && (
+                <span className="ml-3 font-mono text-[10.5px] text-encre-douce">
+                  {rmSeance > rmPasse
+                    ? `+${Math.round((rmSeance - rmPasse) * 10) / 10} vs dernière`
+                    : rmSeance < rmPasse
+                      ? `${Math.round((rmSeance - rmPasse) * 10) / 10} vs dernière`
+                      : 'comme la dernière fois'}
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+
         {derniere && (
           <p className="mt-3 font-mono text-[10px] leading-relaxed text-encre-douce/70">
             Les chiffres grisés rappellent ta dernière séance. Ils ne
-            s&apos;enregistrent pas.
+            s&apos;enregistrent pas. Le 1RM est une estimation, pas une mesure.
           </p>
         )}
 

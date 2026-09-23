@@ -3,12 +3,19 @@ import { chargerExercices, chargerSeances, chargerModeles } from '@/lib/donnees'
 import { Exercices } from '@/components/seances/Exercices'
 import { Modeles } from '@/components/seances/Modeles'
 import { Seances } from '@/components/seances/Seances'
+import { creerClientServeur } from '@/lib/supabase/server'
 
 export default async function PageSeances() {
-  const [exercices, seances, modeles] = await Promise.all([
+  const supabase = await creerClientServeur()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const [exercices, seances, modeles, { data: profil }] = await Promise.all([
     chargerExercices(),
     chargerSeances(),
     chargerModeles(),
+    supabase.from('profiles').select('pseudo').eq('id', user!.id).maybeSingle(),
   ])
 
   return (
@@ -33,7 +40,11 @@ export default async function PageSeances() {
           téléphone et laissait des vides sur grand écran. */}
       <div className="flex flex-col">
         <Modeles modeles={modeles} exercices={exercices} />
-        <Seances seances={seances} exercices={exercices} />
+        <Seances
+          seances={seances}
+          exercices={exercices}
+          pseudo={(profil?.pseudo as string) ?? ''}
+        />
         <Exercices exercices={exercices} />
       </div>
     </div>

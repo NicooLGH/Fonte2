@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { Modale } from '@/components/ui/Modale'
 import { Bouton, Erreur } from '@/components/ui'
 import { volumeSeance } from '@/lib/xp'
+import { seanceEnTexte, partagerTexte } from '@/lib/export-seance'
+import { IconePartage } from '@/components/Icones'
 import type { Exercice, SeanceComplete } from '@/lib/carnet'
 import {
   enregistrerSeance,
@@ -21,20 +23,51 @@ type BlocEnCours = { exerciceId: string; series: SerieSaisie[] }
 export function Seances({
   seances,
   exercices,
+  pseudo,
 }: {
   seances: SeanceComplete[]
   exercices: Exercice[]
+  pseudo: string
 }) {
   const [ouvert, setOuvert] = useState(false)
   const [tout, setTout] = useState(false)
+  const [recherche, setRecherche] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
 
-  const visibles = tout ? seances : seances.slice(0, APERCU)
-  const reste = seances.length - visibles.length
+  // La recherche porte sur la date, le nom des exercices et la
+  // note : c'est par l'un de ces trois qu'on se souvient d'une
+  // séance passée.
+  const q = recherche.trim().toLowerCase()
+  const filtrees = q
+    ? seances.filter((s) => {
+        const noms = s.blocs
+          .map((b) => exercices.find((e) => e.id === b.exerciceId)?.nom ?? '')
+          .join(' ')
+        return (
+          s.date.includes(q) ||
+          noms.toLowerCase().includes(q) ||
+          (s.note ?? '').toLowerCase().includes(q)
+        )
+      })
+    : seances
+
+  // Une recherche affiche tous ses résultats : les replier
+  // derrière un bouton irait contre ce qu'on vient de demander.
+  const visibles = tout || q ? filtrees : filtrees.slice(0, APERCU)
+  const reste = filtrees.length - visibles.length
 
   const nomExo = (id: string) =>
     exercices.find((e) => e.id === id)?.nom ?? '—'
+
+  function exporter(seance: SeanceComplete) {
+    const texte = seanceEnTexte(seance, exercices, pseudo)
+    void partagerTexte(
+      texte,
+      `fonte-seance-${seance.date}.txt`,
+      `Séance du ${seance.date}`
+    )
+  }
 
   function supprimer(seance: SeanceComplete) {
     if (
@@ -58,10 +91,26 @@ export function Seances({
         derniers jours.
       </p>
 
+      {seances.length > 2 && (
+        <input
+          type="search"
+          value={recherche}
+          onChange={(e) => setRecherche(e.target.value)}
+          placeholder="Chercher une date, un exercice, une note…"
+          aria-label="Chercher dans mes séances"
+          className="mb-4 w-full rounded-bloc border border-bordure bg-verre px-4 py-2.5
+                     text-sm focus:border-accent focus:outline-none"
+        />
+      )}
+
       <div className="flex-1">
         {seances.length === 0 ? (
           <p className="text-sm italic text-encre-douce">
             Aucune séance enregistrée.
+          </p>
+        ) : filtrees.length === 0 ? (
+          <p className="text-sm italic text-encre-douce">
+            Aucune séance ne correspond à « {recherche.trim()} ».
           </p>
         ) : (
           <ul className="flex flex-col divide-y divide-filet">
@@ -85,14 +134,25 @@ export function Seances({
                       kg
                     </span>
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => supprimer(s)}
-                    aria-label={`Supprimer la séance du ${s.date}`}
-                    className="mt-1 text-xs text-encre-douce transition-colors hover:text-accent"
-                  >
-                    ✕
-                  </button>
+                  <div className="mt-1 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => exporter(s)}
+                      aria-label={`Exporter la séance du ${s.date}`}
+                      title="Exporter en texte"
+                      className="appui text-encre-douce transition-colors hover:text-encre"
+                    >
+                      <IconePartage className="h-[15px] w-[15px]" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => supprimer(s)}
+                      aria-label={`Supprimer la séance du ${s.date}`}
+                      className="appui text-xs text-encre-douce transition-colors hover:text-accent"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}
