@@ -33,7 +33,14 @@ export async function codeRequis(): Promise<boolean> {
   return Boolean(data)
 }
 
-export async function deverrouiller(donnees: FormData): Promise<Reponse> {
+/**
+ * Le premier paramètre est l'état précédent : `useActionState`
+ * le passe systématiquement, avant le formulaire.
+ */
+export async function deverrouiller(
+  _precedent: Reponse,
+  donnees: FormData
+): Promise<Reponse> {
   const code = String(donnees.get('code') ?? '').trim()
 
   const supabase = await creerClientServeur()
