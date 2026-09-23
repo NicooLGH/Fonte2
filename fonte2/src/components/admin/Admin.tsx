@@ -10,11 +10,18 @@ import {
   retirerAnnonce,
   diffuserNotification,
 } from '@/app/(carnet)/admin/actions'
+import { verrouiller } from '@/app/(carnet)/admin/verrou'
 
 const ICONES = ['📢', '🎉', '⚠️', '🔥', '✨', '💪', '🛠️', '🎁', '📅', '❤️']
 type Ton = 'info' | 'succes' | 'alerte'
 
-export function Admin({ annonces }: { annonces: Annonce[] }) {
+export function Admin({
+  annonces,
+  verrouillable,
+}: {
+  annonces: Annonce[]
+  verrouillable: boolean
+}) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
 
@@ -61,14 +68,28 @@ export function Admin({ annonces }: { annonces: Annonce[] }) {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header className="border-b border-filet pb-5">
+      <header className="flex flex-wrap items-start justify-between gap-4
+                         border-b border-filet pb-5">
         <h1 className="text-4xl sm:text-5xl">Administration</h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-encre-douce">
-          Un administrateur publie et notifie. Il n&apos;a aucun accès aux
-          données des membres : ni mensurations, ni poids, ni séances, ni
-          adresses email.
-        </p>
+        {verrouillable && (
+          <form action={verrouiller}>
+            <button
+              type="submit"
+              className="appui rounded-bloc bg-verre px-4 py-2.5 text-xs font-semibold
+                         text-encre-douce transition-colors hover:bg-verre-fort
+                         hover:text-encre"
+            >
+              Verrouiller
+            </button>
+          </form>
+        )}
       </header>
+
+      <p className="max-w-xl text-sm leading-relaxed text-encre-douce">
+        Un administrateur publie et notifie. Il n&apos;a aucun accès aux
+        données des membres : ni mensurations, ni poids, ni séances, ni
+        adresses email.
+      </p>
 
       {(message.ok || message.ko) && (
         <div>

@@ -14,6 +14,7 @@ import {
   IconePlus,
   IconeMenu,
   IconeReglages,
+  IconeAdmin,
   IconeLecture,
   IconeCrayon,
 } from '@/components/Icones'
@@ -40,6 +41,13 @@ const ONGLETS: Entree[] = [
   { href: '/amis', libelle: 'Amis', Ico: IconeAmis },
 ]
 
+/** Réservé aux administrateurs, ajouté au bout de la barre. */
+const ONGLET_ADMIN: Entree = {
+  href: '/admin',
+  libelle: 'Admin',
+  Ico: IconeAdmin,
+}
+
 /* ============================================================
    Barre haute — grand écran
    ============================================================ */
@@ -48,10 +56,12 @@ export function BarreHaute({
   avatar,
   pseudo,
   notifications,
+  admin,
 }: {
   avatar: string
   pseudo: string
   notifications: React.ReactNode
+  admin: boolean
 }) {
   const chemin = usePathname()
 
@@ -67,7 +77,7 @@ export function BarreHaute({
       </Link>
 
       <nav className="flex flex-1 justify-center gap-1">
-        {ONGLETS.map((e) => {
+        {[...ONGLETS, ...(admin ? [ONGLET_ADMIN] : [])].map((e) => {
           const actif = estActif(chemin, e.href)
           return (
             <Link
@@ -162,8 +172,10 @@ export function BarreMobile({
 
 export function BarreBasse({
   aDesModeles,
+  admin,
 }: {
   aDesModeles: boolean
+  admin: boolean
 }) {
   const chemin = usePathname()
   const [plus, setPlus] = useState(false)
@@ -204,7 +216,7 @@ export function BarreBasse({
         />
       </nav>
 
-      <MenuPlus ouvert={plus} onFermer={() => setPlus(false)} />
+      <MenuPlus ouvert={plus} onFermer={() => setPlus(false)} admin={admin} />
       <ActionRapide
         ouvert={action}
         onFermer={() => setAction(false)}
@@ -221,9 +233,11 @@ export function BarreBasse({
 function MenuPlus({
   ouvert,
   onFermer,
+  admin,
 }: {
   ouvert: boolean
   onFermer: () => void
+  admin: boolean
 }) {
   const router = useRouter()
 
@@ -232,6 +246,16 @@ function MenuPlus({
     { href: '/analyse', Ico: IconeAnalyse, titre: 'Analyse', sous: 'Équilibre musculaire et assiduité' },
     { href: '/amis', Ico: IconeAmis, titre: 'Amis', sous: 'Fil, demandes et recherche' },
     { href: '/profil', Ico: IconeProfil, titre: 'Mon profil', sous: 'Niveau, statistiques et records' },
+    ...(admin
+      ? [
+          {
+            href: '/admin',
+            Ico: IconeAdmin,
+            titre: 'Administration',
+            sous: 'Annonces et notifications',
+          },
+        ]
+      : []),
   ]
 
   return (

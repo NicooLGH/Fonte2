@@ -3,6 +3,7 @@ import { creerClientServeur } from '@/lib/supabase/server'
 import { Reglages } from '@/components/reglages/Reglages'
 import { suisJeAdmin } from '@/lib/donnees-notifs'
 import { chargerRappel } from '@/lib/donnees'
+import { codeRequis } from '@/app/(carnet)/admin/verrou'
 import type { Profil } from '@/types/database'
 
 export default async function PageReglages() {
@@ -12,7 +13,11 @@ export default async function PageReglages() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const [admin, rappel] = await Promise.all([suisJeAdmin(), chargerRappel()])
+  const [admin, rappel, aUnCode] = await Promise.all([
+    suisJeAdmin(),
+    chargerRappel(),
+    codeRequis(),
+  ])
 
   const { data } = await supabase
     .from('profiles')
@@ -38,6 +43,7 @@ export default async function PageReglages() {
       jourRappel={rappel.jour}
       bio={profil?.bio ?? ''}
       banniere={profil?.banniere ?? 'braise'}
+      aUnCode={aUnCode}
     />
   )
 }

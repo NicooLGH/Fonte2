@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { BarreHaute, BarreMobile, BarreBasse } from '@/components/Navigation'
 import { Notifications } from '@/components/social/Notifications'
-import { chargerNotifications } from '@/lib/donnees-notifs'
+import { chargerNotifications, suisJeAdmin } from '@/lib/donnees-notifs'
 import { chargerModeles } from '@/lib/donnees'
 import type { Profil } from '@/types/database'
 
@@ -39,9 +39,10 @@ export default async function CarnetLayout({
 
   if (!profil || !profil.onboarded || !profil.pseudo) redirect('/bienvenue')
 
-  const [notifications, modeles] = await Promise.all([
+  const [notifications, modeles, admin] = await Promise.all([
     chargerNotifications(),
     chargerModeles(),
+    suisJeAdmin(),
   ])
   const cloche = <Notifications notifications={notifications} />
 
@@ -62,6 +63,7 @@ export default async function CarnetLayout({
         avatar={profil.avatar ?? '💪'}
         pseudo={profil.pseudo}
         notifications={cloche}
+        admin={admin}
       />
       <BarreMobile notifications={cloche} />
       {/* La marge basse laisse la place à la barre de navigation */}
@@ -73,7 +75,7 @@ export default async function CarnetLayout({
       >
         {children}
       </div>
-      <BarreBasse aDesModeles={modeles.length > 0} />
+      <BarreBasse aDesModeles={modeles.length > 0} admin={admin} />
     </div>
   )
 }

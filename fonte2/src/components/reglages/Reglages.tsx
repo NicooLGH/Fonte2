@@ -9,6 +9,7 @@ import { definirJourRappel } from '@/app/(carnet)/reglages/rappel'
 import { seDeconnecter } from '@/app/auth/actions'
 import { sonsActifs, definirSons, sonValide } from '@/lib/sons'
 import { BANNIERES, fondBanniere } from '@/lib/bannieres'
+import { definirCode } from '@/app/(carnet)/admin/verrou'
 import { changerPersonnalisation } from '@/app/(carnet)/reglages/actions'
 import {
   changerPseudo,
@@ -36,6 +37,7 @@ export function Reglages({
   jourRappel,
   bio,
   banniere,
+  aUnCode,
 }: {
   pseudo: string
   avatar: string
@@ -46,6 +48,7 @@ export function Reglages({
   jourRappel: number | null
   bio: string
   banniere: string
+  aUnCode: boolean
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
@@ -299,11 +302,18 @@ export function Reglages({
           >
             <a
               href="/admin"
-              className="inline-block rounded-bloc bg-accent px-5 py-2.5 text-sm
+              className="appui inline-block rounded-bloc bg-accent px-5 py-2.5 text-sm
                          font-semibold text-white transition-colors hover:bg-accent-clair"
             >
               Ouvrir l'administration
             </a>
+          </Ligne>
+
+          <Ligne
+            titre="Code d'accès"
+            detail="Demandé à l'ouverture de l'administration, puis mémorisé une demi-heure. Il protège d'une publication par accident, ou d'un téléphone laissé déverrouillé — pas d'une intrusion : c'est la base qui vérifie ton rôle."
+          >
+            <ChampCode aUnCode={aUnCode} enCours={enCours} onAgir={agir} />
           </Ligne>
         </Section>
       )}
@@ -357,6 +367,52 @@ function ChoixTheme() {
         </button>
       ))}
     </div>
+  )
+}
+
+/* ---- Code de l'administration ---- */
+
+function ChampCode({
+  aUnCode,
+  enCours,
+  onAgir,
+}: {
+  aUnCode: boolean
+  enCours: boolean
+  onAgir: (a: () => Promise<{ erreur?: string; succes?: string }>) => void
+}) {
+  return (
+    <form
+      action={(d) => onAgir(() => definirCode(d))}
+      className="flex flex-col gap-2"
+    >
+      <div className="flex gap-2">
+        <input
+          name="code"
+          type="password"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={8}
+          placeholder={aUnCode ? 'Nouveau code' : '4 à 8 chiffres'}
+          className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
+                     px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={enCours}
+          className="appui shrink-0 rounded-bloc border border-bordure bg-verre
+                     px-4 py-2.5 text-xs font-semibold text-encre-douce
+                     transition-colors hover:text-encre disabled:opacity-40"
+        >
+          {aUnCode ? 'Changer' : 'Définir'}
+        </button>
+      </div>
+      <span className="font-mono text-[10px] text-encre-douce">
+        {aUnCode
+          ? 'Un code est défini. Laisse vide et valide pour le retirer.'
+          : 'Aucun code : l\'administration s\'ouvre directement.'}
+      </span>
+    </form>
   )
 }
 
