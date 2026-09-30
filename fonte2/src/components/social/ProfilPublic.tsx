@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { fondBanniere } from '@/lib/bannieres'
+import { motifCss } from '@/lib/motifs'
 import { CarteProfil } from '@/components/social/CarteProfil'
 import {
   SIGNES_ENCOURAGEMENT,
@@ -75,6 +76,21 @@ export function VueProfil({
         }}
       />
 
+      {/* Le motif s'arrête où commence le contenu : sous les
+          statistiques, il les rendrait pénibles à lire. Le
+          dégradé vers le bas assure la transition. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0"
+        style={{
+          top: 'calc(-1 * (6.25rem + env(safe-area-inset-top)))',
+          height: 'calc(230px + 6.25rem + env(safe-area-inset-top))',
+          maskImage: 'linear-gradient(to bottom, #000 62%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, #000 62%, transparent 100%)',
+          ...motifCss(profil.motif),
+        }}
+      />
+
       <section className="relative border-b border-filet pb-6">
         <div className="flex flex-wrap items-start gap-4 sm:gap-5">
           <span
@@ -129,6 +145,7 @@ export function VueProfil({
                   niveau={niveau.niveau}
                   rang={niveau.rang}
                   banniere={profil.banniere}
+                  motif={profil.motif}
                 />
               )
             : (

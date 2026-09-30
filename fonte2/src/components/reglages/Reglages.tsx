@@ -8,7 +8,7 @@ import { JOURS } from '@/lib/rappel'
 import { definirJourRappel } from '@/app/(carnet)/reglages/rappel'
 import { seDeconnecter } from '@/app/auth/actions'
 import { sonsActifs, definirSons, sonValide } from '@/lib/sons'
-import { BANNIERES, fondBanniere } from '@/lib/bannieres'
+import { ChoixTheme as ChoixThemeProfil } from '@/components/reglages/ChoixTheme'
 import { definirCode } from '@/app/(carnet)/admin/verrou'
 import { changerPersonnalisation } from '@/app/(carnet)/reglages/actions'
 import {
@@ -37,6 +37,7 @@ export function Reglages({
   jourRappel,
   bio,
   banniere,
+  motif,
   aUnCode,
 }: {
   pseudo: string
@@ -48,6 +49,7 @@ export function Reglages({
   jourRappel: number | null
   bio: string
   banniere: string
+  motif: string
   aUnCode: boolean
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
@@ -103,12 +105,15 @@ export function Reglages({
         </Ligne>
 
         <Ligne
-          titre="Bannière"
-          detail="Le fond de ton profil. Visible de tous."
+          titre="Thème"
+          detail="La couleur et le motif de ton profil, visibles de tous. L'aperçu montre le rendu avant d'appliquer."
         >
-          <ChoixBanniere
-            actuelle={banniere}
+          <ChoixThemeProfil
             bio={bio}
+            banniere={banniere}
+            motif={motif}
+            pseudo={pseudo}
+            avatar={avatar}
             enCours={enCours}
             onAgir={agir}
           />
@@ -121,6 +126,7 @@ export function Reglages({
           <ChampBio
             valeur={bio}
             banniere={banniere}
+            motif={motif}
             enCours={enCours}
             onAgir={agir}
           />
@@ -222,7 +228,7 @@ export function Reglages({
       {/* ---- Apparence ---- */}
       <Section titre="Apparence">
         <Ligne titre="Thème" detail="Ce réglage est propre à cet appareil.">
-          <ChoixTheme />
+          <ChoixThemeAffichage />
         </Ligne>
 
         <Ligne
@@ -325,7 +331,7 @@ export function Reglages({
 
 /* ---- Thème ---- */
 
-function ChoixTheme() {
+function ChoixThemeAffichage() {
   const [theme, setTheme] = useState<Theme>('sombre')
 
   useEffect(() => {
@@ -418,59 +424,16 @@ function ChampCode({
 
 /* ---- Personnalisation ---- */
 
-function ChoixBanniere({
-  actuelle,
-  bio,
-  enCours,
-  onAgir,
-}: {
-  actuelle: string
-  bio: string
-  enCours: boolean
-  onAgir: (a: () => Promise<{ erreur?: string; succes?: string }>) => void
-}) {
-  const [choisie, setChoisie] = useState(actuelle)
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {BANNIERES.map((b) => (
-        <button
-          key={b.cle}
-          type="button"
-          disabled={enCours}
-          aria-label={b.nom}
-          aria-pressed={choisie === b.cle}
-          onClick={() => {
-            setChoisie(b.cle)
-            onAgir(() => changerPersonnalisation(bio, b.cle))
-          }}
-          className={`appui relative h-11 w-16 overflow-hidden rounded-bloc
-            border transition-colors ${
-              choisie === b.cle ? 'border-accent' : 'border-bordure'
-            }`}
-          style={{ backgroundColor: 'var(--color-fond)' }}
-        >
-          {/* Le même dégradé que sur le profil, pour que l'aperçu
-              dise la vérité. */}
-          <span
-            aria-hidden
-            className="absolute inset-0"
-            style={{ background: fondBanniere(b.cle) }}
-          />
-        </button>
-      ))}
-    </div>
-  )
-}
-
 function ChampBio({
   valeur,
   banniere,
+  motif,
   enCours,
   onAgir,
 }: {
   valeur: string
   banniere: string
+  motif: string
   enCours: boolean
   onAgir: (a: () => Promise<{ erreur?: string; succes?: string }>) => void
 }) {
@@ -495,7 +458,7 @@ function ChampBio({
         <button
           type="button"
           disabled={enCours || texte === valeur}
-          onClick={() => onAgir(() => changerPersonnalisation(texte, banniere))}
+          onClick={() => onAgir(() => changerPersonnalisation(texte, banniere, motif))}
           className="appui rounded-bloc border border-bordure bg-verre px-4 py-2
                      text-xs font-semibold text-encre-douce transition-colors
                      hover:text-encre disabled:opacity-40"

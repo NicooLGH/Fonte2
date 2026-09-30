@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import QRCode from 'qrcode'
 import { IconeCroix, IconePartage } from '@/components/Icones'
+import { peindreMotif } from '@/lib/motifs'
 
 /* ============================================================
    Carte de profil partageable
@@ -40,12 +41,14 @@ export function CarteProfil({
   niveau,
   rang,
   banniere,
+  motif,
 }: {
   pseudo: string
   avatar: string
   niveau: number
   rang: string
   banniere: string | null
+  motif: string | null
 }) {
   const [enCours, setEnCours] = useState(false)
   const [apercu, setApercu] = useState<string | null>(null)
@@ -85,6 +88,11 @@ export function CarteProfil({
     teinte.addColorStop(1, `rgba(${rgb},0)`)
     ctx.fillStyle = teinte
     ctx.fillRect(0, 0, L, H - BANDE)
+
+    // Le motif s'arrête bien avant la bande claire : il ne doit
+    // jamais approcher le QR code, dont la lecture dépend d'un
+    // fond net.
+    peindreMotif(ctx, motif, L, H - BANDE - 120)
 
     /* ---- Logo ---- */
     ctx.font = '400 54px "Bebas Neue", sans-serif'

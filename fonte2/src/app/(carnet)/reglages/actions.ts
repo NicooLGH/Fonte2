@@ -116,7 +116,8 @@ export async function supprimerCompte(confirmation: string): Promise<Reponse> {
  */
 export async function changerPersonnalisation(
   bio: string,
-  banniere: string
+  banniere: string,
+  motif: string
 ): Promise<Reponse> {
   if (bio.length > 140)
     return { erreur: 'La description ne peut pas dépasser 140 caractères.' }
@@ -125,6 +126,7 @@ export async function changerPersonnalisation(
   const { error } = await supabase.rpc('set_personnalisation', {
     p_bio: bio.trim(),
     p_banniere: banniere,
+    p_motif: motif,
   })
 
   if (error) return { erreur: messageErreur(error.message) }
