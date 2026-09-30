@@ -8,6 +8,7 @@ import type {
   Signal,
   Signe,
 } from './social'
+import { lireAmisEnSeance, type AmiEnSeance } from './live-social'
 
 /* ============================================================
    Lecture du volet social — serveur uniquement
@@ -232,4 +233,16 @@ export async function compterSeances(cible: string): Promise<number> {
   const supabase = await creerClientServeur()
   const { data } = await supabase.rpc('nb_seances_visibles', { target: cible })
   return Number(data ?? 0)
+}
+
+/**
+ * Amis en séance en ce moment — pour l'accueil.
+ * Renvoie une liste vide si la fonction SQL n'est pas encore
+ * installée : la page ne doit pas casser pour autant.
+ */
+export async function chargerAmisEnSeance(): Promise<AmiEnSeance[]> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase.rpc('amis_en_seance')
+  if (error) return []
+  return lireAmisEnSeance(data)
 }

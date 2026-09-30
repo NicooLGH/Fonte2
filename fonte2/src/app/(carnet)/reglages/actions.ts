@@ -77,6 +77,19 @@ export async function changerPartagePresence(actif: boolean): Promise<Reponse> {
   return { succes: actif ? 'Ton statut est visible' : 'Ton statut est masqué' }
 }
 
+export async function changerPartageLive(actif: boolean): Promise<Reponse> {
+  const { supabase } = await moi()
+  const { error } = await supabase.rpc('set_partage_live', { actif })
+  if (error) return { erreur: messageErreur(error.message) }
+
+  rafraichir()
+  return {
+    succes: actif
+      ? 'Tes amis verront quand tu es en séance'
+      : 'Tes séances en direct restent discrètes',
+  }
+}
+
 export async function changerMotDePasse(donnees: FormData): Promise<Reponse> {
   const nouveau = String(donnees.get('motDePasse') ?? '')
   if (nouveau.length < 8)

@@ -7,13 +7,19 @@ import {
 import { rappelAAfficher } from '@/lib/rappel'
 import { semaineCourante } from '@/lib/semaine'
 import { Rappel } from '@/components/suivi/Rappel'
-import { chargerFil, chargerSignaux, chargerAmis } from '@/lib/donnees-social'
+import {
+  chargerFil,
+  chargerSignaux,
+  chargerAmis,
+  chargerAmisEnSeance,
+} from '@/lib/donnees-social'
 import { chargerAnnonces } from '@/lib/donnees-notifs'
 import { bilanDisponible, calculerBilan, moisPrecedent } from '@/lib/bilan'
 import { BanniereBilan } from '@/components/bilan/Banniere'
 import { Annonces } from '@/components/social/Annonces'
 import { Fil } from '@/components/social/Fil'
 import { Presence } from '@/components/social/Presence'
+import { EnSeance } from '@/components/social/EnSeance'
 
 /**
  * Accueil.
@@ -23,13 +29,14 @@ import { Presence } from '@/components/social/Presence'
  * afficher aux deux endroits n'apprenait rien de plus.
  */
 export default async function Accueil() {
-  const [fil, signaux, amis, annonces, rappel, releves] = await Promise.all([
+  const [fil, signaux, amis, annonces, rappel, releves, enSeance] = await Promise.all([
     chargerFil(),
     chargerSignaux(),
     chargerAmis(),
     chargerAnnonces(),
     chargerRappel(),
     chargerSuiviComplet(),
+    chargerAmisEnSeance(),
   ])
 
   const semaine = semaineCourante()
@@ -53,6 +60,10 @@ export default async function Accueil() {
   return (
     <div className="flex flex-col gap-6 py-4">
       <Presence />
+
+      {/* Toujours monté : il se rafraîchit seul et n'affiche
+          rien tant qu'aucun ami ne s'entraîne. */}
+      <EnSeance initiaux={enSeance} />
 
       {annonces.length > 0 && <Annonces annonces={annonces} />}
 

@@ -419,3 +419,59 @@ select {
 .tremblement {
   animation: tremblement 0.26s ease-in-out;
 }
+
+/* ============================================================
+   RÉACTIONS EN DIRECT
+   ============================================================ */
+
+/* Point vert « en séance » : une respiration lente, pas un
+   clignotement. */
+@keyframes pouls-live {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(34 197 94 / 0.55); }
+  60% { box-shadow: 0 0 0 5px rgb(34 197 94 / 0); }
+}
+.pouls-live {
+  animation: pouls-live 1.8s ease-out infinite;
+}
+
+/* Côté envoi : le smiley décolle du bouton. */
+@keyframes envol-live {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-46px) scale(1.35); opacity: 0; }
+}
+.envol-live {
+  animation: envol-live 1.1s var(--courbe) forwards;
+}
+
+/* Côté séance : le smiley monte le long du bord et s'efface. */
+@keyframes envol-live-long {
+  0% { transform: translateY(12px) scale(0.6); opacity: 0; }
+  12% { transform: translateY(0) scale(1.1); opacity: 1; }
+  25% { transform: translateY(-20px) scale(1); opacity: 1; }
+  100% { transform: translateY(-190px) scale(0.9); opacity: 0; }
+}
+.envol-live-long {
+  animation: envol-live-long 3.2s ease-out forwards;
+}
+
+/* « X t'encourage » : arrive, reste, repart. */
+@keyframes bulle-live {
+  0% { opacity: 0; transform: translate(-50%, -6px); }
+  10%, 85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -6px); }
+}
+.bulle-live {
+  animation: bulle-live 3.8s var(--courbe) forwards;
+}
+
+/* Animations réduites : les messages restent visibles, sans
+   mouvement, le temps de leur minuterie. */
+@media (prefers-reduced-motion: reduce) {
+  .bulle-live,
+  .envol-live-long {
+    animation: none !important;
+  }
+  .bulle-live {
+    transform: translateX(-50%);
+  }
+}

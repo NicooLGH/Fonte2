@@ -16,6 +16,7 @@ import {
   changerAvatar,
   changerPartageSeances,
   changerPartagePresence,
+  changerPartageLive,
   changerMotDePasse,
   supprimerCompte,
 } from '@/app/(carnet)/reglages/actions'
@@ -33,6 +34,7 @@ export function Reglages({
   email,
   partageSeances,
   partagePresence,
+  partageLive,
   admin,
   jourRappel,
   bio,
@@ -45,6 +47,7 @@ export function Reglages({
   email: string
   partageSeances: boolean
   partagePresence: boolean
+  partageLive: boolean
   admin: boolean
   jourRappel: number | null
   bio: string
@@ -179,6 +182,18 @@ export function Reglages({
             libelles={['Visible', 'Masqué']}
             desactive={enCours}
             onChange={(v) => agir(() => changerPartagePresence(v))}
+          />
+        </Ligne>
+
+        <Ligne
+          titre="Séance en direct"
+          detail="Pendant une séance en mode direct, tes amis voient « en séance depuis X min » et peuvent t'envoyer un smiley par minute. Jamais tes exercices ni tes charges. Masqué, rien n'est enregistré."
+        >
+          <Bascule
+            valeur={partageLive}
+            libelles={['Amis', 'Masqué']}
+            desactive={enCours}
+            onChange={(v) => agir(() => changerPartageLive(v))}
           />
         </Ligne>
       </Section>

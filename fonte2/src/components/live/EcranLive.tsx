@@ -25,6 +25,8 @@ import {
   vibrer,
 } from '@/lib/sons'
 import { enregistrerSeanceLive } from '@/app/(carnet)/seances/actions'
+import { finirLive } from '@/lib/live-social'
+import { Encouragements } from './Encouragements'
 
 /* ============================================================
    Séance en direct
@@ -188,6 +190,7 @@ export function EcranLive({
             onClick={() => {
               enregistrer(null)
               setEtape('choix')
+              void finirLive()
             }}
             className="rounded-bloc border border-bordure bg-verre px-6 py-3
                        text-sm font-semibold text-encre-douce transition-colors
@@ -441,6 +444,7 @@ export function EcranLive({
       }
       sonSeanceFinie()
       vibrer(30)
+      void finirLive()
       enregistrer(null)
       router.push('/seances')
       router.refresh()
@@ -462,6 +466,8 @@ export function EcranLive({
 
     return (
       <main className="securise flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+        <Encouragements debut={live.debut} actif />
+
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
           {fini ? 'Prêt' : 'Échauffement'}
         </p>
@@ -621,6 +627,10 @@ export function EcranLive({
 
   return (
     <div className="plein-ecran securise-haut flex flex-col">
+      {/* Signal « en séance » pour les amis et smileys reçus.
+          Rien du contenu de la séance ne quitte l'appareil. */}
+      <Encouragements debut={live.debut} actif />
+
       {/* En-tête */}
       {/* En-tête réduit au strict nécessaire : tout l'espace
           vertical gagné va aux charges. */}

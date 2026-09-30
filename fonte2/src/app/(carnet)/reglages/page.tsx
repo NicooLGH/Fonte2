@@ -21,7 +21,7 @@ export default async function PageReglages() {
 
   const { data } = await supabase
     .from('profiles')
-    .select('pseudo, avatar, partage_seances, partage_presence, bio, banniere, motif')
+    .select('pseudo, avatar, partage_seances, partage_presence, partage_live, bio, banniere, motif')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -30,6 +30,7 @@ export default async function PageReglages() {
         bio: string | null
         banniere: string | null
         motif: string | null
+        partage_live: boolean | null
       })
     | null
 
@@ -40,6 +41,7 @@ export default async function PageReglages() {
       email={user.email ?? '—'}
       partageSeances={profil?.partage_seances ?? false}
       partagePresence={profil?.partage_presence ?? true}
+      partageLive={profil?.partage_live ?? true}
       admin={admin}
       jourRappel={rappel.jour}
       bio={profil?.bio ?? ''}
