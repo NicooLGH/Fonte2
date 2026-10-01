@@ -33,10 +33,13 @@ export function VueProfil({
   encouragementEnvoye,
   niveau,
   historique,
+  badges,
 }: {
   profil: Profil
   encouragementEnvoye: Signe | null
   historique?: React.ReactNode
+  /** Grille des badges, visible par la personne et ses amis. */
+  badges?: React.ReactNode
   /* Seulement pour son propre profil : l'XP des autres ne
      regarde personne. */
   niveau?: {
@@ -255,6 +258,8 @@ export function VueProfil({
               )}
             </section>
           )}
+
+          {badges && <section className="section relative pb-6">{badges}</section>}
 
           <section className="section relative pb-6">
             <p className="section-titre mb-4">Séances</p>

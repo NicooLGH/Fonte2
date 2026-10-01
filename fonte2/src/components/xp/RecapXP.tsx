@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { calculerNiveau, rangSuivant, type GainXP } from '@/lib/xp'
 import { vibrer } from '@/lib/sons'
+import { Badge } from '@/components/badges/Badge'
+import { couleurPalier, definitionBadge, nomPalier } from '@/lib/badges'
 
 /* ============================================================
    Récapitulatif d'XP, après l'enregistrement d'une séance
@@ -80,6 +82,8 @@ function Detail({
   onContinuer: () => void
 }) {
   const total = gains.reduce((t, g) => t + g.montant, 0)
+  const lignes = gains.filter((g) => g.source !== 'badge')
+  const badges = gains.filter((g) => g.source === 'badge')
   const n = calculerNiveau(apres)
   const etendue = n.xpSuivant - n.xpDebut
 
@@ -128,9 +132,9 @@ function Detail({
           <span className="font-mono text-[13px] text-encre-douce">XP</span>
         </p>
 
-        {gains.length > 0 && (
+        {lignes.length > 0 && (
           <ul className="entree-liste mt-5 border-t border-filet">
-            {gains.map((g, i) => (
+            {lignes.map((g, i) => (
               <li
                 key={i}
                 className="flex items-baseline justify-between gap-3 border-b border-filet py-3"
@@ -141,6 +145,10 @@ function Detail({
             ))}
           </ul>
         )}
+
+        {badges.map((g, i) => (
+          <EncartBadge key={i} gain={g} />
+        ))}
 
         <div className="mt-7">
           <div className="flex items-baseline justify-between">
@@ -185,6 +193,40 @@ function Detail({
         </div>
       </div>
     </main>
+  )
+}
+
+/* ---- Un badge débloqué par la séance ---- */
+
+function EncartBadge({ gain }: { gain: GainXP }) {
+  const def = gain.badge ? definitionBadge(gain.badge) : undefined
+  if (!def) return null
+  const i = Math.max(0, (gain.palier ?? 1) - 1)
+  const couleur = couleurPalier(def, i)
+
+  return (
+    <div
+      className="impulsion mt-4 flex items-center gap-3.5 rounded-[14px] border p-3.5"
+      style={{ borderColor: `${couleur}59`, background: `${couleur}0f` }}
+    >
+      <Badge def={def} palier={i} taille={60} />
+      <div className="min-w-0 flex-1">
+        <p
+          className="font-mono text-[10px] uppercase tracking-[0.14em]"
+          style={{ color: couleur }}
+        >
+          Badge débloqué
+        </p>
+        <p className="mt-1 font-display text-2xl leading-none">
+          {def.nom}
+          {!def.moment && ` · ${nomPalier(def, i)}`}
+        </p>
+        <p className="mt-1 text-[12.5px] text-encre-douce">
+          {def.moment ? def.condition : `${def.condition} · ${def.seuils[i]}`}
+        </p>
+      </div>
+      <span className="font-mono text-[13px] text-accent-2">+{gain.montant}</span>
+    </div>
   )
 }
 

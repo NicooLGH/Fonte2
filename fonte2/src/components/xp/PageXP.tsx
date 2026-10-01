@@ -174,7 +174,12 @@ function Bareme({ niveau }: { niveau: number }) {
           detail="1 par exercice et par séance. La première fois sur un exercice sert de référence."
           valeur={`+${b.record}`}
         />
-        <Ligne titre="Badges et défis" detail="bientôt" valeur="—" estompe />
+        <Ligne
+          titre="Palier de badge"
+          detail="Bronze 25 · Argent 50 · Or 100 · Platine 200 · Diamant 400. Les badges « Moments » valent 100."
+          valeur="+25 → +400"
+        />
+        <Ligne titre="Défis" detail="bientôt" valeur="—" estompe />
       </Groupe>
 
       <Groupe titre="Rangs">

@@ -6,6 +6,9 @@ import {
   compterSeances,
 } from '@/lib/donnees-social'
 import { Historique } from '@/components/social/Historique'
+import { GrilleBadges } from '@/components/badges/GrilleBadges'
+import { chargerBadges } from '@/lib/donnees-xp'
+import type { EtatBadge } from '@/lib/badges'
 import { VueProfil } from '@/components/social/ProfilPublic'
 import type { Metadata } from 'next'
 
@@ -56,17 +59,27 @@ export default async function ProfilPublicPage({
 
   // L'historique n'est chargé que si la base accepte de le
   // montrer : inutile de le demander pour un profil fermé.
-  const [historique, total] = profil.detail
+  const [historique, total, badges]: [
+    Awaited<ReturnType<typeof chargerHistorique>>,
+    number,
+    EtatBadge[] | null,
+  ] = profil.detail
     ? await Promise.all([
         chargerHistorique(profil.id),
         compterSeances(profil.id),
+        chargerBadges(profil.id),
       ])
-    : [[], 0]
+    : [[], 0, null]
 
   return (
     <VueProfil
       profil={profil}
       encouragementEnvoye={envoyes[profil.id] ?? null}
+      badges={
+        badges && (
+          <GrilleBadges etats={badges} moi={profil.relation === 'moi'} />
+        )
+      }
       historique={
         <Historique
           cible={profil.id}

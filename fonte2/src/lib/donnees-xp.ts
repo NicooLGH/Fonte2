@@ -2,6 +2,7 @@ import 'server-only'
 
 import { creerClientServeur } from './supabase/server'
 import type { GainXP, PageJournal, SourceXP, XPSeance } from './xp'
+import type { EtatBadge } from './badges'
 
 /* ============================================================
    XP — lecture côté serveur
@@ -12,7 +13,7 @@ import type { GainXP, PageJournal, SourceXP, XPSeance } from './xp'
    répondre : on lit donc toujours un chiffre à jour.
    ============================================================ */
 
-const SOURCES: SourceXP[] = ['serie', 'seance', 'record', 'releve', 'semaine']
+const SOURCES: SourceXP[] = ['serie', 'seance', 'record', 'releve', 'semaine', 'badge']
 
 type Brut = Record<string, unknown>
 
@@ -24,6 +25,8 @@ export function lireGain(g: Brut): GainXP {
     montant: Number(g.montant) || 0,
     date: String(g.date ?? ''),
     semaine: String(g.semaine ?? ''),
+    badge: typeof g.badge === 'string' ? g.badge : null,
+    palier: g.palier == null ? null : Number(g.palier),
   }
 }
 
@@ -65,4 +68,23 @@ export async function chargerXPSeance(seanceId: string): Promise<XPSeance | null
     total: Number(brut.total) || 0,
     gains: Array.isArray(brut.gains) ? (brut.gains as Brut[]).map(lireGain) : [],
   }
+}
+
+/**
+ * Badges d'une personne : la mienne, ou celle d'un ami.
+ * null si la base refuse (pas amis) ou si le SQL des badges
+ * n'est pas encore installé.
+ */
+export async function chargerBadges(cible: string): Promise<EtatBadge[] | null> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase.rpc('badges_de', { target: cible })
+  if (error || !Array.isArray(data)) return null
+
+  return (data as Brut[]).map((b) => ({
+    id: String(b.id ?? ''),
+    valeur: Number(b.valeur) || 0,
+    dates: Array.isArray(b.dates)
+      ? (b.dates as unknown[]).map((d) => (typeof d === 'string' ? d : null))
+      : [],
+  }))
 }
