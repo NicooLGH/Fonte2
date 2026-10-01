@@ -3,11 +3,22 @@
 import { revalidatePath } from 'next/cache'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { messageErreur } from '@/lib/messages'
-import { semaineDe } from '@/lib/xp'
+import { semaineDe, type GainXP } from '@/lib/xp'
+import { chargerMonXP, chargerXPSeance } from '@/lib/donnees-xp'
 import { aujourdhui } from '@/lib/semaine'
 import type { Groupe } from '@/types/database'
 
 export type Reponse = { erreur?: string; succes?: string }
+
+/** Réponse du mode direct : l'XP gagnée, pour le récapitulatif. */
+export type ReponseLive = Reponse & {
+  xp?: { avant: number; apres: number; gains: GainXP[] }
+}
+
+/** « · +66 XP » quand le total a augmenté, rien sinon. */
+function mentionXP(avant: number, apres: number): string {
+  return apres > avant ? ` · +${apres - avant} XP` : ''
+}
 
 async function moi() {
   const supabase = await creerClientServeur()
@@ -131,6 +142,8 @@ export async function enregistrerSeance(
   if (propres.length === 0)
     return { erreur: 'Renseigne au moins une série complète.' }
 
+  const xpAvant = await chargerMonXP()
+
   const { data: existante } = await supabase
     .from('seances')
     .select('id')
@@ -181,7 +194,13 @@ export async function enregistrerSeance(
 
   revalidatePath('/seances')
   revalidatePath('/')
-  return { succes: existante ? 'Séance mise à jour' : 'Séance enregistrée' }
+  revalidatePath('/profil')
+  const xpApres = await chargerMonXP()
+  return {
+    succes:
+      (existante ? 'Séance mise à jour' : 'Séance enregistrée') +
+      mentionXP(xpAvant, xpApres),
+  }
 }
 
 export async function supprimerSeance(id: string): Promise<Reponse> {
@@ -191,6 +210,7 @@ export async function supprimerSeance(id: string): Promise<Reponse> {
 
   revalidatePath('/seances')
   revalidatePath('/')
+  revalidatePath('/profil')
   return { succes: 'Séance supprimée' }
 }
 
@@ -241,8 +261,9 @@ export async function supprimerModele(id: string): Promise<Reponse> {
 export async function enregistrerSeanceLive(
   blocs: BlocSaisi[],
   note: string | null,
-  dureeSec: number
-): Promise<Reponse> {
+  dureeSec: number,
+  nom: string | null = null
+): Promise<ReponseLive> {
   const { supabase, user } = await moi()
   if (!user) return { erreur: 'Session expirée.' }
 
@@ -260,6 +281,9 @@ export async function enregistrerSeanceLive(
   if (propres.length === 0)
     return { erreur: 'Aucune série complète à enregistrer.' }
 
+  const xpAvant = await chargerMonXP()
+  const nomPropre = nom?.trim().slice(0, 40) || null
+
   const { data: existante } = await supabase
     .from('seances')
     .select('id')
@@ -273,7 +297,7 @@ export async function enregistrerSeanceLive(
     seanceId = existante.id as string
     await supabase
       .from('seances')
-      .update({ note, duree_sec: dureeSec })
+      .update({ note, duree_sec: dureeSec, nom: nomPropre })
       .eq('id', seanceId)
     await supabase.from('series').delete().eq('seance_id', seanceId)
   } else {
@@ -285,6 +309,7 @@ export async function enregistrerSeanceLive(
         week_key: semaineDe(date),
         note,
         duree_sec: dureeSec,
+        nom: nomPropre,
       })
       .select('id')
       .single()
@@ -309,5 +334,13 @@ export async function enregistrerSeanceLive(
 
   revalidatePath('/seances')
   revalidatePath('/')
-  return { succes: 'Séance enregistrée' }
+  revalidatePath('/profil')
+
+  // L'XP est recalculée par la base à cette lecture : les
+  // séries viennent d'être écrites, le journal est donc à jour.
+  const xp = await chargerXPSeance(seanceId)
+  return {
+    succes: 'Séance enregistrée',
+    xp: xp ? { avant: xpAvant, apres: xp.total, gains: xp.gains } : undefined,
+  }
 }

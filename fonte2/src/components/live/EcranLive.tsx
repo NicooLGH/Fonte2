@@ -27,6 +27,8 @@ import {
 import { enregistrerSeanceLive } from '@/app/(carnet)/seances/actions'
 import { finirLive } from '@/lib/live-social'
 import { Encouragements } from './Encouragements'
+import { RecapXP } from '@/components/xp/RecapXP'
+import type { GainXP } from '@/lib/xp'
 
 /* ============================================================
    Séance en direct
@@ -65,6 +67,15 @@ export function EcranLive({
   // toutes les séries à venir.
   const [refusees, setRefusees] = useState<number[]>([])
   const [echauffementAnnonce, setEchauffementAnnonce] = useState(false)
+  // Après l'enregistrement : l'XP gagnée, affichée avant de
+  // revenir au carnet.
+  const [recap, setRecap] = useState<{
+    avant: number
+    apres: number
+    gains: GainXP[]
+    titre: string
+    resume: string
+  } | null>(null)
   const [enCours, demarrer] = useTransition()
 
   const cle = cleLive(userId)
@@ -160,6 +171,18 @@ export function EcranLive({
   }
 
   /* ---- Écrans ---- */
+
+  if (recap) {
+    return (
+      <RecapXP
+        {...recap}
+        onContinuer={() => {
+          router.push('/seances')
+          router.refresh()
+        }}
+      />
+    )
+  }
 
   if (etape === 'reprise' && live) {
     const minutes = Math.round((Date.now() - live.debut) / 60000)
@@ -436,8 +459,24 @@ export function EcranLive({
       return
     }
 
+    // Le résumé est calculé avant d'effacer la séance locale.
+    const nbExos = blocs.length
+    const volume = blocs.reduce(
+      (t, b) => t + b.series.reduce((x, s) => x + s.poids * s.reps, 0),
+      0
+    )
+    const resume = `${nbExos} exercice${nbExos > 1 ? 's' : ''} · ${Math.round(
+      volume
+    ).toLocaleString('fr-FR')} kg · ${mmss(dureeSec * 1000)}`
+    const titre = live!.nom || 'Séance'
+
     demarrer(async () => {
-      const r = await enregistrerSeanceLive(blocs, live!.note.trim() || null, dureeSec)
+      const r = await enregistrerSeanceLive(
+        blocs,
+        live!.note.trim() || null,
+        dureeSec,
+        live!.nom
+      )
       if (r.erreur) {
         setErreur(r.erreur)
         return
@@ -446,8 +485,16 @@ export function EcranLive({
       vibrer(30)
       void finirLive()
       enregistrer(null)
-      router.push('/seances')
-      router.refresh()
+
+      // Sans XP (SQL pas encore installé, réseau coupé), on
+      // revient au carnet comme avant.
+      if (r.xp) {
+        setRecap({ ...r.xp, titre, resume })
+        window.scrollTo({ top: 0 })
+      } else {
+        router.push('/seances')
+        router.refresh()
+      }
     })
   }
 

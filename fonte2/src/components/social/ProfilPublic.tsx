@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { fondBanniere } from '@/lib/bannieres'
 import { motifCss } from '@/lib/motifs'
@@ -156,7 +157,15 @@ export function VueProfil({
         </div>
 
         {niveau && (
-          <div className="mt-6">
+          // Sur mon profil, la barre mène au barème et au journal.
+          <Link
+            href={profil.relation === 'moi' ? '/xp' : '#'}
+            aria-disabled={profil.relation !== 'moi'}
+            onClick={(e) => {
+              if (profil.relation !== 'moi') e.preventDefault()
+            }}
+            className="group mt-6 block"
+          >
             <div className="h-2 overflow-hidden rounded-bloc bg-verre-fort">
               <div
                 className="h-full rounded-bloc bg-accent transition-[width] duration-500"
@@ -170,7 +179,13 @@ export function VueProfil({
                 {niveau.niveau + 1}
               </span>
             </div>
-          </div>
+            {profil.relation === 'moi' && (
+              <p className="mt-1.5 text-right font-mono text-[10.5px] text-accent-2
+                            transition-colors group-hover:text-encre">
+                Barème et journal d&apos;XP ›
+              </p>
+            )}
+          </Link>
         )}
 
         {erreur && (

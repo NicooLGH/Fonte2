@@ -7,8 +7,8 @@ import {
 } from '@/lib/donnees-social'
 import { Historique } from '@/components/social/Historique'
 import { VueProfil } from '@/components/social/ProfilPublic'
-import { chargerExercices, chargerSeances, chargerReleves } from '@/lib/donnees'
-import { repartitionXP, totalXP, calculerNiveau } from '@/lib/xp'
+import { chargerMonXP } from '@/lib/donnees-xp'
+import { calculerNiveau } from '@/lib/xp'
 
 /**
  * Mon profil.
@@ -24,19 +24,15 @@ export default async function MonProfil() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const [profil, exercices, seances, releves, historique, total] =
-    await Promise.all([
-      chargerProfil(user.id),
-      chargerExercices(),
-      chargerSeances(),
-      chargerReleves(),
-      chargerHistorique(user.id),
-      compterSeances(user.id),
-    ])
+  // L'XP vient de la base, qui tient le journal à jour.
+  const [profil, xp, historique, total] = await Promise.all([
+    chargerProfil(user.id),
+    chargerMonXP(),
+    chargerHistorique(user.id),
+    compterSeances(user.id),
+  ])
 
-  const n = calculerNiveau(
-    totalXP(repartitionXP(seances, releves, exercices.map((e) => e.id)))
-  )
+  const n = calculerNiveau(xp)
 
   if (!profil)
     return (

@@ -5,6 +5,7 @@ import { creerClientServeur } from '@/lib/supabase/server'
 import { messageErreur } from '@/lib/messages'
 import { cleSemaine, aujourdhui } from '@/lib/semaine'
 import { estDimanche } from '@/lib/xp'
+import { chargerMonXP } from '@/lib/donnees-xp'
 import type { CleSuivi, Objectifs } from '@/lib/suivi'
 
 export type Reponse = { erreur?: string; succes?: string }
@@ -54,6 +55,8 @@ export async function enregistrerReleve(donnees: FormData): Promise<Reponse> {
   if (CLES.every((c) => valeurs[c] === null))
     return { erreur: 'Renseigne au moins une valeur.' }
 
+  const xpAvant = await chargerMonXP()
+
   const { data: existant } = await supabase
     .from('suivi')
     .select('id')
@@ -86,7 +89,12 @@ export async function enregistrerReleve(donnees: FormData): Promise<Reponse> {
 
   revalidatePath('/suivi')
   revalidatePath('/')
-  return { succes: 'Relevé enregistré' }
+  revalidatePath('/profil')
+  const xpApres = await chargerMonXP()
+  return {
+    succes:
+      'Relevé enregistré' + (xpApres > xpAvant ? ` · +${xpApres - xpAvant} XP` : ''),
+  }
 }
 
 export async function supprimerReleve(id: string): Promise<Reponse> {
@@ -96,6 +104,7 @@ export async function supprimerReleve(id: string): Promise<Reponse> {
 
   revalidatePath('/suivi')
   revalidatePath('/')
+  revalidatePath('/profil')
   return { succes: 'Relevé supprimé' }
 }
 

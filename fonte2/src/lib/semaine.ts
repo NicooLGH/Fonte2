@@ -41,6 +41,28 @@ export function libelleCourt(cle: string): string {
   return `S${parseInt(cle.split('-W')[1], 10)}`
 }
 
+/** Lundi d'une semaine ISO, en UTC. */
+export function lundiDe(cle: string): Date {
+  const [annee, sem] = cle.split('-W').map(Number)
+  const jan4 = new Date(Date.UTC(annee, 0, 4))
+  const lundi = new Date(jan4)
+  lundi.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() || 7) - 1) + (sem - 1) * 7)
+  return lundi
+}
+
+/** « 29 sept. – 5 oct. », ou « 22 – 28 sept. » dans le même mois. */
+export function bornesSemaine(cle: string): string {
+  const debut = lundiDe(cle)
+  const fin = new Date(debut)
+  fin.setUTCDate(debut.getUTCDate() + 6)
+  const jour = (d: Date) => d.getUTCDate()
+  const mois = (d: Date) =>
+    d.toLocaleDateString('fr-FR', { month: 'short', timeZone: 'UTC' })
+  return debut.getUTCMonth() === fin.getUTCMonth()
+    ? `${jour(debut)} – ${jour(fin)} ${mois(fin)}`
+    : `${jour(debut)} ${mois(debut)} – ${jour(fin)} ${mois(fin)}`
+}
+
 /** Date du jour au format `2026-08-27`, en heure locale. */
 export function aujourdhui(): string {
   const d = new Date()
