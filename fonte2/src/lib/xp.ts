@@ -1,4 +1,5 @@
 import { cleSemaine } from './semaine'
+import type { ConfigBadge } from './defis'
 
 /* ============================================================
    XP, niveaux et rangs
@@ -29,7 +30,7 @@ export const BAREME = {
   serieSemainesPlafond: 100,
 } as const
 
-export type SourceXP = 'serie' | 'seance' | 'record' | 'releve' | 'semaine' | 'badge'
+export type SourceXP = 'serie' | 'seance' | 'record' | 'releve' | 'semaine' | 'badge' | 'defi'
 
 /** Une ligne du journal. */
 export type GainXP = {
@@ -41,6 +42,9 @@ export type GainXP = {
   /** Pour un gain de badge : lequel, et quel palier (1 = premier). */
   badge?: string | null
   palier?: number | null
+  /** Pour un défi réussi : son badge et son titre. */
+  defiBadge?: ConfigBadge | null
+  defiTitre?: string | null
 }
 
 /** Un paquet de semaines du journal. */

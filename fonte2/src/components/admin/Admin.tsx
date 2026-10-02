@@ -11,6 +11,8 @@ import {
   diffuserNotification,
 } from '@/app/(carnet)/admin/actions'
 import { verrouiller } from '@/app/(carnet)/admin/verrou'
+import { AdminDefis } from './AdminDefis'
+import type { DefiAdmin } from '@/lib/defis'
 
 const ICONES = ['📢', '🎉', '⚠️', '🔥', '✨', '💪', '🛠️', '🎁', '📅', '❤️']
 type Ton = 'info' | 'succes' | 'alerte'
@@ -18,9 +20,11 @@ type Ton = 'info' | 'succes' | 'alerte'
 export function Admin({
   annonces,
   verrouillable,
+  defis = [],
 }: {
   annonces: Annonce[]
   verrouillable: boolean
+  defis?: DefiAdmin[]
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
@@ -97,6 +101,9 @@ export function Admin({
           <Succes>{message.ok}</Succes>
         </div>
       )}
+
+      {/* ---- Défis ---- */}
+      <AdminDefis defis={defis} />
 
       {/* ---- Publier ---- */}
       <section className="section pb-6">

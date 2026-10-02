@@ -179,7 +179,11 @@ function Bareme({ niveau }: { niveau: number }) {
           detail="Bronze 25 · Argent 50 · Or 100 · Platine 200 · Diamant 400. Les badges « Moments » valent 100."
           valeur="+25 → +400"
         />
-        <Ligne titre="Défis" detail="bientôt" valeur="—" estompe />
+        <Ligne
+          titre="Défi réussi"
+          detail="L'XP est fixée défi par défi, et chaque défi apporte son badge unique. Voir les défis en cours depuis l'accueil."
+          valeur="variable"
+        />
       </Groupe>
 
       <Groupe titre="Rangs">

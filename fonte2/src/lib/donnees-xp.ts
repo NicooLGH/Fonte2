@@ -3,6 +3,7 @@ import 'server-only'
 import { creerClientServeur } from './supabase/server'
 import type { GainXP, PageJournal, SourceXP, XPSeance } from './xp'
 import type { EtatBadge } from './badges'
+import { lireBadge } from './defis'
 
 /* ============================================================
    XP — lecture côté serveur
@@ -13,7 +14,7 @@ import type { EtatBadge } from './badges'
    répondre : on lit donc toujours un chiffre à jour.
    ============================================================ */
 
-const SOURCES: SourceXP[] = ['serie', 'seance', 'record', 'releve', 'semaine', 'badge']
+const SOURCES: SourceXP[] = ['serie', 'seance', 'record', 'releve', 'semaine', 'badge', 'defi']
 
 type Brut = Record<string, unknown>
 
@@ -27,6 +28,8 @@ export function lireGain(g: Brut): GainXP {
     semaine: String(g.semaine ?? ''),
     badge: typeof g.badge === 'string' ? g.badge : null,
     palier: g.palier == null ? null : Number(g.palier),
+    defiBadge: g.defi_badge ? lireBadge(g.defi_badge) : null,
+    defiTitre: typeof g.defi_titre === 'string' ? g.defi_titre : null,
   }
 }
 

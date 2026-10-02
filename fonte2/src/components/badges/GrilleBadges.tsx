@@ -1,8 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Badge } from './Badge'
+import { BadgeDefi } from '@/components/defis/BadgeDefi'
+import type { BadgesDefis } from '@/lib/defis'
 import {
   BADGES,
   CATEGORIES,
@@ -29,10 +32,13 @@ import {
 export function GrilleBadges({
   etats,
   moi,
+  defis = null,
 }: {
   etats: EtatBadge[]
   /** Sur son propre profil : textes à la 2e personne. */
   moi: boolean
+  /** Badges uniques des défis : réussis, et en cours. */
+  defis?: BadgesDefis | null
 }) {
   const [ouvert, setOuvert] = useState<string | null>(null)
   const parId = new Map(etats.map((e) => [e.id, e]))
@@ -73,6 +79,63 @@ export function GrilleBadges({
           </div>
         </div>
       ))}
+
+      {defis && (defis.reussis.length > 0 || defis.enCours.length > 0 || moi) && (
+        <div className="mt-6">
+          <div className="flex items-baseline justify-between">
+            <p className="section-titre text-[9.5px] opacity-80">Défis</p>
+            <span className="font-mono text-[11px] text-encre-douce">
+              <strong className="font-medium text-encre">{defis.reussis.length}</strong>{' '}
+              réussi{defis.reussis.length > 1 ? 's' : ''}
+            </span>
+          </div>
+          {defis.reussis.length === 0 && defis.enCours.length === 0 ? (
+            <p className="mt-2.5 text-sm text-encre-douce">
+              Aucun défi pour l&apos;instant.{' '}
+              <Link href="/defis" className="font-semibold text-accent-2">
+                Voir les défis en cours
+              </Link>
+            </p>
+          ) : (
+            <div className="mt-2.5 grid grid-cols-4 gap-x-1.5 gap-y-3.5 sm:grid-cols-6">
+              {defis.reussis.map((r) => (
+                <Link
+                  key={r.defi}
+                  href={`/defis/${r.edition}`}
+                  className="appui relative flex min-h-11 flex-col items-center gap-1.5 rounded-bloc py-1
+                             text-encre transition-colors hover:bg-verre"
+                >
+                  <BadgeDefi badge={r.badge} taille={58} />
+                  {r.fois > 1 && (
+                    <span
+                      className="absolute right-1 top-0 rounded-full border border-white/20 bg-fond px-1.5
+                                 font-mono text-[10px]"
+                    >
+                      ×{r.fois}
+                    </span>
+                  )}
+                  <span className="text-center text-[11px] leading-tight">{r.titre}</span>
+                  <span className="font-mono text-[9.5px] text-encre-douce">
+                    {dateCourte(r.derniere)}
+                  </span>
+                </Link>
+              ))}
+              {defis.enCours.map((e) => (
+                <Link
+                  key={e.edition}
+                  href={`/defis/${e.edition}`}
+                  className="appui flex min-h-11 flex-col items-center gap-1.5 rounded-bloc py-1
+                             text-encre-douce transition-colors hover:bg-verre"
+                >
+                  <BadgeDefi badge={e.badge} taille={58} verrouille />
+                  <span className="text-center text-[11px] leading-tight">{e.titre}</span>
+                  <span className="font-mono text-[9.5px]">en cours</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <p className="mt-5 font-mono text-[10.5px] leading-relaxed text-encre-douce">
         {moi
@@ -313,4 +376,11 @@ function dateLisible(date: string): string {
   const d = new Date(date + 'T12:00:00')
   if (Number.isNaN(d.getTime())) return date
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+/** « oct. 2026 » */
+function dateCourte(date: string): string {
+  const d = new Date(date + 'T12:00:00')
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { messageErreur } from '@/lib/messages'
+import type { NouveauDefi } from '@/lib/defis'
 
 export type Reponse = { erreur?: string; succes?: string }
 
@@ -78,4 +79,68 @@ export async function diffuserNotification(
   revalidatePath('/', 'layout')
   const n = (data as { envoyees?: number } | null)?.envoyees ?? 0
   return { succes: `${n} notification${n > 1 ? 's' : ''} envoyée${n > 1 ? 's' : ''}` }
+}
+
+/* ============================================================
+   Défis
+   ============================================================
+   Comme pour les annonces, le rôle est vérifié en base dans
+   chaque fonction. Les valeurs sont revérifiées là-bas aussi
+   (liste fermée pour le badge, bornes pour l'XP…).
+   ============================================================ */
+
+export async function enregistrerDefi(
+  d: NouveauDefi,
+  id: string | null = null
+): Promise<Reponse> {
+  if (d.titre.trim().length < 3) return { erreur: 'Donne un titre (3 caractères minimum).' }
+  if (!(d.valeur > 0)) return { erreur: "L'objectif doit être supérieur à zéro." }
+  if (!(d.xp >= 0 && d.xp <= 2000)) return { erreur: "L'XP doit être entre 0 et 2 000." }
+  if (d.duree === 'jours' && !(d.dureeJours && d.dureeJours >= 1 && d.dureeJours <= 90))
+    return { erreur: 'La durée doit être entre 1 et 90 jours.' }
+  if (d.duree === 'dates' && !d.fin) return { erreur: 'Choisis la date de fin.' }
+
+  const supabase = await creerClientServeur()
+  const { error } = await supabase.rpc('defi_enregistrer', {
+    p: {
+      titre: d.titre.trim(),
+      description: d.description.trim(),
+      type: d.type,
+      portee: d.portee,
+      objectif: d.objectif,
+      valeur: d.valeur,
+      xp: Math.round(d.xp),
+      duree: d.duree,
+      duree_jours: d.duree === 'jours' ? d.dureeJours : null,
+      debut: d.debut,
+      fin: d.duree === 'dates' ? d.fin : null,
+      repetition: d.repetition,
+      badge: d.badge,
+      annonce: d.annonce,
+      statut: d.statut,
+    },
+    p_id: id,
+  })
+  if (error) return { erreur: messageErreur(error.message) }
+
+  revalidatePath('/', 'layout')
+  return {
+    succes: id
+      ? 'Défi mis à jour'
+      : d.statut === 'brouillon'
+        ? 'Brouillon enregistré'
+        : 'Défi publié',
+  }
+}
+
+export async function changerStatutDefi(
+  id: string,
+  statut: 'publie' | 'archive'
+): Promise<Reponse> {
+  const supabase = await creerClientServeur()
+  const { error } = await supabase.rpc('defi_statut', { d_id: id, s: statut })
+  if (error) return { erreur: messageErreur(error.message) }
+
+  revalidatePath('/', 'layout')
+  return { succes: statut === 'archive' ? 'Défi archivé' : 'Défi publié' }
 }

@@ -6,6 +6,7 @@ import { calculerNiveau, rangSuivant, type GainXP } from '@/lib/xp'
 import { vibrer } from '@/lib/sons'
 import { Badge } from '@/components/badges/Badge'
 import { couleurPalier, definitionBadge, nomPalier } from '@/lib/badges'
+import { BadgeDefi } from '@/components/defis/BadgeDefi'
 
 /* ============================================================
    Récapitulatif d'XP, après l'enregistrement d'une séance
@@ -82,8 +83,9 @@ function Detail({
   onContinuer: () => void
 }) {
   const total = gains.reduce((t, g) => t + g.montant, 0)
-  const lignes = gains.filter((g) => g.source !== 'badge')
+  const lignes = gains.filter((g) => g.source !== 'badge' && g.source !== 'defi')
   const badges = gains.filter((g) => g.source === 'badge')
+  const defis = gains.filter((g) => g.source === 'defi')
   const n = calculerNiveau(apres)
   const etendue = n.xpSuivant - n.xpDebut
 
@@ -146,6 +148,10 @@ function Detail({
           </ul>
         )}
 
+        {defis.map((g, i) => (
+          <EncartDefi key={`d${i}`} gain={g} />
+        ))}
+
         {badges.map((g, i) => (
           <EncartBadge key={i} gain={g} />
         ))}
@@ -193,6 +199,31 @@ function Detail({
         </div>
       </div>
     </main>
+  )
+}
+
+/* ---- Un défi réussi grâce à la séance ---- */
+
+function EncartDefi({ gain }: { gain: GainXP }) {
+  if (!gain.defiBadge) return null
+  const c = gain.defiBadge.couleur
+  return (
+    <div
+      className="impulsion mt-4 flex items-center gap-3.5 rounded-[14px] border p-3.5"
+      style={{ borderColor: `${c}59`, background: `${c}0f` }}
+    >
+      <BadgeDefi badge={gain.defiBadge} taille={60} />
+      <div className="min-w-0 flex-1">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: c }}>
+          Défi réussi
+        </p>
+        <p className="mt-1 font-display text-2xl leading-none">
+          {gain.defiTitre ?? gain.libelle}
+        </p>
+        <p className="mt-1 text-[12.5px] text-encre-douce">Badge ajouté à ton profil</p>
+      </div>
+      <span className="font-mono text-[13px] text-accent-2">+{gain.montant}</span>
+    </div>
   )
 }
 

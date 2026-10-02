@@ -9,6 +9,7 @@ import { Historique } from '@/components/social/Historique'
 import { VueProfil } from '@/components/social/ProfilPublic'
 import { chargerMonXP, chargerBadges } from '@/lib/donnees-xp'
 import { GrilleBadges } from '@/components/badges/GrilleBadges'
+import { chargerBadgesDefis } from '@/lib/donnees-defis'
 import { calculerNiveau } from '@/lib/xp'
 
 /**
@@ -26,12 +27,13 @@ export default async function MonProfil() {
   if (!user) redirect('/connexion')
 
   // L'XP vient de la base, qui tient le journal à jour.
-  const [profil, xp, historique, total, badges] = await Promise.all([
+  const [profil, xp, historique, total, badges, defis] = await Promise.all([
     chargerProfil(user.id),
     chargerMonXP(),
     chargerHistorique(user.id),
     compterSeances(user.id),
     chargerBadges(user.id),
+    chargerBadgesDefis(user.id),
   ])
 
   const n = calculerNiveau(xp)
@@ -47,7 +49,7 @@ export default async function MonProfil() {
     <VueProfil
       profil={profil}
       encouragementEnvoye={null}
-      badges={badges && <GrilleBadges etats={badges} moi />}
+      badges={badges && <GrilleBadges etats={badges} moi defis={defis} />}
       historique={
         <Historique
           cible={profil.id}

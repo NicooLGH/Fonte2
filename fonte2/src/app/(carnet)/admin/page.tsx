@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { suisJeAdmin, chargerToutesAnnonces } from '@/lib/donnees-notifs'
 import { Admin } from '@/components/admin/Admin'
 import { codeRequis } from '@/app/(carnet)/admin/verrou'
+import { chargerDefisAdmin } from '@/lib/donnees-defis'
 
 /**
  * Administration.
@@ -14,9 +15,10 @@ import { codeRequis } from '@/app/(carnet)/admin/verrou'
 export default async function PageAdmin() {
   if (!(await suisJeAdmin())) notFound()
 
-  const [annonces, requis] = await Promise.all([
+  const [annonces, requis, defis] = await Promise.all([
     chargerToutesAnnonces(),
     codeRequis(),
+    chargerDefisAdmin(),
   ])
-  return <Admin annonces={annonces} verrouillable={requis} />
+  return <Admin annonces={annonces} verrouillable={requis} defis={defis} />
 }

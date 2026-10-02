@@ -20,6 +20,8 @@ import { Annonces } from '@/components/social/Annonces'
 import { Fil } from '@/components/social/Fil'
 import { Presence } from '@/components/social/Presence'
 import { EnSeance } from '@/components/social/EnSeance'
+import { chargerDefisEnCours } from '@/lib/donnees-defis'
+import { DefisAccueil } from '@/components/defis/CartesDefis'
 
 /**
  * Accueil.
@@ -29,7 +31,7 @@ import { EnSeance } from '@/components/social/EnSeance'
  * afficher aux deux endroits n'apprenait rien de plus.
  */
 export default async function Accueil() {
-  const [fil, signaux, amis, annonces, rappel, releves, enSeance] = await Promise.all([
+  const [fil, signaux, amis, annonces, rappel, releves, enSeance, defis] = await Promise.all([
     chargerFil(),
     chargerSignaux(),
     chargerAmis(),
@@ -37,6 +39,7 @@ export default async function Accueil() {
     chargerRappel(),
     chargerSuiviComplet(),
     chargerAmisEnSeance(),
+    chargerDefisEnCours(),
   ])
 
   const semaine = semaineCourante()
@@ -64,6 +67,9 @@ export default async function Accueil() {
       {/* Toujours monté : il se rafraîchit seul et n'affiche
           rien tant qu'aucun ami ne s'entraîne. */}
       <EnSeance initiaux={enSeance} />
+
+      {/* Les défis en cours, le plus récent à la une. */}
+      <DefisAccueil defis={defis} />
 
       {annonces.length > 0 && <Annonces annonces={annonces} />}
 
