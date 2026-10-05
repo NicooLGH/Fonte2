@@ -7,6 +7,14 @@ import { vibrer } from '@/lib/sons'
 import { Badge } from '@/components/badges/Badge'
 import { couleurPalier, definitionBadge, nomPalier } from '@/lib/badges'
 import { BadgeDefi } from '@/components/defis/BadgeDefi'
+import {
+  recompensesEntre,
+  cadre as trouverCadre,
+  LIBELLE_TYPE,
+  type Recompense,
+} from '@/lib/recompenses'
+import { fondBanniere } from '@/lib/bannieres'
+import { motifCss } from '@/lib/motifs'
 
 /* ============================================================
    Récapitulatif d'XP, après l'enregistrement d'une séance
@@ -48,6 +56,7 @@ export function RecapXP({
         niveau={nApres.niveau}
         rang={nApres.rang}
         nouveauRang={nApres.rang !== nAvant.rang}
+        debloques={recompensesEntre(nAvant.niveau, nApres.niveau)}
         onContinuer={() => setEtape('detail')}
       />
     )
@@ -267,11 +276,14 @@ export function PassageNiveau({
   niveau,
   rang,
   nouveauRang,
+  debloques = [],
   onContinuer,
 }: {
   niveau: number
   rang: string
   nouveauRang: boolean
+  /** Teintes, motifs et cadres débloqués par ce passage. */
+  debloques?: Recompense[]
   onContinuer: () => void
 }) {
   const suivant = rangSuivant(niveau)
@@ -314,7 +326,33 @@ export function PassageNiveau({
           </p>
         </div>
 
-        {suivant && (
+        {debloques.length > 0 && (
+          <div className="mt-8 w-full text-left">
+            <p className="section-titre border-b border-bordure pb-2">Débloqué</p>
+            <ul>
+              {debloques.map((r) => (
+                <li
+                  key={`${r.type}-${r.cle}`}
+                  className="flex items-center gap-3.5 border-b border-filet py-3"
+                >
+                  <Apercu recompense={r} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">
+                      {LIBELLE_TYPE[r.type]} {r.nom}
+                    </p>
+                    <p className="font-mono text-[10.5px] text-encre-douce">
+                      {r.type === 'cadre'
+                        ? 'autour de ton avatar'
+                        : "pour l'en-tête de ton profil"}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {suivant && debloques.length === 0 && (
           <div className="mt-10 w-full text-left">
             <div className="flex justify-between">
               <span className="section-titre">Vers {suivant.nom}</span>
@@ -331,16 +369,64 @@ export function PassageNiveau({
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={onContinuer}
-          className="appui mt-auto w-full rounded-bloc bg-accent py-4 text-[15px] font-semibold
-                     text-white transition-colors hover:bg-accent-clair"
-        >
-          Continuer
-        </button>
+        {debloques.length > 0 ? (
+          <div className="mt-auto flex w-full flex-col gap-2.5 pt-8">
+            <Link
+              href="/reglages"
+              className="appui block w-full rounded-bloc bg-accent py-4 text-[15px] font-semibold
+                         text-white transition-colors hover:bg-accent-clair"
+            >
+              Essayer mon nouveau thème
+            </Link>
+            <button
+              type="button"
+              onClick={onContinuer}
+              className="min-h-11 font-mono text-xs text-encre-douce underline underline-offset-4"
+            >
+              Continuer
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onContinuer}
+            className="appui mt-auto w-full rounded-bloc bg-accent py-4 text-[15px] font-semibold
+                       text-white transition-colors hover:bg-accent-clair"
+          >
+            Continuer
+          </button>
+        )}
       </div>
     </main>
+  )
+}
+
+/** Petit aperçu d'une récompense : contour, teinte ou motif. */
+function Apercu({ recompense: r }: { recompense: Recompense }) {
+  if (r.type === 'cadre') {
+    const c = trouverCadre(r.cle)
+    return (
+      <span
+        aria-hidden
+        className="h-11 w-11 shrink-0 rounded-[11px] bg-verre"
+        style={{ boxShadow: `0 0 0 2px ${c.couleur}, 0 0 12px ${c.couleur}73` }}
+      />
+    )
+  }
+  if (r.type === 'teinte')
+    return (
+      <span
+        aria-hidden
+        className="h-11 w-11 shrink-0 rounded-[11px] border border-bordure"
+        style={{ background: `${fondBanniere(r.cle)}, var(--color-fond)` }}
+      />
+    )
+  return (
+    <span
+      aria-hidden
+      className="h-11 w-11 shrink-0 rounded-[11px] border border-bordure bg-verre"
+      style={motifCss(r.cle)}
+    />
   )
 }
 

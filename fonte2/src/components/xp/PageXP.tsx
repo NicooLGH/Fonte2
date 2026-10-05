@@ -11,6 +11,7 @@ import {
   type PageJournal,
 } from '@/lib/xp'
 import { bornesSemaine } from '@/lib/semaine'
+import { RECOMPENSES, LIBELLE_TYPE } from '@/lib/recompenses'
 import { journalSuite } from '@/app/(carnet)/xp/actions'
 
 /* ============================================================
@@ -214,6 +215,31 @@ function Bareme({ niveau }: { niveau: number }) {
             )
           })}
         </div>
+      </Groupe>
+
+      <Groupe titre="Récompenses de niveau">
+        {[...new Set(RECOMPENSES.filter((r) => r.niveau > 0).map((r) => r.niveau))]
+          .sort((a, b) => a - b)
+          .map((n) => {
+            const atteint = niveau >= n
+            return (
+              <div
+                key={n}
+                className={`flex justify-between gap-4 border-b border-filet py-2.5 ${
+                  atteint ? '' : 'opacity-60'
+                }`}
+              >
+                <span className={`shrink-0 font-mono text-xs ${atteint ? 'text-accent-2' : ''}`}>
+                  {atteint ? '✓ ' : ''}niv. {n}
+                </span>
+                <span className="text-right text-[13px]">
+                  {RECOMPENSES.filter((r) => r.niveau === n)
+                    .map((r) => `${LIBELLE_TYPE[r.type]} ${r.nom}`)
+                    .join(' · ')}
+                </span>
+              </div>
+            )
+          })}
       </Groupe>
 
       <p className="mt-6 font-mono text-[10.5px] leading-relaxed text-encre-douce">

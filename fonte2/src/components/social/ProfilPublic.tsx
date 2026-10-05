@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { fondBanniere } from '@/lib/bannieres'
+import { banniere as trouverBanniere } from '@/lib/bannieres'
+import { AvatarCadre } from '@/components/AvatarCadre'
 import { motifCss } from '@/lib/motifs'
 import { CarteProfil } from '@/components/social/CarteProfil'
 import {
@@ -76,9 +77,23 @@ export function VueProfil({
         style={{
           top: 'calc(-1 * (6.25rem + env(safe-area-inset-top)))',
           height: 'calc(300px + 6.25rem + env(safe-area-inset-top))',
-          background: fondBanniere(profil.banniere),
+          background: trouverBanniere(profil.banniere).fond,
         }}
       />
+
+      {/* Platine et Or massif : un reflet traverse lentement la teinte. */}
+      {trouverBanniere(profil.banniere).anime && (
+        <div
+          aria-hidden
+          className="reflet-teinte pointer-events-none absolute inset-x-0"
+          style={{
+            top: 'calc(-1 * (6.25rem + env(safe-area-inset-top)))',
+            height: 'calc(300px + 6.25rem + env(safe-area-inset-top))',
+            maskImage: 'linear-gradient(to bottom, #000 40%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, #000 40%, transparent 100%)',
+          }}
+        />
+      )}
 
       {/* Le motif s'arrête où commence le contenu : sous les
           statistiques, il les rendrait pénibles à lire. Le
@@ -97,14 +112,7 @@ export function VueProfil({
 
       <section className="relative border-b border-filet pb-6">
         <div className="flex flex-wrap items-start gap-4 sm:gap-5">
-          <span
-            aria-hidden
-            className="flex h-16 w-16 shrink-0 items-center justify-center
-                       rounded-carte border border-bordure bg-verre text-3xl
-                       sm:h-[72px] sm:w-[72px] sm:text-4xl"
-          >
-            {profil.avatar ?? '💪'}
-          </span>
+          <AvatarCadre avatar={profil.avatar ?? '💪'} cadre={profil.cadre} taille={66} />
 
           <div className="min-w-[150px] flex-1">
             <h1 className="break-words text-3xl sm:text-4xl">{profil.pseudo}</h1>
@@ -150,6 +158,7 @@ export function VueProfil({
                   rang={niveau.rang}
                   banniere={profil.banniere}
                   motif={profil.motif}
+                  cadre={profil.cadre ?? null}
                 />
               )
             : (

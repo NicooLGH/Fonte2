@@ -18,48 +18,86 @@ export type CleBanniere =
   | 'foret'
   | 'prune'
   | 'sable'
+  // La collection : dégradés à deux couleurs, débloqués par niveau
+  | 'ocean'
+  | 'glacier'
+  | 'emeraude'
+  | 'aurore'
+  | 'crepuscule'
+  | 'neon'
+  | 'lave'
+  | 'platine'
+  | 'or'
 
-export const BANNIERES: { cle: CleBanniere; nom: string; fond: string }[] = [
-  {
-    cle: 'braise',
-    nom: 'Braise',
+export type Banniere = {
+  cle: CleBanniere
+  nom: string
+  fond: string
+  /** Niveau requis. 0 : libre. */
+  niveau: number
+  /** Un reflet traverse lentement la teinte. */
+  anime?: boolean
+  /** Couleurs « r,g,b » pour la carte de partage (canvas). */
+  canvas: [string, string?]
+}
+
+/** Teinte simple, d'origine. */
+function simple(cle: CleBanniere, nom: string, rgb: string, alpha: number): Banniere {
+  return {
+    cle,
+    nom,
+    niveau: 0,
+    canvas: [rgb],
+    fond: `radial-gradient(ellipse 130% 100% at 50% 0%, rgb(${rgb.split(',').join(' ')} / ${alpha}), transparent 70%)`,
+  }
+}
+
+/** Teinte de la collection : deux sources, une à gauche, une à droite. */
+function duo(
+  cle: CleBanniere,
+  nom: string,
+  niveau: number,
+  [a, aa]: [string, number],
+  [b, ab]: [string, number],
+  anime = false
+): Banniere {
+  const rgb = (c: string, al: number) => `rgb(${c.split(',').join(' ')} / ${al})`
+  return {
+    cle,
+    nom,
+    niveau,
+    anime,
+    canvas: [a, b],
     fond:
-      'radial-gradient(ellipse 130% 100% at 50% 0%, rgb(255 75 43 / 0.28), transparent 70%)',
-  },
-  {
-    cle: 'nuit',
-    nom: 'Nuit',
-    fond:
-      'radial-gradient(ellipse 130% 100% at 50% 0%, rgb(76 201 240 / 0.26), transparent 70%)',
-  },
-  {
-    cle: 'acier',
-    nom: 'Acier',
-    fond:
-      'radial-gradient(ellipse 130% 100% at 50% 0%, rgb(148 163 184 / 0.22), transparent 70%)',
-  },
-  {
-    cle: 'foret',
-    nom: 'Forêt',
-    fond:
-      'radial-gradient(ellipse 130% 100% at 50% 0%, rgb(22 163 74 / 0.26), transparent 70%)',
-  },
-  {
-    cle: 'prune',
-    nom: 'Prune',
-    fond:
-      'radial-gradient(ellipse 130% 100% at 50% 0%, rgb(162 28 175 / 0.28), transparent 70%)',
-  },
-  {
-    cle: 'sable',
-    nom: 'Sable',
-    fond:
-      'radial-gradient(ellipse 130% 100% at 50% 0%, rgb(217 119 6 / 0.26), transparent 70%)',
-  },
+      `radial-gradient(ellipse 120% 100% at 25% 0%, ${rgb(a, aa)}, transparent 70%),` +
+      `radial-gradient(ellipse 100% 90% at 90% 0%, ${rgb(b, ab)}, transparent 70%)`,
+  }
+}
+
+export const BANNIERES: Banniere[] = [
+  simple('braise', 'Braise', '255,75,43', 0.28),
+  simple('nuit', 'Nuit', '76,201,240', 0.26),
+  simple('acier', 'Acier', '148,163,184', 0.22),
+  simple('foret', 'Forêt', '22,163,74', 0.26),
+  simple('prune', 'Prune', '162,28,175', 0.28),
+  simple('sable', 'Sable', '217,119,6', 0.26),
+
+  // ---- La collection ----
+  duo('ocean', 'Océan', 5, ['14,165,233', 0.3], ['30,58,138', 0.45]),
+  duo('glacier', 'Glacier', 10, ['165,243,252', 0.24], ['224,242,254', 0.18]),
+  duo('emeraude', 'Émeraude', 16, ['16,185,129', 0.3], ['6,95,70', 0.5]),
+  duo('aurore', 'Aurore', 20, ['255,106,61', 0.32], ['255,95,162', 0.3]),
+  duo('crepuscule', 'Crépuscule', 30, ['249,115,22', 0.3], ['124,58,237', 0.38]),
+  duo('neon', 'Néon', 35, ['34,211,238', 0.3], ['168,85,247', 0.38]),
+  duo('lave', 'Lave', 45, ['239,68,68', 0.34], ['245,158,11', 0.3]),
+  duo('platine', 'Platine', 55, ['226,232,240', 0.26], ['111,224,210', 0.2], true),
+  duo('or', 'Or massif', 80, ['245,197,66', 0.34], ['180,83,9', 0.4], true),
 ]
 
+export function banniere(cle: string | null | undefined): Banniere {
+  return BANNIERES.find((b) => b.cle === cle) ?? BANNIERES[0]
+}
+
 export function fondBanniere(cle: string | null | undefined): string {
-  return (
-    BANNIERES.find((b) => b.cle === cle)?.fond ?? BANNIERES[0].fond
-  )
+  return banniere(cle).fond
 }

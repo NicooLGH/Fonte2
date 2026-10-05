@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom'
 import QRCode from 'qrcode'
 import { IconeCroix, IconePartage } from '@/components/Icones'
 import { peindreMotif } from '@/lib/motifs'
+import { banniere as trouverBanniere } from '@/lib/bannieres'
+import { cadre as trouverCadre } from '@/lib/recompenses'
 
 /* ============================================================
    Carte de profil partageable
@@ -25,15 +27,9 @@ const L = 900
 const H = 1200
 const BANDE = 300
 
-/** Couleur de chaque teinte, reprise des bannières. */
-const TEINTES: Record<string, string> = {
-  braise: '255,75,43',
-  nuit: '76,201,240',
-  acier: '148,163,184',
-  foret: '22,163,74',
-  prune: '162,28,175',
-  sable: '217,119,6',
-}
+/** Au niveau Légende, la carte passe en version dorée. */
+const NIVEAU_CARTE_DOREE = 80
+const OR = '#f5c542'
 
 export function CarteProfil({
   pseudo,
@@ -42,6 +38,7 @@ export function CarteProfil({
   rang,
   banniere,
   motif,
+  cadre = null,
 }: {
   pseudo: string
   avatar: string
@@ -49,6 +46,7 @@ export function CarteProfil({
   rang: string
   banniere: string | null
   motif: string | null
+  cadre?: string | null
 }) {
   const [enCours, setEnCours] = useState(false)
   const [apercu, setApercu] = useState<string | null>(null)
@@ -82,12 +80,16 @@ export function CarteProfil({
     ctx.fillStyle = '#0e0f11'
     ctx.fillRect(0, 0, L, H)
 
-    const rgb = TEINTES[banniere ?? 'braise'] ?? TEINTES.braise
-    const teinte = ctx.createRadialGradient(L / 2, 0, 0, L / 2, 0, H * 0.75)
-    teinte.addColorStop(0, `rgba(${rgb},0.34)`)
-    teinte.addColorStop(1, `rgba(${rgb},0)`)
-    ctx.fillStyle = teinte
-    ctx.fillRect(0, 0, L, H - BANDE)
+    // Une ou deux sources de couleur, comme à l'écran.
+    const [a, b] = trouverBanniere(banniere).canvas
+    const sources: [string, number][] = b ? [[a, L * 0.25], [b, L * 0.9]] : [[a, L / 2]]
+    for (const [rgb, x] of sources) {
+      const teinte = ctx.createRadialGradient(x, 0, 0, x, 0, H * (b ? 0.6 : 0.75))
+      teinte.addColorStop(0, `rgba(${rgb},${b ? 0.36 : 0.34})`)
+      teinte.addColorStop(1, `rgba(${rgb},0)`)
+      ctx.fillStyle = teinte
+      ctx.fillRect(0, 0, L, H - BANDE)
+    }
 
     // Le motif s'arrête bien avant la bande claire : il ne doit
     // jamais approcher le QR code, dont la lecture dépend d'un
@@ -102,7 +104,32 @@ export function CarteProfil({
     ctx.fillStyle = '#ff4b2b'
     ctx.fillText('.', 72 + largeurLogo, 120)
 
-    /* ---- Avatar ---- */
+    /* ---- Avatar, dans son cadre ---- */
+    const c = trouverCadre(cadre)
+    if (c.cle !== 'aucun') {
+      ctx.save()
+      if (c.cle === 'diamant') {
+        const g = ctx.createLinearGradient(60, 340, 210, 490)
+        g.addColorStop(0, '#b9a2ff')
+        g.addColorStop(0.5, '#6fe0d2')
+        g.addColorStop(1, '#b9a2ff')
+        ctx.strokeStyle = g
+      } else {
+        ctx.strokeStyle = c.couleur
+      }
+      ctx.lineWidth = c.cle === 'legende' || c.cle === 'diamant' ? 7 : 5
+      ctx.shadowColor = c.couleur
+      ctx.shadowBlur = c.cle === 'bronze' || c.cle === 'argent' ? 0 : 28
+      cadreArrondi(ctx, 58, 348, 150, 150, 34)
+      ctx.stroke()
+      if (c.cle === 'platine') {
+        ctx.shadowBlur = 0
+        ctx.lineWidth = 3
+        cadreArrondi(ctx, 46, 336, 174, 174, 42)
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
     ctx.font = '110px sans-serif'
     ctx.fillText(avatar, 72, 470)
 
@@ -116,9 +143,22 @@ export function CarteProfil({
     ctx.fillStyle = '#f4f3ee'
     ctx.fillText(pseudo.toUpperCase(), 72, 640)
 
+    const doree = niveau >= NIVEAU_CARTE_DOREE
     ctx.font = '400 30px "IBM Plex Mono", monospace'
-    ctx.fillStyle = '#4cc9f0'
+    ctx.fillStyle = doree ? OR : '#4cc9f0'
     ctx.fillText(`NIVEAU ${niveau} · ${rang.toUpperCase()}`, 72, 700)
+
+    // Version Légende : un liseré doré tout autour de la carte.
+    if (doree) {
+      ctx.save()
+      ctx.strokeStyle = OR
+      ctx.lineWidth = 6
+      ctx.shadowColor = OR
+      ctx.shadowBlur = 24
+      cadreArrondi(ctx, 18, 18, L - 36, H - BANDE - 36, 28)
+      ctx.stroke()
+      ctx.restore()
+    }
 
     /* ---- Bande claire et QR ---- */
     ctx.fillStyle = '#f4f3ee'
@@ -277,4 +317,22 @@ function tronquer(ctx: CanvasRenderingContext2D, texte: string, max: number): st
   let t = texte
   while (t.length > 4 && ctx.measureText(`${t}…`).width > max) t = t.slice(0, -1)
   return `${t}…`
+}
+
+/** Rectangle arrondi (tracé seulement). */
+function cadreArrondi(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  l: number,
+  h: number,
+  r: number
+) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + l, y, x + l, y + h, r)
+  ctx.arcTo(x + l, y + h, x, y + h, r)
+  ctx.arcTo(x, y + h, x, y, r)
+  ctx.arcTo(x, y, x + l, y, r)
+  ctx.closePath()
 }

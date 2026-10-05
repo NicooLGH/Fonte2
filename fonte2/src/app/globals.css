@@ -475,3 +475,53 @@ select {
     transform: translateX(-50%);
   }
 }
+
+/* ============================================================
+   RÉCOMPENSES DE NIVEAU
+   ============================================================ */
+
+/* Cadre Diamant : dégradé, et un reflet qui traverse l'anneau.
+   L'avatar, opaque, est posé au-dessus : le reflet ne se voit
+   que sur le contour. */
+.cadre-diamant {
+  background: linear-gradient(135deg, #b9a2ff, #6fe0d2, #b9a2ff);
+  box-shadow: 0 0 22px rgb(185 162 255 / 0.45);
+}
+.cadre-diamant::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.6) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: reflet-cadre 4.5s ease-in-out infinite;
+}
+@keyframes reflet-cadre {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* Cadre Légende : un anneau doré qui tourne lentement. */
+.cadre-legende {
+  box-shadow: 0 0 26px rgb(245 197 66 / 0.5);
+}
+.cadre-legende::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(from 0deg, #f5c542, #ff8a63, #f5c542, #b45309, #f5c542);
+  animation: anneau-tourne 6s linear infinite;
+}
+@keyframes anneau-tourne {
+  to { transform: rotate(360deg); }
+}
+
+/* Teintes Platine et Or massif : un reflet qui traverse en 8 s. */
+.reflet-teinte {
+  background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.09) 45%, transparent 60%);
+  background-size: 250% 100%;
+  animation: reflet-teinte 8s ease-in-out infinite;
+}
+@keyframes reflet-teinte {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}

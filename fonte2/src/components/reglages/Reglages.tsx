@@ -9,6 +9,7 @@ import { definirJourRappel } from '@/app/(carnet)/reglages/rappel'
 import { seDeconnecter } from '@/app/auth/actions'
 import { sonsActifs, definirSons, sonValide } from '@/lib/sons'
 import { ChoixTheme as ChoixThemeProfil } from '@/components/reglages/ChoixTheme'
+import { ChoixAvatar } from '@/components/reglages/ChoixAvatar'
 import { definirCode } from '@/app/(carnet)/admin/verrou'
 import { changerPersonnalisation } from '@/app/(carnet)/reglages/actions'
 import {
@@ -21,10 +22,6 @@ import {
   supprimerCompte,
 } from '@/app/(carnet)/reglages/actions'
 
-const AVATARS = [
-  '💪', '🔥', '🏋️', '🦾', '⚡', '🐺', '🦁', '🐻',
-  '🦍', '🚀', '⚙️', '🎯', '🥇', '🧊', '🌑', '🍀',
-]
 
 type Theme = 'sombre' | 'clair' | 'auto'
 
@@ -40,6 +37,8 @@ export function Reglages({
   bio,
   banniere,
   motif,
+  cadre,
+  niveau,
   aUnCode,
 }: {
   pseudo: string
@@ -53,6 +52,9 @@ export function Reglages({
   bio: string
   banniere: string
   motif: string
+  cadre: string
+  /** Niveau actuel : décide de ce qui est débloqué. */
+  niveau: number
   aUnCode: boolean
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
@@ -85,26 +87,12 @@ export function Reglages({
           titre="Avatar"
           detail="Visible sur ton profil et dans la barre de navigation."
         >
-          <div className="flex flex-wrap gap-2">
-            {AVATARS.map((a) => (
-              <button
-                key={a}
-                type="button"
-                disabled={enCours}
-                onClick={() => agir(() => changerAvatar(a))}
-                aria-pressed={avatar === a}
-                aria-label={`Avatar ${a}`}
-                className={`appui flex h-11 w-11 items-center justify-center rounded-full
-                  border text-xl transition-colors ${
-                    avatar === a
-                      ? 'border-accent bg-accent/15'
-                      : 'border-bordure bg-verre hover:bg-verre-fort'
-                  }`}
-              >
-                {a}
-              </button>
-            ))}
-          </div>
+          <ChoixAvatar
+            avatar={avatar}
+            cadre={cadre}
+            enCours={enCours}
+            onChoisir={(a) => agir(() => changerAvatar(a))}
+          />
         </Ligne>
 
         <Ligne
@@ -115,6 +103,8 @@ export function Reglages({
             bio={bio}
             banniere={banniere}
             motif={motif}
+            cadre={cadre}
+            niveau={niveau}
             pseudo={pseudo}
             avatar={avatar}
             enCours={enCours}

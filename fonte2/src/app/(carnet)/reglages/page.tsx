@@ -5,6 +5,8 @@ import { suisJeAdmin } from '@/lib/donnees-notifs'
 import { chargerRappel } from '@/lib/donnees'
 import { codeRequis } from '@/app/(carnet)/admin/verrou'
 import type { Profil } from '@/types/database'
+import { chargerMonXP } from '@/lib/donnees-xp'
+import { calculerNiveau } from '@/lib/xp'
 
 export default async function PageReglages() {
   const supabase = await creerClientServeur()
@@ -13,15 +15,16 @@ export default async function PageReglages() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const [admin, rappel, aUnCode] = await Promise.all([
+  const [admin, rappel, aUnCode, xp] = await Promise.all([
     suisJeAdmin(),
     chargerRappel(),
     codeRequis(),
+    chargerMonXP(),
   ])
 
   const { data } = await supabase
     .from('profiles')
-    .select('pseudo, avatar, partage_seances, partage_presence, partage_live, bio, banniere, motif')
+    .select('pseudo, avatar, partage_seances, partage_presence, partage_live, bio, banniere, motif, cadre')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -31,6 +34,7 @@ export default async function PageReglages() {
         banniere: string | null
         motif: string | null
         partage_live: boolean | null
+        cadre: string | null
       })
     | null
 
@@ -47,6 +51,8 @@ export default async function PageReglages() {
       bio={profil?.bio ?? ''}
       banniere={profil?.banniere ?? 'braise'}
       motif={profil?.motif ?? 'aucun'}
+      cadre={profil?.cadre ?? 'aucun'}
+      niveau={calculerNiveau(xp).niveau}
       aUnCode={aUnCode}
     />
   )

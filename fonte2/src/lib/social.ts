@@ -86,6 +86,8 @@ export type ProfilPublic = {
   bio: string | null
   banniere: string | null
   motif: string | null
+  /** Cadre d'avatar, débloqué avec le rang. */
+  cadre?: string | null
   streak: number
   relation: Relation
   amiDepuis: string | null

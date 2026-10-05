@@ -190,7 +190,15 @@ export async function chargerProfil(id: string): Promise<ProfilPublic | null> {
   const supabase = await creerClientServeur()
   const { data, error } = await supabase.rpc('get_profile', { target: id })
   if (error || !data) return null
-  return versProfil(data as Brut)
+  return avecCadre(versProfil(data as Brut))
+}
+
+/** Ajoute le cadre d'avatar (fonction séparée : get_profile n'en sait rien). */
+async function avecCadre(profil: ProfilPublic | null): Promise<ProfilPublic | null> {
+  if (!profil) return null
+  const supabase = await creerClientServeur()
+  const { data } = await supabase.rpc('cadre_de', { target: profil.id })
+  return { ...profil, cadre: typeof data === 'string' ? data : 'aucun' }
 }
 
 export async function chargerProfilParPseudo(
@@ -201,7 +209,7 @@ export async function chargerProfilParPseudo(
     p: pseudo,
   })
   if (error || !data) return null
-  return versProfil(data as Brut)
+  return avecCadre(versProfil(data as Brut))
 }
 
 /* ============================================================

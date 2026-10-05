@@ -130,7 +130,9 @@ export async function supprimerCompte(confirmation: string): Promise<Reponse> {
 export async function changerPersonnalisation(
   bio: string,
   banniere: string,
-  motif: string
+  motif: string,
+  /** null : on ne touche pas au cadre. */
+  cadre: string | null = null
 ): Promise<Reponse> {
   if (bio.length > 140)
     return { erreur: 'La description ne peut pas dépasser 140 caractères.' }
@@ -140,6 +142,7 @@ export async function changerPersonnalisation(
     p_bio: bio.trim(),
     p_banniere: banniere,
     p_motif: motif,
+    p_cadre: cadre,
   })
 
   if (error) return { erreur: messageErreur(error.message) }
