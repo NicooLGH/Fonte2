@@ -15,9 +15,9 @@ import { EcranLive } from '@/components/live/EcranLive'
 export default async function PageLive({
   searchParams,
 }: {
-  searchParams: Promise<{ modele?: string; reprendre?: string }>
+  searchParams: Promise<{ modele?: string; reprendre?: string; guide?: string }>
 }) {
-  const { modele, reprendre } = await searchParams
+  const { modele, reprendre, guide } = await searchParams
   const supabase = await creerClientServeur()
   const {
     data: { user },
@@ -44,6 +44,7 @@ export default async function PageLive({
       seances={seances}
       prevuId={prevuId}
       reprendre={reprendre === '1'}
+      guide={guide === '1'}
     />
   )
 }

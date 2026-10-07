@@ -14,10 +14,10 @@ export default function Inscription() {
   return (
     <form action={action} className="flex flex-col gap-6">
       <header>
-        <h1 className="text-[32px] leading-none tracking-wide">
-          Fonte<span className="text-accent">.</span>
+        <h1 className="font-display text-[84px] leading-[0.8]">
+          FONTE<span className="text-accent">.</span>
         </h1>
-        <p className="section-titre mt-1.5">Créer ton carnet</p>
+        <p className="mt-2 text-[18px] text-encre-douce">Crée ton carnet.</p>
       </header>
 
       <div className="flex flex-col gap-5">
@@ -50,7 +50,7 @@ export default function Inscription() {
         </Bouton>
       )}
 
-      <p className="text-center text-[12.5px] text-encre-douce">
+      <p className="text-center text-[15px] text-encre-douce">
         Déjà un carnet ?{' '}
         <Link href="/connexion" className="font-semibold text-accent">
           Se connecter

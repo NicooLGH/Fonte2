@@ -286,12 +286,19 @@ export async function enregistrerSeanceLive(
   blocs: BlocSaisi[],
   note: string | null,
   dureeSec: number,
-  nom: string | null = null
+  nom: string | null = null,
+  /** Identifiant choisi par l'appareil : un renvoi après coupure
+   *  réseau ne crée pas de doublon. */
+  idClient: string | null = null,
+  /** Date du jour où la séance a été faite (envoi différé). */
+  dateClient: string | null = null
 ): Promise<ReponseLive> {
   const { supabase, user } = await moi()
   if (!user) return { erreur: 'Session expirée.' }
 
-  const date = aujourdhui()
+  const id = idClient && /^[0-9a-f-]{36}$/.test(idClient) ? idClient : null
+  // Une séance envoyée en retard garde son jour, dans la limite de la semaine écoulée.
+  const date = dateClient && dateSaisieValide(dateClient) ? dateClient : aujourdhui()
 
   const propres = blocs
     .map((b) => ({
@@ -314,6 +321,7 @@ export async function enregistrerSeanceLive(
   const { data, error: erreurSeance } = await supabase
     .from('seances')
     .insert({
+      ...(id ? { id } : {}),
       user_id: user.id,
       date,
       week_key: semaineDe(date),
@@ -324,6 +332,8 @@ export async function enregistrerSeanceLive(
     .select('id')
     .single()
 
+  // Déjà reçue lors d'un envoi précédent : rien à refaire.
+  if (erreurSeance?.code === '23505' && id) return { succes: 'Séance déjà enregistrée' }
   if (erreurSeance || !data) return { erreur: messageErreur(erreurSeance?.message) }
   const seanceId = data.id as string
 

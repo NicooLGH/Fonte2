@@ -8,13 +8,12 @@ import { JOURS } from '@/lib/rappel'
 import { definirJourRappel } from '@/app/(carnet)/reglages/rappel'
 import { seDeconnecter } from '@/app/auth/actions'
 import { sonsActifs, definirSons, sonValide } from '@/lib/sons'
-import { ChoixTheme as ChoixThemeProfil } from '@/components/reglages/ChoixTheme'
-import { ChoixAvatar } from '@/components/reglages/ChoixAvatar'
+import Link from 'next/link'
+import { fondBanniere } from '@/lib/bannieres'
 import { definirCode } from '@/app/(carnet)/admin/verrou'
 import { changerPersonnalisation } from '@/app/(carnet)/reglages/actions'
 import {
   changerPseudo,
-  changerAvatar,
   changerPartageSeances,
   changerPartagePresence,
   changerPartageLive,
@@ -37,8 +36,6 @@ export function Reglages({
   bio,
   banniere,
   motif,
-  cadre,
-  niveau,
   aUnCode,
 }: {
   pseudo: string
@@ -52,9 +49,9 @@ export function Reglages({
   bio: string
   banniere: string
   motif: string
-  cadre: string
+  cadre?: string
   /** Niveau actuel : décide de ce qui est débloqué. */
-  niveau: number
+  niveau?: number
   aUnCode: boolean
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
@@ -70,8 +67,14 @@ export function Reglages({
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header className="border-b border-filet pb-5">
-        <h1 className="titre-page">Réglages</h1>
+      <header className="flex flex-col gap-1">
+        <Link href="/profil" aria-label="Retour au profil" className="-ml-2 flex h-11 w-11 items-center justify-center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </Link>
+        <h1 className="titre-page px-0.5">Réglages</h1>
       </header>
 
       {(message.ok || message.ko) && (
@@ -83,34 +86,17 @@ export function Reglages({
 
       {/* ---- Profil ---- */}
       <Section titre="Profil">
-        <Ligne
-          titre="Avatar"
-          detail="Visible sur ton profil et dans la barre de navigation."
-        >
-          <ChoixAvatar
-            avatar={avatar}
-            cadre={cadre}
-            enCours={enCours}
-            onChoisir={(a) => agir(() => changerAvatar(a))}
-          />
-        </Ligne>
-
-        <Ligne
-          titre="Thème"
-          detail="La couleur et le motif de ton profil, visibles de tous. L'aperçu montre le rendu avant d'appliquer."
-        >
-          <ChoixThemeProfil
-            bio={bio}
-            banniere={banniere}
-            motif={motif}
-            cadre={cadre}
-            niveau={niveau}
-            pseudo={pseudo}
-            avatar={avatar}
-            enCours={enCours}
-            onAgir={agir}
-          />
-        </Ligne>
+        <Link href="/reglages/apparence" className="flex min-h-14 items-center gap-3 py-2">
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-[16px] font-semibold">Personnaliser</span>
+            <span className="text-[13px] text-encre-douce">Teinte, motif, cadre et avatar</span>
+          </span>
+          <span className="flex items-center gap-2">
+            <span aria-hidden className="h-6 w-6 rounded-[7px]" style={{ background: `${fondBanniere(banniere)}, var(--color-fond)` }} />
+            <span className="text-[20px] text-encre-douce">{avatar}</span>
+            <span className="text-encre-douce">›</span>
+          </span>
+        </Link>
 
         <Ligne
           titre="Description"
@@ -134,14 +120,14 @@ export function Reglages({
               name="pseudo"
               defaultValue={pseudo}
               maxLength={24}
-              className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
-                         px-5 py-2.5 text-sm focus:border-accent focus:outline-none"
+              className="h-12 min-w-0 flex-1 rounded-bloc border border-transparent bg-fond
+                         px-4 text-base focus:border-accent focus:outline-none"
             />
             <button
               type="submit"
               disabled={enCours}
-              className="shrink-0 rounded-bloc border border-bordure bg-verre px-5 py-2.5
-                         text-sm font-semibold text-encre-douce hover:text-encre"
+              className="h-12 shrink-0 rounded-bloc bg-verre-fort px-4
+                         text-[15px] font-semibold hover:text-encre"
             >
               Enregistrer
             </button>
@@ -200,11 +186,10 @@ export function Reglages({
               disabled={enCours}
               onClick={() => agir(() => definirJourRappel(null))}
               aria-pressed={jourRappel === null}
-              className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
-                transition-colors ${
+              className={`h-10 rounded-pilule px-3.5 text-[14px] transition-colors ${
                   jourRappel === null
-                    ? 'border-accent bg-accent/15 text-accent'
-                    : 'border-bordure bg-verre text-encre-douce hover:text-encre'
+                    ? 'bg-encre font-semibold text-fond'
+                    : 'bg-verre-fort text-encre-douce hover:text-encre'
                 }`}
             >
               Aucun
@@ -216,11 +201,10 @@ export function Reglages({
                 disabled={enCours}
                 onClick={() => agir(() => definirJourRappel(j.valeur))}
                 aria-pressed={jourRappel === j.valeur}
-                className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
-                  transition-colors ${
+                className={`h-10 rounded-pilule px-3.5 text-[14px] transition-colors ${
                     jourRappel === j.valeur
-                      ? 'border-accent bg-accent/15 text-accent'
-                      : 'border-bordure bg-verre text-encre-douce hover:text-encre'
+                      ? 'bg-encre font-semibold text-fond'
+                      : 'bg-verre-fort text-encre-douce hover:text-encre'
                   }`}
               >
                 {j.nom.slice(0, 3)}
@@ -269,8 +253,7 @@ export function Reglages({
           <form action={seDeconnecter}>
             <button
               type="submit"
-              className="appui w-full rounded-bloc border border-bordure bg-verre
-                         px-5 py-2.5 text-sm font-semibold text-encre-douce
+              className="appui h-12 w-full rounded-bloc bg-verre-fort px-5 text-[15px] font-semibold
                          transition-colors hover:text-encre sm:w-auto"
             >
               Se déconnecter
@@ -290,14 +273,14 @@ export function Reglages({
               minLength={8}
               required
               placeholder="Nouveau mot de passe"
-              className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
-                         px-5 py-2.5 text-sm focus:border-accent focus:outline-none"
+              className="h-12 min-w-0 flex-1 rounded-bloc border border-transparent bg-fond
+                         px-4 text-base focus:border-accent focus:outline-none"
             />
             <button
               type="submit"
               disabled={enCours}
-              className="shrink-0 rounded-bloc border border-bordure bg-verre px-5 py-2.5
-                         text-sm font-semibold text-encre-douce hover:text-encre"
+              className="h-12 shrink-0 rounded-bloc bg-verre-fort px-4
+                         text-[15px] font-semibold hover:text-encre"
             >
               Modifier
             </button>
@@ -313,8 +296,8 @@ export function Reglages({
           >
             <a
               href="/admin"
-              className="appui inline-block rounded-bloc bg-accent px-5 py-2.5 text-sm
-                         font-semibold text-white transition-colors hover:bg-accent-clair"
+              className="appui inline-flex h-12 items-center rounded-bloc bg-accent px-5 text-[15px]
+                         font-bold text-white transition-colors hover:bg-accent-clair"
             >
               Ouvrir l'administration
             </a>
@@ -357,7 +340,7 @@ function ChoixThemeAffichage() {
   }
 
   return (
-    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
+    <div className="flex gap-1 rounded-bloc bg-verre-fort p-1">
       {(
         [
           ['sombre', '🌙 Sombre'],
@@ -370,8 +353,8 @@ function ChoixThemeAffichage() {
           type="button"
           onClick={() => appliquer(cle)}
           aria-pressed={theme === cle}
-          className={`rounded-bloc px-4 py-1.5 text-xs font-semibold transition-colors ${
-            theme === cle ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+          className={`h-10 flex-1 rounded-[11px] px-3 text-[14px] transition-colors ${
+            theme === cle ? 'bg-encre font-semibold text-fond' : 'text-encre-douce hover:text-encre'
           }`}
         >
           {libelle}
@@ -405,20 +388,19 @@ function ChampCode({
           autoComplete="off"
           maxLength={8}
           placeholder={aUnCode ? 'Nouveau code' : '4 à 8 chiffres'}
-          className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
-                     px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
+          className="h-12 min-w-0 flex-1 rounded-bloc border border-transparent bg-fond
+                     px-4 text-base focus:border-accent focus:outline-none"
         />
         <button
           type="submit"
           disabled={enCours}
-          className="appui shrink-0 rounded-bloc border border-bordure bg-verre
-                     px-4 py-2.5 text-xs font-semibold text-encre-douce
-                     transition-colors hover:text-encre disabled:opacity-40"
+          className="appui h-12 shrink-0 rounded-bloc bg-verre-fort px-4 text-[15px] font-semibold
+                     transition-colors disabled:opacity-40"
         >
           {aUnCode ? 'Changer' : 'Définir'}
         </button>
       </div>
-      <span className="font-mono text-[10px] text-encre-douce">
+      <span className="text-[13px] text-encre-douce">
         {aUnCode
           ? 'Un code est défini. Laisse vide et valide pour le retirer.'
           : 'Aucun code : l\'administration s\'ouvre directement.'}
@@ -452,11 +434,11 @@ function ChampBio({
         onChange={(e) => setTexte(e.target.value.slice(0, 140))}
         rows={2}
         placeholder="ex : powerlifting, 3 séances par semaine"
-        className="w-full resize-y rounded-bloc border border-bordure bg-verre
-                   px-4 py-3 text-sm focus:border-accent focus:outline-none"
+        className="w-full resize-none rounded-bloc border border-transparent bg-fond
+                   px-4 py-3 text-base focus:border-accent focus:outline-none"
       />
       <div className="mt-2 flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] text-encre-douce">
+        <span className="font-mono text-[12px] text-encre-douce">
           {restant} caractère{restant > 1 ? 's' : ''} restant
           {restant > 1 ? 's' : ''}
         </span>
@@ -464,9 +446,8 @@ function ChampBio({
           type="button"
           disabled={enCours || texte === valeur}
           onClick={() => onAgir(() => changerPersonnalisation(texte, banniere, motif))}
-          className="appui rounded-bloc border border-bordure bg-verre px-4 py-2
-                     text-xs font-semibold text-encre-douce transition-colors
-                     hover:text-encre disabled:opacity-40"
+          className="appui h-10 rounded-pilule bg-verre-fort px-4 text-[14px] font-semibold
+                     transition-colors disabled:opacity-40"
         >
           Enregistrer
         </button>
@@ -491,16 +472,15 @@ function ChoixSons() {
   }
 
   return (
-    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
+    <div className="flex gap-1 rounded-bloc bg-verre-fort p-1">
       {([true, false] as const).map((v) => (
         <button
           key={String(v)}
           type="button"
           onClick={() => basculer(v)}
           aria-pressed={actifs === v}
-          className={`appui flex-1 rounded-bloc px-4 py-1.5 text-xs font-semibold
-            transition-colors ${
-              actifs === v ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+          className={`appui h-10 flex-1 rounded-[11px] px-4 text-[14px] transition-colors ${
+              actifs === v ? 'bg-encre font-semibold text-fond' : 'text-encre-douce hover:text-encre'
             }`}
         >
           {v ? 'Activés' : 'Coupés'}
@@ -523,10 +503,8 @@ function ZoneDeDanger({
   const [confirmation, setConfirmation] = useState('')
 
   return (
-    <section className="rounded-carte border border-accent/40 bg-accent/5 p-5">
-      <h2 className="mb-4 text-2xl text-accent">Zone de danger</h2>
-
-      <p className="mb-4 text-sm leading-relaxed text-encre-douce">
+    <section className="flex flex-col gap-3 px-0.5">
+      <p className="text-[15px] leading-relaxed text-encre-douce">
         Supprimer ton compte efface définitivement ton carnet : séances,
         relevés, records, amitiés. Rien n&apos;est conservé, et rien
         n&apos;est récupérable.
@@ -536,8 +514,7 @@ function ZoneDeDanger({
         <button
           type="button"
           onClick={() => setOuvert(true)}
-          className="rounded-bloc border border-accent/50 px-5 py-2.5 text-sm
-                     font-semibold text-accent transition-colors hover:bg-accent/10"
+          className="h-12 self-start text-[16px] font-semibold text-accent"
         >
           Supprimer mon compte
         </button>
@@ -557,8 +534,7 @@ function ZoneDeDanger({
                 setOuvert(false)
                 setConfirmation('')
               }}
-              className="flex-1 rounded-bloc border border-bordure bg-verre px-5 py-2.5
-                         text-sm font-semibold text-encre-douce hover:text-encre"
+              className="h-12 flex-1 rounded-bloc bg-verre text-[15px] font-semibold text-encre-douce hover:text-encre"
             >
               Annuler
             </button>
@@ -566,8 +542,7 @@ function ZoneDeDanger({
               type="button"
               disabled={enCours || confirmation.trim().toUpperCase() !== 'SUPPRIMER'}
               onClick={() => onAgir(() => supprimerCompte(confirmation))}
-              className="flex-1 rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold
-                         text-white disabled:opacity-40"
+              className="h-12 flex-1 rounded-bloc bg-accent text-[15px] font-bold text-white disabled:opacity-40"
             >
               Supprimer définitivement
             </button>
@@ -588,9 +563,9 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="section pb-6">
-      <p className="section-titre mb-4">{titre}</p>
-      <div className="flex flex-col divide-y divide-filet">{children}</div>
+    <section className="flex flex-col gap-2">
+      <p className="section-titre px-0.5">{titre}</p>
+      <div className="bloc flex flex-col divide-y divide-filet px-4">{children}</div>
     </section>
   )
 }
@@ -605,18 +580,17 @@ function Ligne({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+    <div className="flex flex-col gap-3 py-3.5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
       <div className="sm:max-w-sm">
-        <p className="font-semibold">{titre}</p>
-        <p className="mt-1 font-mono text-[10.5px] leading-relaxed text-encre-douce">
-          {detail}
-        </p>
+        <p className="text-[16px] font-semibold">{titre}</p>
+        <p className="mt-0.5 text-[13px] leading-snug text-encre-douce">{detail}</p>
       </div>
       <div className="shrink-0 sm:min-w-[280px]">{children}</div>
     </div>
   )
 }
 
+/** Interrupteur : vrai = premier libellé (partagé, visible…). */
 function Bascule({
   valeur,
   libelles,
@@ -629,22 +603,26 @@ function Bascule({
   onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
-      {([true, false] as const).map((v, i) => (
-        <button
-          key={String(v)}
-          type="button"
-          disabled={desactive}
-          onClick={() => onChange(v)}
-          aria-pressed={valeur === v}
-          className={`flex-1 rounded-bloc px-4 py-1.5 text-xs font-semibold
-            transition-colors ${
-              valeur === v ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
-            }`}
-        >
-          {libelles[i]}
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={valeur}
+      disabled={desactive}
+      onClick={() => onChange(!valeur)}
+      className="flex items-center gap-3 disabled:opacity-60"
+    >
+      <span className="text-[14px] text-encre-douce">{valeur ? libelles[0] : libelles[1]}</span>
+      <span
+        className={`relative h-[30px] w-[52px] rounded-pilule transition-colors ${
+          valeur ? 'bg-accent' : 'bg-encre/20'
+        }`}
+      >
+        <span
+          className={`absolute top-[3px] h-6 w-6 rounded-full bg-white shadow transition-[left] ${
+            valeur ? 'left-[25px]' : 'left-[3px]'
+          }`}
+        />
+      </span>
+    </button>
   )
 }

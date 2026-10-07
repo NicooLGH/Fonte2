@@ -1,15 +1,9 @@
-import { IllustrationSalle } from '@/components/IllustrationSalle'
-
 /**
- * Écrans d'authentification.
+ * Écrans d'entrée (3.0).
  *
- * L'illustration occupe le haut, le formulaire le bas, sans
- * cadre autour. Pas de titre « Connexion » : sur un écran qui ne
- * fait que ça, l'annoncer est redondant.
- *
- * L'illustration se réduit quand la hauteur manque — clavier
- * ouvert sur petit téléphone. Sinon le formulaire sortirait de
- * l'écran.
+ * Les deux cercles de FONTE en haut, le formulaire dessous. La
+ * hauteur du décor se réduit quand le clavier s'ouvre sur un
+ * petit téléphone, pour que le formulaire reste visible.
  */
 export default function AuthLayout({
   children,
@@ -17,27 +11,21 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <main className="plein-ecran flex flex-col">
-      <div
+    <main
+      className="plein-ecran relative flex flex-col overflow-hidden"
+      style={{ background: 'radial-gradient(circle at 80% 10%, rgb(255 75 43 / 0.22), transparent 50%)' }}
+    >
+      <svg
+        viewBox="0 0 390 300"
         aria-hidden
-        className="relative shrink-0 overflow-hidden
-                   h-[26vh] min-h-[130px] max-h-[230px]
-                   sm:h-[32vh]"
+        className="pointer-events-none absolute -top-6 left-1/2 w-[520px] max-w-none -translate-x-[30%]"
       >
-        <IllustrationSalle className="h-full w-full object-cover" />
-        {/* Le fondu masque la jonction entre l'illustration et
-            le fond, quelle que soit la hauteur retenue. */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(to bottom, transparent 45%, var(--color-fond) 100%)',
-          }}
-        />
-      </div>
-
-      <div className="flex flex-1 items-start justify-center overflow-y-auto px-6">
-        <div className="marge-basse w-full max-w-[380px] pt-1">{children}</div>
+        <circle cx="270" cy="120" r="140" fill="none" stroke="rgb(255 75 43 / 0.16)" strokeWidth="34" />
+        <circle cx="270" cy="120" r="62" fill="none" stroke="rgb(76 201 240 / 0.12)" strokeWidth="18" />
+      </svg>
+      <div className="h-[18vh] min-h-[70px] max-h-[170px] shrink-0" aria-hidden />
+      <div className="relative flex flex-1 items-start justify-center overflow-y-auto px-4">
+        <div className="marge-basse w-full max-w-[400px] pt-1">{children}</div>
       </div>
     </main>
   )

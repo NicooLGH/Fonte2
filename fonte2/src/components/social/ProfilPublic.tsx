@@ -40,7 +40,10 @@ export function VueProfil({
   nbSeances,
   historique,
   badges,
+  piste,
 }: {
+  /** Piste de niveaux, sur mon profil. */
+  piste?: React.ReactNode
   profil: Profil
   encouragementEnvoye: Signe | null
   historique?: React.ReactNode
@@ -134,6 +137,18 @@ export function VueProfil({
               </span>
             )}
           </div>
+          {profil.relation === 'moi' && (
+            <Link
+              href="/reglages/apparence"
+              aria-label="Personnaliser mon profil"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-bloc bg-fond/55 backdrop-blur-sm"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+              </svg>
+            </Link>
+          )}
           {profil.relation === 'moi' && niveau && (
             <CarteProfil
               pseudo={profil.pseudo}
@@ -199,7 +214,7 @@ export function VueProfil({
           </div>
         )}
 
-        {niveau && (
+        {niveau && !piste && (
           <Link href="/xp" className="group block">
             <div className="h-2 overflow-hidden rounded-pilule bg-encre/10">
               <div
@@ -237,6 +252,10 @@ export function VueProfil({
             <Chiffre valeur={profil.streak} libelle="semaines" separe accent />
           </div>
 
+          {piste}
+
+          {profil.relation === 'moi' && badges && <section className="relative">{badges}</section>}
+
           {(profil.records ?? []).length > 0 && (
             <section className="relative flex flex-col px-0.5">
               <p className="section-titre pt-1 pb-1">Records</p>
@@ -256,7 +275,7 @@ export function VueProfil({
             </section>
           )}
 
-          {badges && <section className="relative">{badges}</section>}
+          {profil.relation !== 'moi' && badges && <section className="relative">{badges}</section>}
 
           {historique && (
             <section className="relative flex flex-col gap-3">

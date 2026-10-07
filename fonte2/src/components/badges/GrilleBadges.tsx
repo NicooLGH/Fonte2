@@ -33,7 +33,10 @@ export function GrilleBadges({
   etats,
   moi,
   defis = null,
+  entete = true,
 }: {
+  /** Faux sur la page Badges, qui a déjà son titre. */
+  entete?: boolean
   etats: EtatBadge[]
   /** Sur son propre profil : textes à la 2e personne. */
   moi: boolean
@@ -47,18 +50,19 @@ export function GrilleBadges({
 
   return (
     <>
-      <div className="mb-1 flex items-baseline justify-between">
-        <p className="section-titre">Badges</p>
-        <span className="font-mono text-[11px] text-encre-douce">
-          <strong className="font-medium text-encre">{total}</strong> /{' '}
-          {TOTAL_PALIERS} paliers
-        </span>
-      </div>
+      {entete && (
+        <div className="mb-1 flex items-baseline justify-between px-0.5">
+          <p className="section-titre">Badges</p>
+          <span className="font-mono text-[13px] text-encre-douce">
+            <strong className="font-medium text-encre">{total}</strong> / {TOTAL_PALIERS} paliers
+          </span>
+        </div>
+      )}
 
       {CATEGORIES.map((categorie) => (
-        <div key={categorie} className="mt-4">
-          <p className="section-titre text-[9.5px] opacity-80">{categorie}</p>
-          <div className="mt-2.5 grid grid-cols-4 gap-x-1.5 gap-y-3.5 sm:grid-cols-6">
+        <div key={categorie} className="mt-5">
+          <p className="section-titre px-0.5">{categorie}</p>
+          <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-5 sm:grid-cols-5">
             {BADGES.filter((b) => b.categorie === categorie).map((b) => {
               const n = obtenus(parId.get(b.id))
               return (
@@ -70,9 +74,14 @@ export function GrilleBadges({
                   className={`appui flex min-h-11 flex-col items-center gap-1.5 rounded-bloc py-1
                     transition-colors hover:bg-verre ${n > 0 ? 'text-encre' : 'text-encre-douce'}`}
                 >
-                  <Badge def={b} palier={n - 1} taille={58} />
-                  <span className="text-center text-[11px] leading-tight">{b.nom}</span>
-                  {!b.moment && <Points def={b} n={n} />}
+                  <Badge def={b} palier={n - 1} taille={64} />
+                  <span className="text-center text-[13px] leading-tight">{b.nom}</span>
+                  <span
+                    className="font-mono text-[11px]"
+                    style={{ color: n > 0 ? couleurPalier(b, n - 1) : undefined }}
+                  >
+                    {n === 0 ? 'verrouillé' : b.moment ? 'Moment' : nomPalier(b, n - 1)}
+                  </span>
                 </button>
               )
             })}
@@ -82,22 +91,22 @@ export function GrilleBadges({
 
       {defis && (defis.reussis.length > 0 || defis.enCours.length > 0 || moi) && (
         <div className="mt-6">
-          <div className="flex items-baseline justify-between">
-            <p className="section-titre text-[9.5px] opacity-80">Défis</p>
-            <span className="font-mono text-[11px] text-encre-douce">
+          <div className="flex items-baseline justify-between px-0.5">
+            <p className="section-titre">Défis</p>
+            <span className="font-mono text-[13px] text-encre-douce">
               <strong className="font-medium text-encre">{defis.reussis.length}</strong>{' '}
               réussi{defis.reussis.length > 1 ? 's' : ''}
             </span>
           </div>
           {defis.reussis.length === 0 && defis.enCours.length === 0 ? (
-            <p className="mt-2.5 text-sm text-encre-douce">
+            <p className="mt-2.5 px-0.5 text-[15px] text-encre-douce">
               Aucun défi pour l&apos;instant.{' '}
               <Link href="/defis" className="font-semibold text-accent-2">
                 Voir les défis en cours
               </Link>
             </p>
           ) : (
-            <div className="mt-2.5 grid grid-cols-4 gap-x-1.5 gap-y-3.5 sm:grid-cols-6">
+            <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-5 sm:grid-cols-5">
               {defis.reussis.map((r) => (
                 <Link
                   key={r.defi}
@@ -105,7 +114,7 @@ export function GrilleBadges({
                   className="appui relative flex min-h-11 flex-col items-center gap-1.5 rounded-bloc py-1
                              text-encre transition-colors hover:bg-verre"
                 >
-                  <BadgeDefi badge={r.badge} taille={58} />
+                  <BadgeDefi badge={r.badge} taille={64} />
                   {r.fois > 1 && (
                     <span
                       className="absolute right-1 top-0 rounded-full border border-white/20 bg-fond px-1.5
@@ -114,8 +123,8 @@ export function GrilleBadges({
                       ×{r.fois}
                     </span>
                   )}
-                  <span className="text-center text-[11px] leading-tight">{r.titre}</span>
-                  <span className="font-mono text-[9.5px] text-encre-douce">
+                  <span className="text-center text-[13px] leading-tight">{r.titre}</span>
+                  <span className="font-mono text-[11px] text-encre-douce">
                     {dateCourte(r.derniere)}
                   </span>
                 </Link>
@@ -127,9 +136,9 @@ export function GrilleBadges({
                   className="appui flex min-h-11 flex-col items-center gap-1.5 rounded-bloc py-1
                              text-encre-douce transition-colors hover:bg-verre"
                 >
-                  <BadgeDefi badge={e.badge} taille={58} verrouille />
-                  <span className="text-center text-[11px] leading-tight">{e.titre}</span>
-                  <span className="font-mono text-[9.5px]">en cours</span>
+                  <BadgeDefi badge={e.badge} taille={64} verrouille />
+                  <span className="text-center text-[13px] leading-tight">{e.titre}</span>
+                  <span className="font-mono text-[11px]">en cours</span>
                 </Link>
               ))}
             </div>
@@ -137,7 +146,7 @@ export function GrilleBadges({
         </div>
       )}
 
-      <p className="mt-5 font-mono text-[10.5px] leading-relaxed text-encre-douce">
+      <p className="mt-5 px-0.5 text-[13px] leading-relaxed text-encre-douce">
         {moi
           ? 'Touche un badge pour voir ce qu’il récompense et tes paliers. Tes amis voient tes badges sur ton profil.'
           : 'Touche un badge pour voir ce qu’il récompense.'}
@@ -151,21 +160,6 @@ export function GrilleBadges({
         />
       )}
     </>
-  )
-}
-
-function Points({ def, n }: { def: DefinitionBadge; n: number }) {
-  const couleur = n > 0 ? couleurPalier(def, n - 1) : undefined
-  return (
-    <span className="flex justify-center gap-[3px]" aria-hidden>
-      {def.seuils.map((_, k) => (
-        <span
-          key={k}
-          className="h-[5px] w-[5px] rounded-full"
-          style={{ background: k < n ? couleur : 'rgb(255 255 255 / 0.14)' }}
-        />
-      ))}
-    </span>
   )
 }
 
@@ -214,8 +208,7 @@ function Detail({
         aria-modal="true"
         aria-label={def.nom}
         className="carte-monte defilement-isole relative max-h-[88dvh] w-full max-w-md overflow-y-auto
-                   rounded-t-[22px] border-t border-bordure bg-[#15171a] px-5.5 pt-2.5
-                   sm:rounded-[22px] sm:border"
+                   rounded-t-[24px] bg-verre px-5.5 pt-2.5 sm:rounded-[24px]"
         style={{ paddingBottom: 'calc(1.75rem + env(safe-area-inset-bottom))' }}
       >
         <span className="mx-auto block h-1 w-10 rounded-full bg-white/20" aria-hidden />
@@ -243,7 +236,7 @@ function Detail({
         <div className="mt-4 flex flex-col items-center text-center">
           <Badge def={def} palier={n - 1} taille={116} />
           <p
-            className="mt-3 font-mono text-[10.5px] uppercase tracking-[0.14em]"
+            className="mt-3 font-mono text-[12px] uppercase tracking-[0.1em]"
             style={{ color: n > 0 ? couleurPalier(def, n - 1) : undefined }}
           >
             {n === 0
@@ -255,7 +248,7 @@ function Detail({
           <h2 className="mt-1.5 text-[40px]">{def.nom}</h2>
           <p
             className={`mt-1.5 max-w-[290px] leading-relaxed ${
-              def.moment ? 'text-[15px] text-encre' : 'text-sm text-encre-douce'
+              def.moment ? 'text-[16px] text-encre' : 'text-[15px] text-encre-douce'
             }`}
           >
             {def.condition}
@@ -293,7 +286,7 @@ function Detail({
                   >
                     <Badge def={def} palier={date ? i : -1} taille={36} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm">
+                      <p className="text-[15px]">
                         <span
                           className="font-semibold"
                           style={{ color: date ? couleurPalier(def, i) : undefined }}
@@ -303,7 +296,7 @@ function Detail({
                         · {seuil}
                         {/\d$/.test(seuil) ? ` ${def.unite(seuilNumerique(seuil))}` : ''}
                       </p>
-                      <p className="font-mono text-[10.5px] text-encre-douce">
+                      <p className="font-mono text-[12px] text-encre-douce">
                         {date ? dateLisible(date) : 'à débloquer'}
                       </p>
                     </div>
@@ -342,7 +335,7 @@ function Progression({
 
   return (
     <div className="mt-5">
-      <div className="flex justify-between font-mono text-[11px] text-encre-douce">
+      <div className="flex justify-between font-mono text-[13px] text-encre-douce">
         <span>
           <strong className="font-medium text-encre">{nombre(valeur)}</strong>{' '}
           {def.unite(valeur)}
@@ -357,7 +350,7 @@ function Progression({
           style={{ width: `${part * 100}%`, background: couleurPalier(def, palier) }}
         />
       </div>
-      <p className="mt-2 text-[13px] text-encre-douce">
+      <p className="mt-2 text-[15px] text-encre-douce">
         Encore{' '}
         <strong className="font-semibold text-encre">
           {nombre(reste)} {unite}

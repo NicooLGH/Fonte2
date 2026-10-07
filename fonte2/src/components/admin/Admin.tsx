@@ -12,6 +12,7 @@ import {
 } from '@/app/(carnet)/admin/actions'
 import { verrouiller } from '@/app/(carnet)/admin/verrou'
 import { AdminDefis } from './AdminDefis'
+import { Onglets } from '@/components/ui/Controles'
 import type { DefiAdmin } from '@/lib/defis'
 
 const ICONES = ['📢', '🎉', '⚠️', '🔥', '✨', '💪', '🛠️', '🎁', '📅', '❤️']
@@ -28,6 +29,7 @@ export function Admin({
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
+  const [onglet, setOnglet] = useState<'annonces' | 'defis' | 'notifs'>('annonces')
 
   // Formulaire
   const [titre, setTitre] = useState('')
@@ -72,27 +74,39 @@ export function Admin({
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header className="flex flex-wrap items-start justify-between gap-4
-                         border-b border-filet pb-5">
-        <h1 className="titre-page">Administration</h1>
-        {verrouillable && (
-          <form action={verrouiller}>
-            <button
-              type="submit"
-              className="appui rounded-bloc bg-verre px-4 py-2.5 text-xs font-semibold
-                         text-encre-douce transition-colors hover:bg-verre-fort
-                         hover:text-encre"
-            >
-              Verrouiller
-            </button>
-          </form>
-        )}
+      <header className="flex flex-col gap-4">
+        <div className="flex items-end justify-between gap-4 px-0.5 pt-2">
+          <h1 className="titre-page">Admin</h1>
+          {verrouillable && (
+            <form action={verrouiller}>
+              <button
+                type="submit"
+                aria-label="Verrouiller l'administration"
+                className="appui flex h-11 w-11 items-center justify-center rounded-bloc bg-verre"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" aria-hidden>
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                </svg>
+              </button>
+            </form>
+          )}
+        </div>
+        <Onglets
+          etiquette="Rubriques de l'administration"
+          actif={onglet}
+          onChange={(c) => setOnglet(c as 'annonces' | 'defis' | 'notifs')}
+          onglets={[
+            { cle: 'annonces', libelle: 'Annonces' },
+            { cle: 'defis', libelle: 'Défis' },
+            { cle: 'notifs', libelle: 'Notifs' },
+          ]}
+        />
       </header>
 
-      <p className="max-w-xl text-sm leading-relaxed text-encre-douce">
-        Un administrateur publie et notifie. Il n&apos;a aucun accès aux
-        données des membres : ni mensurations, ni poids, ni séances, ni
-        adresses email.
+      <p className="px-0.5 text-[13px] leading-relaxed text-encre-douce">
+        Un administrateur publie et notifie. Il n&apos;a aucun accès aux données des membres.
       </p>
 
       {(message.ok || message.ko) && (
@@ -103,10 +117,11 @@ export function Admin({
       )}
 
       {/* ---- Défis ---- */}
-      <AdminDefis defis={defis} />
+      {onglet === 'defis' && <AdminDefis defis={defis} />}
 
       {/* ---- Publier ---- */}
-      <section className="section pb-6">
+      {onglet === 'annonces' && (
+      <section className="bloc flex flex-col p-4">
         <p className="section-titre mb-4">Publier une annonce</p>
 
         <div className="flex flex-col gap-4">
@@ -119,7 +134,7 @@ export function Admin({
           />
 
           <label className="block">
-            <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+            <span className="mb-2 block text-[15px] font-semibold text-encre-douce">
               Message
             </span>
             <textarea
@@ -127,13 +142,13 @@ export function Admin({
               onChange={(e) => setCorps(e.target.value)}
               rows={4}
               maxLength={600}
-              className="w-full resize-y rounded-bloc border border-bordure bg-verre
-                         px-4 py-3 text-sm focus:border-accent focus:outline-none"
+              className="w-full resize-y rounded-bloc border border-transparent bg-verre
+                         px-4 py-3 text-[15px] focus:border-accent focus:outline-none"
             />
           </label>
 
           <Reglage titre="Style" detail="Couleur de base du bandeau.">
-            <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
+            <div className="flex gap-1 rounded-bloc bg-verre p-1">
               {(['info', 'succes', 'alerte'] as Ton[]).map((t) => (
                 <button
                   key={t}
@@ -143,7 +158,7 @@ export function Admin({
                     setCouleur(null)
                   }}
                   aria-pressed={ton === t && !couleur}
-                  className={`flex-1 rounded-bloc px-3 py-1.5 text-xs font-semibold ${
+                  className={`flex-1 rounded-bloc px-3 py-1.5 text-[14px] font-semibold ${
                     ton === t && !couleur
                       ? 'bg-encre text-fond'
                       : 'text-encre-douce'
@@ -162,12 +177,12 @@ export function Admin({
                 value={couleur ?? '#ff4b2b'}
                 onChange={(e) => setCouleur(e.target.value)}
                 aria-label="Couleur personnalisée"
-                className="h-10 w-12 cursor-pointer rounded-bloc border border-bordure bg-verre p-1"
+                className="h-10 w-12 cursor-pointer rounded-bloc bg-verre p-1"
               />
               <button
                 type="button"
                 onClick={() => setCouleur(null)}
-                className="rounded-full border border-bordure px-4 py-2 text-xs
+                className="rounded-full border border-bordure px-4 py-2 text-[14px]
                            font-semibold text-encre-douce hover:text-encre"
               >
                 Aucune
@@ -215,14 +230,14 @@ export function Admin({
                 placeholder="Texte"
                 maxLength={30}
                 className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
-                           px-4 py-2 text-sm focus:border-accent focus:outline-none"
+                           px-4 py-2 text-[15px] focus:border-accent focus:outline-none"
               />
               <input
                 value={lienUrl}
                 onChange={(e) => setLienUrl(e.target.value)}
                 placeholder="https://…"
                 className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre
-                           px-4 py-2 text-sm focus:border-accent focus:outline-none"
+                           px-4 py-2 text-[15px] focus:border-accent focus:outline-none"
               />
             </div>
           </Reglage>
@@ -244,7 +259,7 @@ export function Admin({
           </Reglage>
 
           <div>
-            <p className="mb-3 border-t border-filet pt-4 font-mono text-[10px] uppercase tracking-[0.1em] text-encre-douce">
+            <p className="mb-3 border-t border-filet pt-4 font-mono text-[13px] uppercase tracking-[0.1em] text-encre-douce">
               Aperçu
             </p>
             <Annonces annonces={[apercu]} />
@@ -276,11 +291,14 @@ export function Admin({
         </div>
       </section>
 
+      )}
+
       {/* ---- Liste ---- */}
-      <section className="section pb-6">
-        <p className="section-titre mb-4">Annonces</p>
+      {onglet === 'annonces' && (
+      <section className="flex flex-col">
+        <p className="section-titre mb-2 px-0.5">En ligne</p>
         {annonces.length === 0 ? (
-          <p className="text-sm italic text-encre-douce">Aucune annonce.</p>
+          <p className="text-[15px] italic text-encre-douce">Aucune annonce.</p>
         ) : (
           <ul className="divide-y divide-filet">
             {annonces.map((a) => {
@@ -293,7 +311,7 @@ export function Admin({
                       {a.icone && `${a.icone} `}
                       {a.titre}
                     </p>
-                    <p className="mt-0.5 font-mono text-[10.5px] text-encre-douce">
+                    <p className="mt-0.5 font-mono text-[13px] text-encre-douce">
                       <span
                         className={
                           etat === 'active' ? 'text-accent-2' : undefined
@@ -311,8 +329,8 @@ export function Admin({
                       type="button"
                       disabled={enCours}
                       onClick={() => agir(() => retirerAnnonce(a.id))}
-                      className="shrink-0 rounded-bloc border border-bordure px-4 py-1.5
-                                 text-xs font-semibold text-encre-douce hover:text-encre"
+                      className="h-10 shrink-0 rounded-pilule bg-verre px-4
+                                 text-[14px] font-semibold text-encre-douce hover:text-encre"
                     >
                       Retirer
                     </button>
@@ -324,10 +342,13 @@ export function Admin({
         )}
       </section>
 
+      )}
+
       {/* ---- Notification seule ---- */}
-      <section className="section pb-6">
+      {onglet === 'notifs' && (
+      <section className="bloc flex flex-col p-4">
         <p className="section-titre mb-2">Notification seule</p>
-        <p className="mb-4 text-sm leading-relaxed text-encre-douce">
+        <p className="mb-4 text-[15px] leading-relaxed text-encre-douce">
           Une notification à tous les membres, sans créer d&apos;annonce.
         </p>
 
@@ -340,7 +361,7 @@ export function Admin({
             placeholder="ex : Rappel"
           />
           <label className="block">
-            <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+            <span className="mb-2 block text-[15px] font-semibold text-encre-douce">
               Message
             </span>
             <textarea
@@ -348,8 +369,8 @@ export function Admin({
               onChange={(e) => setNCorps(e.target.value)}
               rows={2}
               maxLength={200}
-              className="w-full resize-y rounded-bloc border border-bordure bg-verre
-                         px-4 py-3 text-sm focus:border-accent focus:outline-none"
+              className="w-full resize-y rounded-bloc border border-transparent bg-verre
+                         px-4 py-3 text-[15px] focus:border-accent focus:outline-none"
             />
           </label>
           <Bouton
@@ -372,6 +393,7 @@ export function Admin({
           </Bouton>
         </div>
       </section>
+      )}
     </div>
   )
 }
@@ -388,8 +410,8 @@ function Reglage({
   return (
     <div className="flex flex-col gap-2.5 border-t border-filet pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div>
-        <p className="text-sm font-semibold">{titre}</p>
-        <p className="mt-0.5 font-mono text-[10.5px] text-encre-douce">{detail}</p>
+        <p className="text-[15px] font-semibold">{titre}</p>
+        <p className="mt-0.5 font-mono text-[13px] text-encre-douce">{detail}</p>
       </div>
       <div className="shrink-0 sm:min-w-[240px]">{children}</div>
     </div>
@@ -404,14 +426,14 @@ function Oui({
   onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
+    <div className="flex gap-1 rounded-bloc bg-verre p-1">
       {([true, false] as const).map((v) => (
         <button
           key={String(v)}
           type="button"
           onClick={() => onChange(v)}
           aria-pressed={valeur === v}
-          className={`flex-1 rounded-bloc px-4 py-1.5 text-xs font-semibold ${
+          className={`flex-1 rounded-bloc px-4 py-1.5 text-[14px] font-semibold ${
             valeur === v ? 'bg-encre text-fond' : 'text-encre-douce'
           }`}
         >

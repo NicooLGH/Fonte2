@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { BANNIERES, banniere as trouverBanniere, fondBanniere } from '@/lib/bannieres'
 import { MOTIFS, motifCss } from '@/lib/motifs'
 import { CADRES } from '@/lib/recompenses'
 import { AvatarCadre } from '@/components/AvatarCadre'
-import { changerPersonnalisation } from '@/app/(carnet)/reglages/actions'
+import { changerPersonnalisation, changerAvatar } from '@/app/(carnet)/reglages/actions'
+import { Onglets } from '@/components/ui/Controles'
+import { ChoixAvatar } from './ChoixAvatar'
 
 /* ============================================================
    Thème du profil
@@ -18,6 +20,8 @@ import { changerPersonnalisation } from '@/app/(carnet)/reglages/actions'
    La base revérifie le niveau à l'enregistrement.
    ============================================================ */
 
+type Onglet = 'teinte' | 'motif' | 'cadre' | 'avatar'
+
 export function ChoixTheme({
   bio,
   banniere,
@@ -26,8 +30,6 @@ export function ChoixTheme({
   niveau,
   pseudo,
   avatar,
-  enCours,
-  onAgir,
 }: {
   bio: string
   banniere: string
@@ -36,59 +38,63 @@ export function ChoixTheme({
   niveau: number
   pseudo: string
   avatar: string
-  enCours: boolean
-  onAgir: (a: () => Promise<{ erreur?: string; succes?: string }>) => void
 }) {
+  const [onglet, setOnglet] = useState<Onglet>('teinte')
   const [couleur, setCouleur] = useState(banniere)
   const [forme, setForme] = useState(motif)
   const [contour, setContour] = useState(cadre)
+  const [visage, setVisage] = useState(avatar)
+  const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
+  const [enCours, demarrer] = useTransition()
 
   const modifie = couleur !== banniere || forme !== motif || contour !== cadre
   const teinte = trouverBanniere(couleur)
 
-  const compte = <T extends { niveau: number }>(liste: T[]) =>
-    `${liste.filter((x) => x.niveau <= niveau).length} / ${liste.length}`
+  function appliquer() {
+    setMessage({})
+    demarrer(async () => {
+      const r = await changerPersonnalisation(bio, couleur, forme, contour)
+      setMessage({ ok: r.succes, ko: r.erreur })
+    })
+  }
+
+  function choisirAvatar(a: string) {
+    setVisage(a)
+    setMessage({})
+    demarrer(async () => {
+      const r = await changerAvatar(a)
+      if (r.erreur) setMessage({ ko: r.erreur })
+    })
+  }
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* ---- Aperçu ---- */}
-      <div className="overflow-hidden rounded-bloc border border-bordure">
-        <div className="relative p-4">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{ background: teinte.fond }}
-          />
-          {teinte.anime && (
-            <div aria-hidden className="reflet-teinte pointer-events-none absolute inset-0" />
-          )}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              maskImage: 'linear-gradient(to bottom, #000 70%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, #000 70%, transparent 100%)',
-              ...motifCss(forme),
-            }}
-          />
-
-          <div className="relative flex items-start gap-3.5 py-1">
-            <AvatarCadre avatar={avatar} cadre={contour} taille={52} />
-            <div className="min-w-0">
-              <p className="truncate font-display text-2xl">{pseudo}</p>
-              {bio && (
-                <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-encre-douce">
-                  {bio}
-                </p>
-              )}
-            </div>
-          </div>
+    <div className="flex flex-col gap-4">
+      {/* Aperçu */}
+      <div className="relative -mx-4 h-[190px] overflow-hidden md:mx-0 md:rounded-carte">
+        <div aria-hidden className="absolute inset-0" style={{ background: teinte.fond }} />
+        {teinte.anime && <div aria-hidden className="reflet-teinte absolute inset-0" />}
+        <div aria-hidden className="absolute inset-0" style={motifCss(forme)} />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-fond" />
+        <div className="absolute bottom-3 left-4 flex items-end gap-3.5">
+          <AvatarCadre avatar={visage} cadre={contour} taille={72} />
+          <span className="pb-1 font-display text-[40px] leading-[0.85]">{pseudo}</span>
         </div>
       </div>
 
-      {/* ---- Teinte ---- */}
-      <Groupe titre="Teinte" compte={compte(BANNIERES)}>
-        <div className="grid grid-cols-5 gap-1.5">
+      <Onglets
+        etiquette="Personnalisation"
+        actif={onglet}
+        onChange={(c) => setOnglet(c as Onglet)}
+        onglets={[
+          { cle: 'teinte', libelle: 'Teinte' },
+          { cle: 'motif', libelle: 'Motif' },
+          { cle: 'cadre', libelle: 'Cadre' },
+          { cle: 'avatar', libelle: 'Avatar' },
+        ]}
+      />
+
+      {onglet === 'teinte' && (
+        <div className="grid grid-cols-4 gap-2">
           {BANNIERES.map((b) => {
             const libre = b.niveau <= niveau
             return (
@@ -97,29 +103,27 @@ export function ChoixTheme({
                 type="button"
                 disabled={!libre}
                 aria-label={libre ? b.nom : `${b.nom}, débloqué au niveau ${b.niveau}`}
-                title={libre ? b.nom : `${b.nom} · niveau ${b.niveau}`}
                 aria-pressed={couleur === b.cle}
                 onClick={() => setCouleur(b.cle)}
-                className={`appui relative flex h-12 items-center justify-center overflow-hidden rounded-bloc transition-colors ${
-                  couleur === b.cle ? 'border-2 border-encre' : 'border border-bordure'
+                className={`appui relative flex h-[72px] items-end overflow-hidden rounded-bloc p-2 ${
+                  couleur === b.cle ? 'ring-[3px] ring-encre ring-inset' : ''
                 }`}
                 style={{ backgroundColor: 'var(--color-fond)' }}
               >
-                <span
-                  aria-hidden
-                  className={`absolute inset-0 ${libre ? '' : 'opacity-40'}`}
-                  style={{ background: fondBanniere(b.cle) }}
-                />
-                {!libre && <Cadenas niveau={b.niveau} />}
+                <span aria-hidden className={`absolute inset-0 ${libre ? '' : 'opacity-35'}`} style={{ background: fondBanniere(b.cle) }} />
+                {libre ? (
+                  <span className="relative truncate text-[12px] font-semibold">{b.nom}</span>
+                ) : (
+                  <Cadenas niveau={b.niveau} />
+                )}
               </button>
             )
           })}
         </div>
-      </Groupe>
+      )}
 
-      {/* ---- Motif ---- */}
-      <Groupe titre="Motif" compte={compte(MOTIFS)}>
-        <div className="grid grid-cols-5 gap-1.5">
+      {onglet === 'motif' && (
+        <div className="grid grid-cols-4 gap-2">
           {MOTIFS.map((m) => {
             const libre = m.niveau <= niveau
             return (
@@ -128,29 +132,26 @@ export function ChoixTheme({
                 type="button"
                 disabled={!libre}
                 aria-label={libre ? m.nom : `${m.nom}, débloqué au niveau ${m.niveau}`}
-                title={libre ? m.nom : `${m.nom} · niveau ${m.niveau}`}
                 aria-pressed={forme === m.cle}
                 onClick={() => setForme(m.cle)}
-                className={`appui relative flex h-12 items-center justify-center overflow-hidden rounded-bloc bg-verre transition-colors ${
-                  forme === m.cle ? 'border-2 border-encre' : 'border border-bordure'
+                className={`appui relative flex h-[72px] items-end overflow-hidden rounded-bloc bg-verre p-2 ${
+                  forme === m.cle ? 'ring-[3px] ring-encre ring-inset' : ''
                 }`}
               >
-                {!libre ? (
-                  <Cadenas niveau={m.niveau} />
-                ) : m.cle === 'aucun' ? (
-                  <span className="font-mono text-[9px] text-encre-douce">aucun</span>
+                {libre && m.cle !== 'aucun' && <span aria-hidden className="absolute inset-0" style={motifCss(m.cle)} />}
+                {libre ? (
+                  <span className="relative truncate text-[12px] font-semibold">{m.nom}</span>
                 ) : (
-                  <span aria-hidden className="absolute inset-0" style={motifCss(m.cle)} />
+                  <Cadenas niveau={m.niveau} />
                 )}
               </button>
             )
           })}
         </div>
-      </Groupe>
+      )}
 
-      {/* ---- Cadre ---- */}
-      <Groupe titre="Cadre" compte={compte(CADRES)}>
-        <div className="grid grid-cols-4 gap-x-1.5 gap-y-3 sm:grid-cols-7">
+      {onglet === 'cadre' && (
+        <div className="grid grid-cols-4 gap-x-2 gap-y-4">
           {CADRES.map((c) => {
             const libre = c.niveau <= niveau
             return (
@@ -161,61 +162,49 @@ export function ChoixTheme({
                 aria-label={libre ? `Cadre ${c.nom}` : `Cadre ${c.nom}, débloqué au niveau ${c.niveau}`}
                 aria-pressed={contour === c.cle}
                 onClick={() => setContour(c.cle)}
-                className="appui flex min-h-11 flex-col items-center gap-2 rounded-bloc py-1.5"
+                className="appui flex flex-col items-center gap-2 rounded-bloc py-1.5"
               >
                 {libre ? (
-                  <AvatarCadre avatar={avatar} cadre={c.cle} taille={42} />
+                  <AvatarCadre avatar={visage} cadre={c.cle} taille={52} />
                 ) : (
                   <span
-                    className="relative flex h-[42px] w-[42px] items-center justify-center rounded-[10px] border border-dashed bg-white/[0.02]"
-                    style={{ borderColor: `${c.couleur}59` }}
+                    className="relative flex h-[52px] w-[52px] items-center justify-center rounded-[13px] border border-dashed"
+                    style={{ borderColor: `${c.couleur}66` }}
                   >
                     <Cadenas niveau={c.niveau} compact />
                   </span>
                 )}
                 <span
-                  className={`font-mono text-[10px] ${
-                    contour === c.cle ? 'text-encre underline underline-offset-4' : 'text-encre-douce'
-                  }`}
+                  className={`text-[13px] ${contour === c.cle ? 'font-semibold text-encre' : 'text-encre-douce'}`}
                 >
-                  {libre ? c.nom.toLowerCase() : `niv. ${c.niveau}`}
+                  {libre ? c.nom : `niv. ${c.niveau}`}
                 </span>
               </button>
             )
           })}
         </div>
-      </Groupe>
+      )}
 
-      {/* ---- Validation ---- */}
-      <div className="flex gap-2">
+      {onglet === 'avatar' && <ChoixAvatar avatar={visage} cadre={contour} enCours={enCours} onChoisir={choisirAvatar} />}
+
+      <p className="px-0.5 text-[13px] text-encre-douce">
+        Le cadenas indique le niveau qui débloque l&apos;élément. La base le revérifie.
+      </p>
+
+      {message.ko && <p className="rounded-bloc bg-accent/10 px-4 py-3 font-mono text-[12px] text-accent">{message.ko}</p>}
+      {message.ok && <p className="rounded-bloc bg-accent-2/10 px-4 py-3 font-mono text-[12px] text-accent-2">{message.ok}</p>}
+
+      {onglet !== 'avatar' && (
         <button
           type="button"
           disabled={enCours || !modifie}
-          onClick={() =>
-            onAgir(() => changerPersonnalisation(bio, couleur, forme, contour))
-          }
-          className="appui flex-1 rounded-bloc bg-accent px-5 py-2.5 text-sm
-                     font-semibold text-white transition-colors
+          onClick={appliquer}
+          className="appui h-[56px] rounded-carte bg-accent text-[17px] font-bold text-white transition-colors
                      hover:bg-accent-clair disabled:opacity-40"
         >
-          Appliquer
+          {enCours ? 'Enregistrement…' : 'Appliquer'}
         </button>
-        {modifie && (
-          <button
-            type="button"
-            onClick={() => {
-              setCouleur(banniere)
-              setForme(motif)
-              setContour(cadre)
-            }}
-            className="appui shrink-0 rounded-bloc border border-bordure px-5 py-2.5
-                       text-sm font-semibold text-encre-douce transition-colors
-                       hover:text-encre"
-          >
-            Annuler
-          </button>
-        )}
-      </div>
+      )}
     </div>
   )
 }
@@ -242,7 +231,7 @@ function Groupe({
 
 function Cadenas({ niveau, compact = false }: { niveau: number; compact?: boolean }) {
   return (
-    <span className="relative flex flex-col items-center justify-center gap-0.5 text-encre-douce">
+    <span className="relative m-auto flex flex-col items-center justify-center gap-0.5 text-encre">
       <svg
         width="14"
         height="14"
@@ -256,7 +245,7 @@ function Cadenas({ niveau, compact = false }: { niveau: number; compact?: boolea
         <rect x="5" y="11" width="14" height="10" rx="2" />
         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
       </svg>
-      {!compact && <span className="font-mono text-[9px]">niv. {niveau}</span>}
+      {!compact && <span className="font-mono text-[11px]">niv. {niveau}</span>}
     </span>
   )
 }

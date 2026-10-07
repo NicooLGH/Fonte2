@@ -24,10 +24,10 @@ function Formulaire() {
   return (
     <form action={action} className="flex flex-col gap-6">
       <header>
-        <h1 className="text-[32px] leading-none tracking-wide">
-          Fonte<span className="text-accent">.</span>
+        <h1 className="font-display text-[84px] leading-[0.8]">
+          FONTE<span className="text-accent">.</span>
         </h1>
-        <p className="section-titre mt-1.5">Carnet de performance</p>
+        <p className="mt-2 text-[18px] text-encre-douce">Ton carnet de muscu.</p>
       </header>
 
       <div className="flex flex-col gap-5">
@@ -55,7 +55,7 @@ function Formulaire() {
         {enCours ? 'Connexion…' : 'Se connecter'}
       </Bouton>
 
-      <div className="flex items-center justify-between gap-4 text-[12.5px]">
+      <div className="flex items-center justify-between gap-4 text-[15px]">
         <Link
           href="/mot-de-passe"
           className="text-encre-douce transition-colors hover:text-encre"

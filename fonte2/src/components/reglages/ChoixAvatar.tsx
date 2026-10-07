@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { AVATARS } from '@/lib/recompenses'
-import { AvatarCadre } from '@/components/AvatarCadre'
 
 /* ============================================================
    Choix de l'avatar
@@ -14,12 +13,12 @@ import { AvatarCadre } from '@/components/AvatarCadre'
 
 export function ChoixAvatar({
   avatar,
-  cadre,
   enCours,
   onChoisir,
 }: {
   avatar: string
-  cadre: string
+  /** Gardé pour compatibilité : l'aperçu vit dans l'écran parent. */
+  cadre?: string
   enCours: boolean
   onChoisir: (a: string) => void
 }) {
@@ -29,10 +28,6 @@ export function ChoixAvatar({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <AvatarCadre avatar={avatar} cadre={cadre} taille={52} />
-        <p className="font-mono text-[10.5px] text-encre-douce">aperçu avec ton cadre</p>
-      </div>
 
       <div role="tablist" className="defilement-isole -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
         {AVATARS.map((f, i) => (
@@ -42,10 +37,10 @@ export function ChoixAvatar({
             role="tab"
             aria-selected={famille === i}
             onClick={() => setFamille(i)}
-            className={`min-h-9 shrink-0 rounded-full px-3 text-[12.5px] transition-colors ${
+            className={`h-10 shrink-0 rounded-full px-4 text-[14px] transition-colors ${
               famille === i
                 ? 'bg-encre font-semibold text-fond'
-                : 'border border-bordure text-encre-douce hover:text-encre'
+                : 'bg-verre text-encre-douce hover:text-encre'
             }`}
           >
             {f.famille}
@@ -53,7 +48,7 @@ export function ChoixAvatar({
         ))}
       </div>
 
-      <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+      <div className="grid grid-cols-5 gap-2 sm:grid-cols-8">
         {AVATARS[famille].liste.map((a) => (
           <button
             key={a}
@@ -62,10 +57,8 @@ export function ChoixAvatar({
             onClick={() => onChoisir(a)}
             aria-pressed={avatar === a}
             aria-label={`Avatar ${a}`}
-            className={`appui flex h-11 items-center justify-center rounded-bloc text-2xl transition-colors ${
-              avatar === a
-                ? 'border-2 border-encre bg-verre-fort'
-                : 'border border-white/[0.08] bg-verre hover:bg-verre-fort'
+            className={`appui flex h-12 items-center justify-center rounded-bloc text-[26px] transition-colors ${
+              avatar === a ? 'bg-verre-fort ring-2 ring-encre' : 'bg-verre hover:bg-verre-fort'
             }`}
           >
             {a}

@@ -5,7 +5,6 @@ import { useState, useTransition } from 'react'
 import { BadgeDefi } from './BadgeDefi'
 import {
   avancement,
-  libelleObjectif,
   nombre,
   tempsRestant,
   OBJECTIFS,
@@ -30,21 +29,18 @@ export function DefisAccueil({ defis }: { defis: Defi[] }) {
   const autres = defis.filter((d) => d !== une)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-2">
       {une && <CarteUne defi={une} />}
 
       {autres.length > 0 && (
-        <section>
-          <div className="flex items-baseline justify-between border-b border-bordure pb-1.5">
+        <section className="flex flex-col">
+          <div className="flex items-baseline justify-between px-0.5 pb-1">
             <p className="section-titre">Défis en cours</p>
-            <Link
-              href="/defis"
-              className="font-mono text-[11px] text-accent-2 transition-colors hover:text-encre"
-            >
+            <Link href="/defis" className="text-[14px] font-semibold text-encre-douce hover:text-encre">
               Tout voir ›
             </Link>
           </div>
-          {autres.slice(0, 4).map((d) => (
+          {autres.slice(0, 3).map((d) => (
             <LigneDefi key={d.edition} defi={d} />
           ))}
         </section>
@@ -60,7 +56,7 @@ export function CarteUne({ defi }: { defi: Defi }) {
   const [enCours, demarrer] = useTransition()
   const c = defi.badge.couleur
   const a = avancement(defi)
-  const nouveau = Date.now() - new Date(defi.debut).getTime() < 3 * 86400000
+  const unite = defi.objectif === 'seance_longue' ? '' : ` ${OBJECTIFS[defi.objectif].unite(a.cible)}`
 
   function rejoindre() {
     setErreur(null)
@@ -72,74 +68,57 @@ export function CarteUne({ defi }: { defi: Defi }) {
   }
 
   return (
-    <section
-      aria-label="Défi à la une"
-      className="entree-page relative overflow-hidden rounded-[20px] border p-4.5"
-      style={{
-        borderColor: `${c}55`,
-        background: `radial-gradient(ellipse 90% 80% at 85% 10%, ${c}33, transparent 60%), rgb(255 255 255 / 0.03)`,
-      }}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <Pastille couleur={c}>
-          {defi.participe ? 'Tu participes' : nouveau ? 'Nouveau défi' : 'Défi en cours'}
-        </Pastille>
-        <span className="font-mono text-[11px] text-encre-douce">
-          {defi.portee === 'collectif' ? 'collectif · ' : ''}encore{' '}
-          {tempsRestant(defi.fin)}
+    <section aria-label="Défi à la une" className="bloc motif-cercles-bleu motif-cercles flex flex-col gap-4 p-[18px]">
+      <Link href={`/defis/${defi.edition}`} className="flex items-center gap-3.5">
+        <BadgeDefi badge={defi.badge} taille={72} verrouille={!defi.participe && !defi.reussiLe} />
+        <span className="flex min-w-0 flex-col gap-1">
+          <span className="font-mono text-[12px] tracking-[0.08em] uppercase" style={{ color: c }}>
+            À la une{defi.portee === 'collectif' ? ' · collectif' : ''}
+          </span>
+          <span className="font-display text-[36px] leading-[0.9]">{defi.titre}</span>
+          <span className="text-[14px] text-encre-douce">
+            {defi.portee === 'collectif' ? 'Tous ensemble · ' : ''}encore {tempsRestant(defi.fin)}
+          </span>
         </span>
-      </div>
-
-      <Link href={`/defis/${defi.edition}`} className="mt-3.5 flex items-center gap-3.5">
-        <BadgeDefi badge={defi.badge} taille={84} />
-        <div className="min-w-0">
-          <h2 className="text-[34px] leading-[0.95]">{defi.titre}</h2>
-          <p className="mt-1.5 text-[13.5px] leading-snug text-encre-douce">
-            {defi.description || `Objectif : ${libelleObjectif(defi.objectif, defi.valeur)}.`}
-          </p>
-        </div>
       </Link>
 
       {defi.participe ? (
-        <div className="mt-4">
-          <div className="flex justify-between font-mono text-[11px] text-encre-douce">
+        <div className="flex flex-col gap-2">
+          <div className="h-2 overflow-hidden rounded-pilule bg-encre/[0.08]">
+            <div className="h-full rounded-pilule" style={{ width: `${a.part * 100}%`, background: c }} />
+          </div>
+          <div className="flex justify-between font-mono text-[13px] text-encre-douce">
             <span>
-              <strong className="font-medium text-encre">{nombre(a.valeur)}</strong> /{' '}
-              {nombre(a.cible)}{' '}
-              {defi.objectif === 'seance_longue' ? '' : OBJECTIFS[defi.objectif].unite(a.cible)}
-              {defi.portee === 'collectif' && ' · tous ensemble'}
+              {nombre(a.valeur)} / {nombre(a.cible)}
+              {unite}
             </span>
-            <span className="text-accent-2">+{defi.xp} XP</span>
+            <span className="text-accent-clair">+{defi.xp} XP</span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-            <div className="h-full" style={{ width: `${a.part * 100}%`, background: c }} />
-          </div>
-          <Link
-            href={`/defis/${defi.edition}`}
-            className="mt-3 block text-center font-mono text-[11px] text-accent-2 underline underline-offset-4"
-          >
-            {defi.type === 'honneur' ? 'Cocher ma journée' : 'Voir le défi'}
-          </Link>
+          {defi.type === 'honneur' && (
+            <Link
+              href={`/defis/${defi.edition}`}
+              className="appui mt-1 flex h-12 items-center justify-center rounded-bloc bg-verre-fort text-[15px] font-semibold"
+            >
+              Cocher ma journée
+            </Link>
+          )}
         </div>
       ) : (
-        <div className="mt-4 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={rejoindre}
             disabled={enCours}
-            className="appui h-[50px] flex-1 rounded-bloc bg-accent text-[15px] font-semibold text-white
+            className="appui h-[52px] flex-1 rounded-bloc bg-accent text-[16px] font-bold text-white
                        transition-colors hover:bg-accent-clair disabled:opacity-60"
           >
             {enCours ? '…' : 'Je participe'}
           </button>
-          <span className="font-display text-[26px] leading-none text-accent-2">
-            +{defi.xp}
-            <span className="font-mono text-[11px] text-encre-douce"> XP</span>
-          </span>
+          <span className="font-mono text-[15px] text-accent-clair">+{defi.xp} XP</span>
         </div>
       )}
 
-      {erreur && <p className="mt-2 font-mono text-[11px] text-accent">{erreur}</p>}
+      {erreur && <p className="font-mono text-[12px] text-accent">{erreur}</p>}
     </section>
   )
 }
@@ -149,38 +128,32 @@ export function CarteUne({ defi }: { defi: Defi }) {
 export function LigneDefi({ defi }: { defi: Defi }) {
   const a = avancement(defi)
   const sousTitre = defi.reussiLe
-    ? 'réussi'
+    ? 'Réussi'
     : !defi.participe
-      ? `${defi.portee === 'collectif' ? 'collectif · ' : ''}pas encore rejoint`
+      ? `${defi.portee === 'collectif' ? 'Collectif · ' : ''}pas encore rejoint`
       : defi.type === 'honneur'
-        ? `sur l'honneur · ${nombre(a.valeur)} / ${nombre(a.cible)} jours cochés`
-        : defi.portee === 'collectif'
-          ? `collectif · ${nombre(a.valeur)} / ${nombre(a.cible)} ${OBJECTIFS[defi.objectif].unite(a.cible)}`
-          : `${nombre(a.valeur)} / ${nombre(a.cible)} ${defi.objectif === 'seance_longue' ? '' : OBJECTIFS[defi.objectif].unite(a.cible)}`
+        ? `Sur l'honneur · ${nombre(a.valeur)}/${nombre(a.cible)} j`
+        : `Tu participes · ${nombre(a.valeur)}/${nombre(a.cible)}`
 
   return (
     <Link
       href={`/defis/${defi.edition}`}
-      className="flex items-center gap-3 border-b border-filet py-3 transition-colors last:border-0 hover:bg-verre"
+      className="flex min-h-16 items-center gap-3 rounded-bloc px-0.5 transition-colors hover:bg-verre"
     >
-      <BadgeDefi badge={defi.badge} taille={48} verrouille={!defi.reussiLe && !defi.participe} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-sm font-semibold">{defi.titre}</span>
-          <span className="shrink-0 font-mono text-[11px] text-accent-2">+{defi.xp}</span>
-        </div>
-        <p className="mt-0.5 font-mono text-[10.5px] text-encre-douce">
-          {sousTitre} · {defi.enCours ? `encore ${tempsRestant(defi.fin)}` : 'terminé'}
-        </p>
+      <BadgeDefi badge={defi.badge} taille={44} verrouille={!defi.reussiLe && !defi.participe} />
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="truncate text-[16px] font-semibold">{defi.titre}</span>
+        <span className="truncate text-[13px] text-encre-douce">
+          {sousTitre}
+          {defi.enCours && !defi.reussiLe ? ` · ${tempsRestant(defi.fin)}` : ''}
+        </span>
         {defi.participe && !defi.reussiLe && (
-          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.08]">
-            <div
-              className="h-full"
-              style={{ width: `${a.part * 100}%`, background: defi.badge.couleur }}
-            />
-          </div>
+          <span className="block h-1 overflow-hidden rounded-pilule bg-encre/[0.08]">
+            <span className="block h-full" style={{ width: `${a.part * 100}%`, background: defi.badge.couleur }} />
+          </span>
         )}
-      </div>
+      </span>
+      <span className="font-mono text-[14px] text-accent-clair">+{defi.xp}</span>
     </Link>
   )
 }
@@ -194,8 +167,8 @@ export function Pastille({
 }) {
   return (
     <span
-      className="rounded-full border px-2.5 py-[3px] font-mono text-[10px] uppercase tracking-[0.08em]"
-      style={{ color: couleur, borderColor: `${couleur}66` }}
+      className="flex h-7 items-center rounded-pilule px-2.5 font-mono text-[12px] uppercase tracking-[0.06em]"
+      style={{ color: couleur, background: `${couleur}22` }}
     >
       {children}
     </span>

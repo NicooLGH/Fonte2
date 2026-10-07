@@ -14,15 +14,11 @@ export default function MotDePasse() {
   return (
     <form action={action} className="flex flex-col gap-6">
       <header>
-        <h1 className="text-[32px] leading-none tracking-wide">
-          Fonte<span className="text-accent">.</span>
-        </h1>
-        <p className="section-titre mt-1.5">Mot de passe oublié</p>
+        <h1 className="font-display text-[56px] leading-[0.85]">Mot de passe oublié</h1>
+        <p className="mt-2 text-[16px] text-encre-douce">
+          Indique ton adresse : tu recevras un lien pour en choisir un nouveau.
+        </p>
       </header>
-
-      <p className="text-sm leading-relaxed text-encre-douce">
-        Indique ton adresse : tu recevras un lien pour en choisir un nouveau.
-      </p>
 
       <ChampEpure
         libelle="Adresse email"
@@ -42,7 +38,7 @@ export default function MotDePasse() {
         </Bouton>
       )}
 
-      <p className="text-center text-[12.5px]">
+      <p className="text-center text-[15px]">
         <Link
           href="/connexion"
           className="text-encre-douce transition-colors hover:text-encre"

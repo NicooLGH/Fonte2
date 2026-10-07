@@ -22,6 +22,7 @@ export const BAREME = {
   seance: 30,
   serieValidee: 2,
   seriesPlafondSeance: 40,
+  cardio: 15,
   record: 40,
   releve: 20,
   bonusDimanche: 5,

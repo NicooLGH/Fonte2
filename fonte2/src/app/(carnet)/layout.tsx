@@ -6,6 +6,7 @@ import { chargerNotifications, suisJeAdmin } from '@/lib/donnees-notifs'
 import { chargerModeles } from '@/lib/donnees'
 import type { Profil } from '@/types/database'
 import { BandeauLive } from '@/components/live/BandeauLive'
+import { EnvoiEnAttente } from '@/components/live/EnvoiEnAttente'
 
 /**
  * Mise en page commune aux pages du carnet.
@@ -82,6 +83,8 @@ export default async function CarnetLayout({
       </div>
       {/* Une séance réduite reste accessible depuis toutes les pages. */}
       <BandeauLive userId={user.id} />
+      {/* Séances terminées sans réseau : envoyées au retour de la connexion. */}
+      <EnvoiEnAttente userId={user.id} />
       <BarreBasse aDesModeles={modeles.length > 0} />
     </div>
   )

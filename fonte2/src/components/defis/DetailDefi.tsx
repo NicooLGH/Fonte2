@@ -48,8 +48,8 @@ export function DetailDefi({ defi }: { defi: Defi }) {
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
         <Link
           href="/defis"
-          className="flex min-h-11 items-center gap-1.5 self-start text-[13px] text-encre-douce
-                     transition-colors hover:text-encre"
+          aria-label="Retour aux défis"
+          className="-ml-2 flex h-11 w-11 items-center justify-center text-encre"
         >
           <svg
             width="16"
@@ -64,7 +64,6 @@ export function DetailDefi({ defi }: { defi: Defi }) {
           >
             <path d="M15 18l-6-6 6-6" />
           </svg>
-          Défis
         </Link>
 
         <div className="mt-2 flex flex-col items-center text-center">
@@ -84,7 +83,7 @@ export function DetailDefi({ defi }: { defi: Defi }) {
               {defi.portee === 'collectif' ? 'Collectif' : 'Individuel'}
             </Pastille>
           </div>
-          <h1 className="mt-3 text-[44px] leading-[0.95]">{defi.titre}</h1>
+          <h1 className="mt-3 titre-page">{defi.titre}</h1>
           {defi.description && (
             <p className="mt-2.5 max-w-[310px] text-[15px] leading-relaxed text-encre-douce">
               {defi.description}
@@ -94,12 +93,12 @@ export function DetailDefi({ defi }: { defi: Defi }) {
 
         {/* Progression */}
         {(defi.participe || defi.portee === 'collectif') && (
-          <div className="mt-6">
+          <div className="bloc mt-6 p-[18px]">
             <div className="flex items-baseline justify-between">
-              <p className="section-titre">
+              <p className="text-[16px] font-semibold">
                 {defi.portee === 'collectif' ? 'Tous ensemble' : 'Ta progression'}
               </p>
-              <span className="font-mono text-[11px] text-encre-douce">
+              <span className="font-mono text-[14px]" style={{ color: c }}>
                 {Math.round(a.part * 100)} %
               </span>
             </div>
@@ -117,8 +116,8 @@ export function DetailDefi({ defi }: { defi: Defi }) {
               />
             </div>
             {defi.portee === 'collectif' && defi.participe && (
-              <div className="mt-4 flex items-baseline justify-between border-y border-filet py-3">
-                <span className="text-sm text-encre-douce">Ta contribution</span>
+              <div className="mt-3 flex items-baseline justify-between">
+                <span className="text-[15px] text-encre-douce">Ta contribution</span>
                 <span className="font-display text-[26px] leading-none" style={{ color: c }}>
                   {nombre(defi.progression)}
                   {unite}
@@ -134,7 +133,7 @@ export function DetailDefi({ defi }: { defi: Defi }) {
         )}
 
         {/* Informations */}
-        <dl className="mt-6 border-t border-filet">
+        <dl className="mt-5">
           <Info terme="Objectif">
             {defi.type === 'honneur'
               ? `${nombre(defi.valeur)} jour${defi.valeur > 1 ? 's' : ''} cochés`
@@ -156,7 +155,7 @@ export function DetailDefi({ defi }: { defi: Defi }) {
           )}
         </dl>
 
-        <p className="mt-4 font-mono text-[10.5px] leading-relaxed text-encre-douce">
+        <p className="mt-4 text-[13px] leading-relaxed text-encre-douce">
           {defi.portee === 'collectif'
             ? "Seul le total commun est affiché. Personne ne voit la part des autres. Ce qui compte : ce que tu fais à partir du jour où tu rejoins."
             : "Ta progression ne compte qu'à partir du jour où tu participes, et elle reste privée."}
@@ -175,7 +174,7 @@ export function DetailDefi({ defi }: { defi: Defi }) {
               type="button"
               disabled={enCours}
               onClick={() => agir(() => participer(defi.edition, true))}
-              className="appui h-[50px] rounded-bloc bg-accent text-[15px] font-semibold text-white
+              className="appui h-[58px] rounded-carte bg-accent text-[17px] font-bold text-white
                          transition-colors hover:bg-accent-clair disabled:opacity-60"
             >
               Je participe
@@ -185,8 +184,7 @@ export function DetailDefi({ defi }: { defi: Defi }) {
                 type="button"
                 disabled={enCours}
                 onClick={() => agir(() => participer(defi.edition, false))}
-                className="h-[46px] rounded-bloc border border-bordure bg-verre text-sm font-semibold
-                           text-encre transition-colors hover:bg-verre-fort disabled:opacity-60"
+                className="h-12 text-[16px] font-semibold text-encre-douce hover:text-encre disabled:opacity-60"
               >
                 Pas cette fois
               </button>
@@ -217,7 +215,7 @@ function Jours({
     <div className="mt-6">
       <div className="flex items-baseline justify-between">
         <p className="section-titre">Tes jours</p>
-        <span className="font-mono text-[11px] text-encre-douce">
+        <span className="font-mono text-[13px] text-encre-douce">
           <strong className="font-medium text-encre">{defi.jours.length}</strong> /{' '}
           {nombre(defi.valeur)} jours
         </span>
@@ -268,7 +266,7 @@ function Jours({
                   </svg>
                 )}
               </span>
-              <span className="font-mono text-[10px]">
+              <span className="font-mono text-[12px]">
                 {d.toLocaleDateString('fr-FR', { weekday: 'short' })}
               </span>
             </div>
@@ -281,17 +279,17 @@ function Jours({
           type="button"
           disabled={enCours}
           onClick={() => agir(() => cocherAujourdhui(defi.edition, !coche))}
-          className={`appui mt-5 h-[50px] w-full rounded-bloc text-[15px] font-semibold transition-colors
+          className={`appui mt-5 h-[54px] w-full rounded-carte text-[16px] font-bold transition-colors
             disabled:opacity-60 ${
               coche
-                ? 'border border-bordure bg-verre text-encre hover:bg-verre-fort'
+                ? 'bg-verre text-encre hover:bg-verre-fort'
                 : 'bg-accent text-white hover:bg-accent-clair'
             }`}
         >
           {coche ? "Décocher aujourd'hui" : "Cocher aujourd'hui"}
         </button>
       )}
-      <p className="mt-2 text-center font-mono text-[10.5px] text-encre-douce">
+      <p className="mt-2 text-center text-[13px] text-encre-douce">
         On ne coche que le jour même. Un jour coché par erreur se décoche avant minuit.
       </p>
     </div>
@@ -309,9 +307,9 @@ function Info({
   accent?: boolean
 }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-filet py-3">
-      <dt className="text-sm text-encre-douce">{terme}</dt>
-      <dd className={`text-right text-sm font-semibold ${accent ? 'text-accent-2' : ''}`}>
+    <div className="flex min-h-[50px] items-center justify-between gap-4 border-b border-filet">
+      <dt className="text-[15px] text-encre-douce">{terme}</dt>
+      <dd className={`text-right text-[15px] font-semibold ${accent ? 'text-accent-clair' : ''}`}>
         {children}
       </dd>
     </div>

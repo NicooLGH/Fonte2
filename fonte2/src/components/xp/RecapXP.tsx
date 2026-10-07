@@ -361,7 +361,7 @@ export function PassageNiveau({
           {essai ? (
             <>
               <Link
-                href="/reglages"
+                href="/reglages/apparence"
                 className="appui flex h-[58px] items-center justify-center rounded-carte bg-accent text-[17px]
                            font-bold text-white transition-colors hover:bg-accent-clair"
               >

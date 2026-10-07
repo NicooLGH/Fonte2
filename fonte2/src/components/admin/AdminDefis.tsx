@@ -59,6 +59,8 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
   const [finLocal, setFinLocal] = useState('')
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const [enCours, demarrer] = useTransition()
+  // Le formulaire avance en trois étapes : le défi, quand, le badge.
+  const [etape, setEtape] = useState<1 | 2 | 3>(1)
 
   // Une fois publié, l'objectif et le calendrier sont figés.
   const fige = edite !== null && edite.statut !== 'brouillon'
@@ -98,6 +100,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
       statut: e.statut === 'brouillon' ? 'brouillon' : 'publie',
     })
     setMessage({})
+    setEtape(1)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -107,6 +110,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
     setProgramme(false)
     setDebutLocal('')
     setFinLocal('')
+    setEtape(1)
   }
 
   function envoyer(statut: 'publie' | 'brouillon') {
@@ -144,22 +148,27 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
   const objectifs: Objectif[] = d.type === 'honneur' ? ['jours'] : OBJECTIFS_VERIFIES
 
   return (
-    <section className="section pb-6">
-      <p className="section-titre mb-1">
+    <section className="flex flex-col">
+      <p className="etiquette">
         {edite ? `Modifier « ${edite.titre} »` : 'Nouveau défi'}
       </p>
       {edite && (
         <button
           type="button"
           onClick={reinitialiser}
-          className="mb-3 font-mono text-[11px] text-accent-2 underline underline-offset-4"
+          className="mb-3 font-mono text-[13px] text-accent-2 underline underline-offset-4"
         >
           Annuler la modification
         </button>
       )}
 
       <div className="mt-3 flex flex-col gap-4">
-        <p className="section-titre text-[9.5px]">1 · Le défi</p>
+        <div className="flex items-baseline justify-between">
+          <h2 className="titre-page">{['Le défi', 'Quand', 'Le badge'][etape - 1]}</h2>
+          <span className="font-mono text-[14px] text-encre-douce">{etape}/3</span>
+        </div>
+        {etape === 1 && (
+          <>
         <Champ
           libelle="Titre"
           value={d.titre}
@@ -168,7 +177,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
           placeholder="ex : Semaine de feu"
         />
         <label className="block">
-          <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+          <span className="mb-2 block text-[15px] font-semibold text-encre-douce">
             Description
           </span>
           <textarea
@@ -211,7 +220,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
         />
 
         <div>
-          <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+          <span className="mb-2 block text-[15px] font-semibold text-encre-douce">
             Objectif
           </span>
           <div className="flex gap-2">
@@ -242,7 +251,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
                          text-base text-encre focus:border-accent focus:outline-none disabled:opacity-60"
             />
           </div>
-          <p className="mt-1.5 font-mono text-[10px] text-encre-douce">
+          <p className="mt-1.5 font-mono text-[13px] text-encre-douce">
             {d.valeur > 0 &&
               (d.type === 'honneur'
                 ? `${d.valeur} jour${d.valeur > 1 ? 's' : ''} à cocher pendant le défi`
@@ -260,7 +269,10 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
           onChange={(e) => maj('xp', parseInt(e.target.value, 10))}
         />
 
-        <p className="section-titre mt-3 text-[9.5px]">2 · Quand</p>
+          </>
+        )}
+        {etape === 2 && (
+          <>
         <Segments
           libelle="Répétition"
           options={[
@@ -333,7 +345,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
               />
             )}
             <label className="flex min-h-11 items-center justify-between gap-3">
-              <span className="text-sm">Annonce à tout le monde à la publication</span>
+              <span className="text-[15px]">Annonce à tout le monde à la publication</span>
               <input
                 type="checkbox"
                 checked={d.annonce}
@@ -344,7 +356,10 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
           </>
         )}
 
-        <p className="section-titre mt-3 text-[9.5px]">3 · Le badge</p>
+          </>
+        )}
+        {etape === 3 && (
+          <>
         <div
           className="flex flex-col items-center gap-2.5 rounded-[18px] border border-bordure p-4.5"
           style={{
@@ -353,7 +368,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
         >
           <BadgeDefi badge={d.badge} taille={120} />
           <span className="font-display text-[22px] uppercase">{d.titre || 'Titre du défi'}</span>
-          <span className="font-mono text-[10px] text-encre-douce">aperçu en direct</span>
+          <span className="font-mono text-[13px] text-encre-douce">aperçu en direct</span>
         </div>
 
         <Grille libelle="Forme" colonnes={6}>
@@ -380,7 +395,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
           ))}
           <label
             className="relative flex min-h-[38px] cursor-pointer items-center justify-center overflow-hidden
-                       rounded-[10px] border border-dashed border-white/30 font-mono text-[10px] text-encre-douce"
+                       rounded-[10px] border border-dashed border-white/30 font-mono text-[13px] text-encre-douce"
           >
             #hex
             <input
@@ -438,10 +453,48 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
           aide="4 caractères au maximum. Il prend la moitié basse du badge."
         />
 
+          </>
+        )}
+
         <Erreur>{message.ko}</Erreur>
         <Succes>{message.ok}</Succes>
 
+        {etape < 3 ? (
+          <div className="flex gap-2">
+            {etape > 1 && (
+              <button
+                type="button"
+                onClick={() => setEtape((etape - 1) as 1 | 2)}
+                className="appui h-[56px] rounded-carte bg-verre px-5 text-[16px] font-semibold"
+              >
+                Retour
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (etape === 1 && d.titre.trim().length < 3) {
+                  setMessage({ ko: 'Donne un titre au défi.' })
+                  return
+                }
+                setMessage({})
+                setEtape((etape + 1) as 2 | 3)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+              className="appui h-[56px] flex-1 rounded-carte bg-accent text-[17px] font-bold text-white hover:bg-accent-clair"
+            >
+              Suivant
+            </button>
+          </div>
+        ) : (
         <div className="flex flex-col gap-2.5">
+          <button
+            type="button"
+            onClick={() => setEtape(2)}
+            className="h-11 self-start text-[15px] font-semibold text-encre-douce hover:text-encre"
+          >
+            ‹ Étape précédente
+          </button>
           <button
             type="button"
             disabled={enCours}
@@ -456,13 +509,14 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
               type="button"
               disabled={enCours}
               onClick={() => envoyer('brouillon')}
-              className="h-[46px] rounded-bloc border border-bordure bg-verre text-sm font-semibold
+              className="h-[46px] rounded-bloc border border-bordure bg-verre text-[15px] font-semibold
                          text-encre transition-colors hover:bg-verre-fort disabled:opacity-60"
             >
               Enregistrer en brouillon
             </button>
           )}
         </div>
+        )}
       </div>
 
       {/* ---- Liste ---- */}
@@ -474,8 +528,8 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
               <li key={e.id} className="flex items-center gap-3 border-b border-filet py-3">
                 <BadgeDefi badge={e.badge} taille={44} verrouille={e.statut === 'archive'} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{e.titre}</p>
-                  <p className="font-mono text-[10.5px] text-encre-douce">
+                  <p className="truncate text-[15px] font-semibold">{e.titre}</p>
+                  <p className="font-mono text-[13px] text-encre-douce">
                     {e.statut === 'brouillon'
                       ? 'brouillon'
                       : e.statut === 'archive'
@@ -507,7 +561,7 @@ export function AdminDefis({ defis }: { defis: DefiAdmin[] }) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 font-mono text-[10.5px] leading-relaxed text-encre-douce">
+          <p className="mt-3 font-mono text-[13px] leading-relaxed text-encre-douce">
             Archiver retire le défi de l&apos;application. L&apos;XP et les badges déjà
             gagnés restent acquis. Aucune donnée de participant n&apos;est visible ici.
           </p>
@@ -536,10 +590,10 @@ function Segments({
 }) {
   return (
     <div>
-      <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+      <span className="mb-2 block text-[15px] font-semibold text-encre-douce">
         {libelle}
       </span>
-      <div className="flex gap-1 rounded-bloc border border-bordure bg-verre p-1">
+      <div className="flex gap-1 rounded-bloc bg-verre p-1">
         {options.map(([v, l]) => (
           <button
             key={v}
@@ -547,7 +601,7 @@ function Segments({
             disabled={desactive}
             aria-pressed={valeur === v}
             onClick={() => onChange(v)}
-            className={`min-h-[38px] flex-1 rounded-[9px] px-2 text-[12.5px] font-semibold transition-colors
+            className={`min-h-10 flex-1 rounded-[11px] px-2 text-[14px] font-semibold transition-colors
               disabled:cursor-not-allowed disabled:opacity-50 ${
                 valeur === v ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
               }`}
@@ -556,7 +610,7 @@ function Segments({
           </button>
         ))}
       </div>
-      {aide && <p className="mt-1.5 font-mono text-[10px] text-encre-douce">{aide}</p>}
+      {aide && <p className="mt-1.5 font-mono text-[13px] text-encre-douce">{aide}</p>}
     </div>
   )
 }
@@ -572,7 +626,7 @@ function Grille({
 }) {
   return (
     <div>
-      <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+      <span className="mb-2 block text-[15px] font-semibold text-encre-douce">
         {libelle}
       </span>
       <div
@@ -624,7 +678,7 @@ function PetitBouton({
       type="button"
       onClick={onClick}
       disabled={desactive}
-      className="min-h-9 rounded-bloc bg-verre px-2.5 text-[11px] font-semibold text-encre-douce
+      className="min-h-10 rounded-pilule bg-verre px-3.5 text-[13px] font-semibold text-encre-douce
                  transition-colors hover:bg-verre-fort hover:text-encre disabled:opacity-50"
     >
       {children}

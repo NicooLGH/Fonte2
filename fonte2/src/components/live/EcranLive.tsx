@@ -31,6 +31,7 @@ import { enregistrerSeanceLive } from '@/app/(carnet)/seances/actions'
 import { finirLive } from '@/lib/live-social'
 import { Encouragements } from './Encouragements'
 import { RecapXP, type StatsSeance } from '@/components/xp/RecapXP'
+import { ecrireAttente, lireAttente, type SeanceEnAttente } from '@/lib/attente'
 import type { GainXP } from '@/lib/xp'
 
 /* ============================================================
@@ -54,6 +55,7 @@ export function EcranLive({
   seances,
   prevuId = null,
   reprendre = false,
+  guide = false,
 }: {
   userId: string
   modeles: Modele[]
@@ -63,6 +65,8 @@ export function EcranLive({
   prevuId?: string | null
   /** Vrai quand on revient d'une séance réduite. */
   reprendre?: boolean
+  /** Première séance guidée : bulles d'aide, pas d'échauffement. */
+  guide?: boolean
 }) {
   const router = useRouter()
   const [live, setLive] = useState<SeanceLive | null>(null)
@@ -125,6 +129,40 @@ export function EcranLive({
     if (Number.isFinite(garde) && garde >= REPOS_MIN_S && garde <= REPOS_MAX_S) setReposDefaut(garde)
   }, [])
 
+  // Séance guidée : trois astuces, puis plus rien.
+  const [astuce, setAstuce] = useState(guide ? 0 : 3)
+  // Séance gardée hors ligne : l'écran l'annonce avant de revenir.
+  const [horsLigne, setHorsLigne] = useState(false)
+
+  /* ---- Écran allumé pendant la séance ---- */
+  useEffect(() => {
+    if (etape !== 'seance' || live?.fin) return
+    type Verrou = { release: () => Promise<void> }
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<Verrou> } }
+    if (!nav.wakeLock) return
+    let verrou: Verrou | null = null
+    let fini = false
+    const demander = async () => {
+      try {
+        verrou = await nav.wakeLock!.request('screen')
+        if (fini) void verrou.release()
+      } catch {
+        // Refusé (batterie faible…) : l'écran s'éteindra comme d'habitude.
+      }
+    }
+    void demander()
+    // Le verrou tombe quand l'app passe en arrière-plan : on le reprend au retour.
+    const retour = () => {
+      if (document.visibilityState === 'visible') void demander()
+    }
+    document.addEventListener('visibilitychange', retour)
+    return () => {
+      fini = true
+      document.removeEventListener('visibilitychange', retour)
+      void verrou?.release().catch(() => {})
+    }
+  }, [etape, live?.fin])
+
   /* ---- Chrono ---- */
   useEffect(() => {
     if (etape !== 'seance' || live?.fin) return
@@ -161,7 +199,7 @@ export function EcranLive({
   const nomExo = (id: string) => exercices.find((e) => e.id === id)?.nom ?? '—'
 
   /* ---- Démarrage ---- */
-  function lancer(modele: Modele) {
+  function lancer(modele: Modele, minutesForcees?: number) {
     const valides = modele.entrees.filter((e) =>
       exercices.some((x) => x.id === e.id)
     )
@@ -171,7 +209,8 @@ export function EcranLive({
     }
     setErreur(null)
 
-    localStorage.setItem(CLE_ECHAUFFEMENT, String(minutes))
+    const echauffement = minutesForcees ?? minutes
+    if (minutesForcees === undefined) localStorage.setItem(CLE_ECHAUFFEMENT, String(minutes))
 
     enregistrer({
       nom: modele.nom,
@@ -180,7 +219,7 @@ export function EcranLive({
       reposDebut: null,
       index: 0,
       note: '',
-      echauffementFin: minutes > 0 ? Date.now() + minutes * 60000 : null,
+      echauffementFin: echauffement > 0 ? Date.now() + echauffement * 60000 : null,
       blocs: valides.map((e) => ({
         exerciceId: e.id,
         alternatives: e.alternatives.filter((a) =>
@@ -193,7 +232,30 @@ export function EcranLive({
     setEtape('seance')
   }
 
+  // Séance guidée : elle démarre d'elle-même, sans échauffement.
+  const guideLance = useRef(false)
+  useEffect(() => {
+    if (!guide || guideLance.current || etape !== 'choix' || live) return
+    const m = modeles.find((x) => x.id === prevuId)
+    if (!m) return
+    guideLance.current = true
+    lancer(m, 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guide, etape, live, modeles, prevuId])
+
   /* ---- Écrans ---- */
+
+  if (horsLigne) {
+    return (
+      <Cadre titre="Séance gardée">
+        <p className="mb-6 text-[16px] leading-relaxed text-encre-douce">
+          Pas de réseau pour l&apos;instant. Ta séance est enregistrée sur ce téléphone et partira
+          toute seule dès que la connexion revient. Ne te déconnecte pas d&apos;ici là.
+        </p>
+        <BoutonPlein onClick={() => router.push('/')}>Retour au carnet</BoutonPlein>
+      </Cadre>
+    )
+  }
 
   if (recap) {
     return (
@@ -501,13 +563,43 @@ export function EcranLive({
     }
     const titre = live!.nom || 'Séance'
 
+    // Gardée sur le téléphone tant que le réseau manque.
+    const enAttente: SeanceEnAttente = {
+      id: crypto.randomUUID(),
+      date: new Date().toLocaleDateString('sv-SE'),
+      blocs,
+      note: live!.note.trim() || null,
+      dureeSec,
+      nom: live!.nom,
+    }
+    const garderHorsLigne = () => {
+      ecrireAttente(userId, [...lireAttente(userId), enAttente])
+      void finirLive().catch(() => {})
+      enregistrer(null)
+      setHorsLigne(true)
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      garderHorsLigne()
+      return
+    }
+
     demarrer(async () => {
-      const r = await enregistrerSeanceLive(
-        blocs,
-        live!.note.trim() || null,
-        dureeSec,
-        live!.nom
-      )
+      let r: Awaited<ReturnType<typeof enregistrerSeanceLive>>
+      try {
+        r = await enregistrerSeanceLive(
+          enAttente.blocs,
+          enAttente.note,
+          enAttente.dureeSec,
+          enAttente.nom,
+          enAttente.id,
+          enAttente.date
+        )
+      } catch {
+        // Le serveur n'a pas répondu : réseau coupé en salle.
+        garderHorsLigne()
+        return
+      }
       if (r.erreur) {
         setErreur(r.erreur)
         return
@@ -517,13 +609,12 @@ export function EcranLive({
       void finirLive()
       enregistrer(null)
 
-      // Sans XP (SQL pas encore installé, réseau coupé), on
-      // revient au carnet comme avant.
+      // Sans XP (SQL pas encore installé), on revient au carnet.
       if (r.xp) {
         setRecap({ ...r.xp, titre, stats })
         window.scrollTo({ top: 0 })
       } else {
-        router.push('/seances')
+        router.push('/')
         router.refresh()
       }
     })
@@ -777,6 +868,43 @@ export function EcranLive({
       {/* Signal « en séance » pour les amis et smileys reçus.
           Rien du contenu de la séance ne quitte l'appareil. */}
       <Encouragements debut={live.debut} actif />
+
+      {/* Première séance guidée : trois astuces, une à la fois. */}
+      {guide && astuce < ASTUCES.length && (
+        <div
+          role="dialog"
+          aria-label={`Astuce ${astuce + 1} sur ${ASTUCES.length}`}
+          className="fixed inset-x-4 z-30 mx-auto flex max-w-md flex-col gap-2 rounded-carte bg-encre p-4 text-fond shadow-2xl"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 5.5rem)' }}
+        >
+          <span className="font-mono text-[12px] tracking-[0.08em] text-accent uppercase">
+            Astuce {astuce + 1} / {ASTUCES.length}
+          </span>
+          <span className="text-[17px] font-semibold leading-snug">{ASTUCES[astuce][0]}</span>
+          <span className="text-[15px] leading-snug opacity-75">{ASTUCES[astuce][1]}</span>
+          <span className="mt-1 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAstuce(astuce + 1)}
+              className="h-11 flex-1 rounded-bloc bg-accent text-[15px] font-bold text-white"
+            >
+              Compris
+            </button>
+            <button
+              type="button"
+              onClick={() => setAstuce(ASTUCES.length)}
+              className="h-11 px-4 text-[15px] font-semibold opacity-70"
+            >
+              Passer
+            </button>
+          </span>
+        </div>
+      )}
+      {guide && (
+        <p className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+64px)] z-20 mx-auto w-fit rounded-pilule bg-accent-2/15 px-3.5 py-1.5 text-[13px] font-semibold text-accent-2">
+          Cette séance compte : tu gagnes déjà de l&apos;XP.
+        </p>
+      )}
 
       <header className="mx-auto flex h-[60px] w-full max-w-xl shrink-0 items-center justify-between px-4">
         <button
@@ -1123,6 +1251,13 @@ export function EcranLive({
 }
 
 /* ---- Pièces ---- */
+
+/** Les astuces de la première séance guidée. */
+const ASTUCES: [string, string][] = [
+  ['Ton premier exercice.', 'Commence léger : ce qui compte aujourd\'hui, c\'est le bon mouvement.'],
+  ['Note ta charge et tes reps, puis valide la série.', 'Le minuteur de repos se lance tout seul.'],
+  ['L\'exercice est fini ? Passe au suivant.', '« Terminer », en haut, enregistre ta séance quand tu veux.'],
+]
 
 function Cadre({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (

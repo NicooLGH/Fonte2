@@ -8,8 +8,10 @@ import {
 import { Historique } from '@/components/social/Historique'
 import { VueProfil } from '@/components/social/ProfilPublic'
 import { chargerMonXP, chargerBadges } from '@/lib/donnees-xp'
-import { GrilleBadges } from '@/components/badges/GrilleBadges'
-import { chargerBadgesDefis } from '@/lib/donnees-defis'
+import { ApercuBadges } from '@/components/badges/ApercuBadges'
+import { PisteNiveaux } from '@/components/xp/PisteNiveaux'
+import { chargerClassement } from '@/lib/donnees-social'
+import Link from 'next/link'
 import { calculerNiveau } from '@/lib/xp'
 
 /**
@@ -27,13 +29,13 @@ export default async function MonProfil() {
   if (!user) redirect('/connexion')
 
   // L'XP vient de la base, qui tient le journal à jour.
-  const [profil, xp, historique, total, badges, defis] = await Promise.all([
+  const [profil, xp, historique, total, badges, classement] = await Promise.all([
     chargerProfil(user.id),
     chargerMonXP(),
     chargerHistorique(user.id),
     compterSeances(user.id),
     chargerBadges(user.id),
-    chargerBadgesDefis(user.id),
+    chargerClassement('niveau'),
   ])
 
   const n = calculerNiveau(xp)
@@ -50,7 +52,24 @@ export default async function MonProfil() {
       profil={profil}
       encouragementEnvoye={null}
       nbSeances={total}
-      badges={badges && <GrilleBadges etats={badges} moi defis={defis} />}
+      badges={badges && <ApercuBadges etats={badges} />}
+      piste={
+        <Link href="/xp" className="bloc appui relative flex flex-col gap-1 py-3.5">
+          <span className="flex items-baseline justify-between px-4">
+            <span className="text-[16px] font-semibold">Niveaux</span>
+            <span className="font-mono text-[13px] text-encre-douce">
+              −{(n.xpSuivant - n.xp).toLocaleString('fr-FR')} XP ›
+            </span>
+          </span>
+          <PisteNiveaux
+            niveau={n.niveau}
+            progression={n.progression}
+            amis={classement.lignes
+              .filter((l) => !l.moi)
+              .map((l) => ({ id: l.id, pseudo: l.pseudo, avatar: l.avatar, niveau: l.niveau }))}
+          />
+        </Link>
+      }
       historique={
         <Historique
           cible={profil.id}
