@@ -23,17 +23,20 @@ import { motifCss } from '@/lib/motifs'
    d'abord, en plein écran ; le détail suit. Sinon on arrive
    directement sur le détail.
 
-   Sur la barre de niveau, l'XP d'avant reste grise et ce que la
-   séance vient d'apporter ressort en bleu : on voit d'un coup
+   Sur la barre de niveau, l'XP d'avant reste pâle et ce que la
+   séance vient d'apporter ressort en orange : on voit d'un coup
    d'œil ce que l'effort du jour a pesé.
    ============================================================ */
+
+/** Les trois chiffres de la séance, déjà mis en forme. */
+export type StatsSeance = { duree: string; tonnage: string; series: number }
 
 export function RecapXP({
   avant,
   apres,
   gains,
   titre,
-  resume,
+  stats,
   onContinuer,
 }: {
   avant: number
@@ -41,8 +44,7 @@ export function RecapXP({
   gains: GainXP[]
   /** Nom du modèle, ou « Séance ». */
   titre: string
-  /** « 5 exercices · 8 420 kg · 58:12 » */
-  resume: string
+  stats: StatsSeance
   onContinuer: () => void
 }) {
   const nAvant = calculerNiveau(avant)
@@ -68,7 +70,7 @@ export function RecapXP({
       apres={apres}
       gains={gains}
       titre={titre}
-      resume={resume}
+      stats={stats}
       onContinuer={onContinuer}
     />
   )
@@ -81,14 +83,14 @@ function Detail({
   apres,
   gains,
   titre,
-  resume,
+  stats,
   onContinuer,
 }: {
   avant: number
   apres: number
   gains: GainXP[]
   titre: string
-  resume: string
+  stats: StatsSeance
   onContinuer: () => void
 }) {
   const total = gains.reduce((t, g) => t + g.montant, 0)
@@ -128,80 +130,82 @@ function Detail({
   }, [total])
 
   return (
-    <main className="securise flex min-h-dvh justify-center px-6 py-10">
-      <div className="flex w-full max-w-md flex-col">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
-          Séance enregistrée
-        </p>
-        <h1 className="mt-2.5 text-[44px]">{titre}</h1>
-        <p className="mt-2 font-mono text-[11px] text-encre-douce">{resume}</p>
+    <main
+      className="securise flex min-h-dvh justify-center px-4 pt-7 pb-7"
+      style={{
+        background: 'radial-gradient(circle at 50% 18%, rgb(255 75 43 / 0.28), transparent 50%)',
+      }}
+    >
+      <div className="flex w-full max-w-md flex-col gap-[18px]">
+        <div className="pt-5 text-center">
+          <p className="font-mono text-[13px] tracking-[0.08em] text-accent-clair uppercase">
+            {titre} · terminé
+          </p>
+          <p className="mt-2.5 font-display text-[112px] leading-[0.8] text-accent">+{affiche}</p>
+          <p className="mt-1.5 font-display text-[30px] leading-none">XP</p>
+        </div>
 
-        <p className="mt-9 flex items-baseline gap-2.5">
-          <span className="font-display text-[104px] leading-[0.85] text-accent-2">
-            +{affiche}
-          </span>
-          <span className="font-mono text-[13px] text-encre-douce">XP</span>
-        </p>
+        <div className="grid grid-cols-3 py-1.5 text-center">
+          <Chiffre valeur={stats.duree} libelle="durée" />
+          <Chiffre valeur={stats.tonnage} libelle="soulevées" />
+          <Chiffre valeur={String(stats.series)} libelle="séries" />
+        </div>
 
-        {lignes.length > 0 && (
-          <ul className="entree-liste mt-5 border-t border-filet">
+        <div className="bloc motif-cercles px-[18px] pt-1.5 pb-4">
+          <ul className="entree-liste">
             {lignes.map((g, i) => (
-              <li
-                key={i}
-                className="flex items-baseline justify-between gap-3 border-b border-filet py-3"
-              >
-                <span className="text-sm">{g.libelle}</span>
-                <span className="font-mono text-[13px] text-accent-2">+{g.montant}</span>
+              <li key={i} className="flex min-h-[46px] items-center justify-between gap-3">
+                <span className="text-[16px]">{g.libelle}</span>
+                <span className="font-mono text-[15px] text-accent-clair">+{g.montant}</span>
               </li>
             ))}
           </ul>
-        )}
 
-        {defis.map((g, i) => (
-          <EncartDefi key={`d${i}`} gain={g} />
-        ))}
-
-        {badges.map((g, i) => (
-          <EncartBadge key={i} gain={g} />
-        ))}
-
-        <div className="mt-7">
-          <div className="flex items-baseline justify-between">
-            <span className="section-titre">
-              Niveau {n.niveau} · {n.rang}
-            </span>
-            <span className="font-mono text-[11px] text-encre-douce">
-              {apres.toLocaleString('fr-FR')} / {n.xpSuivant.toLocaleString('fr-FR')}
-            </span>
-          </div>
-          <div className="mt-2.5 flex h-2 overflow-hidden rounded-full bg-verre-fort">
-            <div className="bg-encre/35" style={{ width: `${base * 100}%` }} />
+          <div className="mt-2 flex flex-col gap-2">
             <div
-              className="bg-accent-2 transition-[width] duration-700 ease-out"
-              style={{ width: `${(rempli ? fin - base : 0) * 100}%` }}
-            />
+              className="flex h-2 overflow-hidden rounded-pilule bg-encre/[0.08]"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(fin * 100)}
+              aria-label={`Progression du niveau ${n.niveau}`}
+            >
+              <div className="bg-accent/45" style={{ width: `${base * 100}%` }} />
+              <div
+                className="bg-accent transition-[width] duration-700 ease-out"
+                style={{ width: `${(rempli ? fin - base : 0) * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-between font-mono text-[13px] text-encre-douce">
+              <span>
+                Niv. {n.niveau} · {n.rang}
+              </span>
+              <span>
+                −{(n.xpSuivant - apres).toLocaleString('fr-FR')} XP avant le {n.niveau + 1}
+              </span>
+            </div>
           </div>
-          <p className="mt-2.5 text-[13px] text-encre-douce">
-            Plus que{' '}
-            <strong className="font-semibold text-encre">
-              {(n.xpSuivant - apres).toLocaleString('fr-FR')} XP
-            </strong>{' '}
-            avant le niveau {n.niveau + 1}.
-          </p>
         </div>
 
-        <div className="mt-auto flex flex-col gap-3.5 pt-10">
+        {defis.map((g, i) => (
+          <LigneDefi key={`d${i}`} gain={g} />
+        ))}
+        {badges.map((g, i) => (
+          <LigneBadge key={i} gain={g} />
+        ))}
+
+        <div className="mt-auto flex flex-col gap-1 pt-4">
           <button
             type="button"
             onClick={onContinuer}
-            className="appui rounded-bloc bg-accent py-4 text-[15px] font-semibold text-white
+            className="appui h-[58px] rounded-carte bg-accent text-[17px] font-bold text-white
                        transition-colors hover:bg-accent-clair"
           >
             Continuer
           </button>
           <Link
             href="/xp?onglet=journal"
-            className="text-center font-mono text-xs text-accent-2 underline underline-offset-4"
+            className="flex h-11 items-center justify-center text-[15px] font-semibold text-encre-douce hover:text-encre"
           >
             Voir mon journal d&apos;XP
           </Link>
@@ -211,61 +215,53 @@ function Detail({
   )
 }
 
+function Chiffre({ valeur, libelle }: { valeur: string; libelle: string }) {
+  return (
+    <div>
+      <p className="font-display text-[36px] leading-none">{valeur}</p>
+      <p className="mt-0.5 text-[13px] text-encre-douce">{libelle}</p>
+    </div>
+  )
+}
+
 /* ---- Un défi réussi grâce à la séance ---- */
 
-function EncartDefi({ gain }: { gain: GainXP }) {
+function LigneDefi({ gain }: { gain: GainXP }) {
   if (!gain.defiBadge) return null
-  const c = gain.defiBadge.couleur
   return (
-    <div
-      className="impulsion mt-4 flex items-center gap-3.5 rounded-[14px] border p-3.5"
-      style={{ borderColor: `${c}59`, background: `${c}0f` }}
-    >
-      <BadgeDefi badge={gain.defiBadge} taille={60} />
-      <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: c }}>
+    <div className="impulsion flex items-center gap-3.5 px-0.5">
+      <BadgeDefi badge={gain.defiBadge} taille={52} />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="font-mono text-[12px] tracking-[0.08em] uppercase" style={{ color: gain.defiBadge.couleur }}>
           Défi réussi
-        </p>
-        <p className="mt-1 font-display text-2xl leading-none">
-          {gain.defiTitre ?? gain.libelle}
-        </p>
-        <p className="mt-1 text-[12.5px] text-encre-douce">Badge ajouté à ton profil</p>
-      </div>
-      <span className="font-mono text-[13px] text-accent-2">+{gain.montant}</span>
+        </span>
+        <span className="truncate text-[16px] font-semibold">{gain.defiTitre ?? gain.libelle}</span>
+      </span>
+      <span className="font-mono text-[14px] text-accent-clair">+{gain.montant} XP</span>
     </div>
   )
 }
 
 /* ---- Un badge débloqué par la séance ---- */
 
-function EncartBadge({ gain }: { gain: GainXP }) {
+function LigneBadge({ gain }: { gain: GainXP }) {
   const def = gain.badge ? definitionBadge(gain.badge) : undefined
   if (!def) return null
   const i = Math.max(0, (gain.palier ?? 1) - 1)
   const couleur = couleurPalier(def, i)
 
   return (
-    <div
-      className="impulsion mt-4 flex items-center gap-3.5 rounded-[14px] border p-3.5"
-      style={{ borderColor: `${couleur}59`, background: `${couleur}0f` }}
-    >
-      <Badge def={def} palier={i} taille={60} />
-      <div className="min-w-0 flex-1">
-        <p
-          className="font-mono text-[10px] uppercase tracking-[0.14em]"
-          style={{ color: couleur }}
-        >
-          Badge débloqué
-        </p>
-        <p className="mt-1 font-display text-2xl leading-none">
+    <div className="impulsion flex items-center gap-3.5 px-0.5">
+      <Badge def={def} palier={i} taille={52} />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-[16px] font-semibold">
           {def.nom}
           {!def.moment && ` · ${nomPalier(def, i)}`}
-        </p>
-        <p className="mt-1 text-[12.5px] text-encre-douce">
-          {def.moment ? def.condition : `${def.condition} · ${def.seuils[i]}`}
-        </p>
-      </div>
-      <span className="font-mono text-[13px] text-accent-2">+{gain.montant}</span>
+        </span>
+        <span className="font-mono text-[13px]" style={{ color: couleur }}>
+          +{gain.montant} XP
+        </span>
+      </span>
     </div>
   )
 }
@@ -287,6 +283,16 @@ export function PassageNiveau({
   onContinuer: () => void
 }) {
   const suivant = rangSuivant(niveau)
+  const ecart = suivant ? suivant.niveau - niveau : 0
+  const teinte = debloques.find((r) => r.type === 'teinte')
+  const essai =
+    debloques.length === 0
+      ? null
+      : teinte
+        ? 'Essayer ma nouvelle teinte'
+        : debloques.some((r) => r.type === 'cadre')
+          ? 'Essayer mon nouveau cadre'
+          : 'Essayer mon nouveau motif'
 
   useEffect(() => {
     vibrer(60)
@@ -294,110 +300,101 @@ export function PassageNiveau({
 
   return (
     <main
-      className="securise flex min-h-dvh justify-center px-7 py-10 text-center"
+      className="securise relative flex min-h-dvh justify-center overflow-hidden px-4 pt-7 pb-7"
       style={{
-        background:
-          'radial-gradient(ellipse 120% 70% at 50% 34%, rgb(255 75 43 / 0.28), transparent 60%)',
+        background: 'radial-gradient(circle at 50% 24%, rgb(255 75 43 / 0.32), transparent 52%)',
       }}
     >
-      <div className="flex w-full max-w-md flex-col items-center">
-        <div className="mt-[14vh] flex flex-col items-center">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent-clair">
+      <Eclats />
+      <div className="relative flex w-full max-w-md flex-col gap-5">
+        <div className="pt-14 text-center">
+          <p className="font-mono text-[13px] tracking-[0.1em] text-accent-clair uppercase">
             Nouveau niveau
           </p>
-          <p className="arrivee-valeur mt-3.5 font-display text-[200px] leading-[0.8] text-accent">
+          <p className="arrivee-valeur mt-1.5 font-display text-[190px] leading-[0.78] text-accent">
             {niveau}
           </p>
-
-          {nouveauRang && (
-            <p className="mt-6 flex items-center gap-2.5 rounded-full border border-accent-clair/50 px-4.5 py-2">
+          {nouveauRang ? (
+            <p className="mx-auto mt-4 flex w-fit items-center gap-2.5 rounded-pilule bg-accent/15 px-4 py-2">
               <IconeEtoile />
-              <span className="font-display text-2xl leading-none tracking-wide">
+              <span className="font-display text-[24px] leading-none tracking-wide">
                 Rang {rang}
               </span>
             </p>
-          )}
-
-          <p className="mt-6 max-w-[280px] text-sm leading-relaxed text-encre-douce">
-            {nouveauRang ? `Tu rejoins le rang ${rang}.` : `Rang ${rang}.`}{' '}
+          ) : null}
+          <p className="mt-3 font-mono text-[14px] text-encre-douce uppercase">
+            {rang}
             {suivant
-              ? `Prochain palier : ${suivant.nom}, au niveau ${suivant.niveau}.`
-              : 'Tu as atteint le sommet.'}
+              ? ` · encore ${ecart} niveau${ecart > 1 ? 'x' : ''} avant ${suivant.nom}`
+              : ' · le sommet'}
           </p>
         </div>
 
-        {debloques.length > 0 && (
-          <div className="mt-8 w-full text-left">
-            <p className="section-titre border-b border-bordure pb-2">Débloqué</p>
-            <ul>
-              {debloques.map((r) => (
-                <li
-                  key={`${r.type}-${r.cle}`}
-                  className="flex items-center gap-3.5 border-b border-filet py-3"
-                >
-                  <Apercu recompense={r} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold">
-                      {LIBELLE_TYPE[r.type]} {r.nom}
-                    </p>
-                    <p className="font-mono text-[10.5px] text-encre-douce">
-                      {r.type === 'cadre'
-                        ? 'autour de ton avatar'
-                        : "pour l'en-tête de ton profil"}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {suivant && debloques.length === 0 && (
-          <div className="mt-10 w-full text-left">
-            <div className="flex justify-between">
-              <span className="section-titre">Vers {suivant.nom}</span>
-              <span className="font-mono text-[11px] text-encre-douce">
-                niv. {niveau} / {suivant.niveau}
+        {debloques.map((r) => (
+          <div key={`${r.type}-${r.cle}`} className="bloc motif-cercles flex items-center gap-4 p-[18px]">
+            <Apercu recompense={r} />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="font-mono text-[12px] tracking-[0.08em] text-encre-douce uppercase">
+                Débloqué
               </span>
-            </div>
-            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-verre-fort">
-              <div
-                className="h-full bg-accent"
-                style={{ width: `${Math.round((niveau / suivant.niveau) * 100)}%` }}
-              />
-            </div>
+              <span className="truncate text-[18px] font-bold">
+                {LIBELLE_TYPE[r.type]} {r.nom}
+              </span>
+            </span>
           </div>
-        )}
+        ))}
 
-        {debloques.length > 0 ? (
-          <div className="mt-auto flex w-full flex-col gap-2.5 pt-8">
-            <Link
-              href="/reglages"
-              className="appui block w-full rounded-bloc bg-accent py-4 text-[15px] font-semibold
-                         text-white transition-colors hover:bg-accent-clair"
-            >
-              Essayer mon nouveau thème
-            </Link>
+        <div className="mt-auto flex flex-col gap-1 pt-4">
+          {essai ? (
+            <>
+              <Link
+                href="/reglages"
+                className="appui flex h-[58px] items-center justify-center rounded-carte bg-accent text-[17px]
+                           font-bold text-white transition-colors hover:bg-accent-clair"
+              >
+                {essai}
+              </Link>
+              <button
+                type="button"
+                onClick={onContinuer}
+                className="h-[50px] text-[16px] text-encre-douce hover:text-encre"
+              >
+                Continuer
+              </button>
+            </>
+          ) : (
             <button
               type="button"
               onClick={onContinuer}
-              className="min-h-11 font-mono text-xs text-encre-douce underline underline-offset-4"
+              className="appui h-[58px] rounded-carte bg-accent text-[17px] font-bold text-white
+                         transition-colors hover:bg-accent-clair"
             >
               Continuer
             </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={onContinuer}
-            className="appui mt-auto w-full rounded-bloc bg-accent py-4 text-[15px] font-semibold
-                       text-white transition-colors hover:bg-accent-clair"
-          >
-            Continuer
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </main>
+  )
+}
+
+/** Quelques éclats de couleur autour du chiffre. */
+function Eclats() {
+  return (
+    <svg
+      viewBox="0 0 390 360"
+      aria-hidden
+      className="pointer-events-none absolute top-10 left-1/2 w-[390px] -translate-x-1/2"
+    >
+      <rect x="58" y="62" width="10" height="4" rx="2" fill="#ff8a63" transform="rotate(-30 63 64)" />
+      <rect x="320" y="90" width="12" height="4" rx="2" fill="#4cc9f0" transform="rotate(25 326 92)" />
+      <rect x="300" y="250" width="9" height="4" rx="2" fill="#f0c04a" transform="rotate(-50 304 252)" />
+      <rect x="70" y="240" width="11" height="4" rx="2" fill="#4cc9f0" transform="rotate(40 75 242)" />
+      <circle cx="110" cy="40" r="3" fill="#f0c04a" />
+      <circle cx="270" cy="30" r="2.5" fill="#ff8a63" />
+      <circle cx="40" cy="160" r="2.5" fill="currentColor" opacity="0.5" />
+      <circle cx="350" cy="180" r="3" fill="#ff8a63" />
+    </svg>
   )
 }
 
@@ -408,7 +405,7 @@ function Apercu({ recompense: r }: { recompense: Recompense }) {
     return (
       <span
         aria-hidden
-        className="h-11 w-11 shrink-0 rounded-[11px] bg-verre"
+        className="h-14 w-14 shrink-0 rounded-bloc bg-verre-fort"
         style={{ boxShadow: `0 0 0 2px ${c.couleur}, 0 0 12px ${c.couleur}73` }}
       />
     )
@@ -417,14 +414,14 @@ function Apercu({ recompense: r }: { recompense: Recompense }) {
     return (
       <span
         aria-hidden
-        className="h-11 w-11 shrink-0 rounded-[11px] border border-bordure"
+        className="h-14 w-[84px] shrink-0 rounded-bloc"
         style={{ background: `${fondBanniere(r.cle)}, var(--color-fond)` }}
       />
     )
   return (
     <span
       aria-hidden
-      className="h-11 w-11 shrink-0 rounded-[11px] border border-bordure bg-verre"
+      className="h-14 w-[84px] shrink-0 rounded-bloc bg-verre-fort"
       style={motifCss(r.cle)}
     />
   )

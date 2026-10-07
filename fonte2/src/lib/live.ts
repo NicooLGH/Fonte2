@@ -49,12 +49,20 @@ export type SeanceLive = {
    * `null` quand il est terminé ou qu'il n'y en avait pas.
    */
   echauffementFin: number | null
+  /** Durée de repos visée, en secondes (3.0). Absente : celle retenue. */
+  reposCible?: number
 }
 
 /** Durées d'échauffement proposées, en minutes. */
 export const DUREES_ECHAUFFEMENT = [0, 3, 5, 8, 10, 15] as const
 
 export const CLE_ECHAUFFEMENT = 'fonte-echauffement'
+
+/** Repos entre deux séries : durée par défaut, bornes et mémoire. */
+export const REPOS_DEFAUT_S = 90
+export const REPOS_MIN_S = 15
+export const REPOS_MAX_S = 600
+export const CLE_REPOS = 'fonte-repos'
 
 /** Au-delà de douze heures, la séance est considérée oubliée. */
 export const DUREE_MAX_MS = 12 * 3600 * 1000

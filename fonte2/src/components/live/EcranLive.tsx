@@ -1,19 +1,22 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import {
   cleLive,
   dureeLive,
-  mmss,
   DUREE_MAX_MS,
   DUREES_ECHAUFFEMENT,
   CLE_ECHAUFFEMENT,
+  CLE_REPOS,
+  REPOS_DEFAUT_S,
+  REPOS_MIN_S,
+  REPOS_MAX_S,
   type BlocLive,
   type Modele,
   type SeanceLive,
 } from '@/lib/live'
-import type { Exercice, SeanceComplete } from '@/lib/carnet'
+import { GROUPES, type Exercice, type SeanceComplete } from '@/lib/carnet'
 import { IconeCoche, IconeCroix } from '@/components/Icones'
 import { meilleur1RM } from '@/lib/rm'
 import {
@@ -27,7 +30,7 @@ import {
 import { enregistrerSeanceLive } from '@/app/(carnet)/seances/actions'
 import { finirLive } from '@/lib/live-social'
 import { Encouragements } from './Encouragements'
-import { RecapXP } from '@/components/xp/RecapXP'
+import { RecapXP, type StatsSeance } from '@/components/xp/RecapXP'
 import type { GainXP } from '@/lib/xp'
 
 /* ============================================================
@@ -50,6 +53,7 @@ export function EcranLive({
   exercices,
   seances,
   prevuId = null,
+  reprendre = false,
 }: {
   userId: string
   modeles: Modele[]
@@ -57,6 +61,8 @@ export function EcranLive({
   seances: SeanceComplete[]
   /** Modèle à présélectionner : celui du planning, ou celui de l'adresse. */
   prevuId?: string | null
+  /** Vrai quand on revient d'une séance réduite. */
+  reprendre?: boolean
 }) {
   const router = useRouter()
   const [live, setLive] = useState<SeanceLive | null>(null)
@@ -79,7 +85,7 @@ export function EcranLive({
     apres: number
     gains: GainXP[]
     titre: string
-    resume: string
+    stats: StatsSeance
   } | null>(null)
   const [enCours, demarrer] = useTransition()
 
@@ -96,12 +102,14 @@ export function EcranLive({
         return
       }
       setLive(reprise)
-      setEtape('reprise')
+      // Retour depuis le bandeau « séance en cours » : on reprend
+      // directement, sans redemander.
+      setEtape(reprendre ? 'seance' : 'reprise')
     } catch {
       // Contenu illisible : on repart à zéro plutôt que de planter
       localStorage.removeItem(cle)
     }
-  }, [cle])
+  }, [cle, reprendre])
 
   // La durée d'échauffement retenue de la dernière fois : on ne
   // la redemande pas à chaque séance.
@@ -110,12 +118,31 @@ export function EcranLive({
     if (Number.isFinite(garde) && garde > 0) setMinutes(garde)
   }, [])
 
+  // Durée de repos retenue de la dernière fois.
+  const [reposDefaut, setReposDefaut] = useState(REPOS_DEFAUT_S)
+  useEffect(() => {
+    const garde = Number(localStorage.getItem(CLE_REPOS))
+    if (Number.isFinite(garde) && garde >= REPOS_MIN_S && garde <= REPOS_MAX_S) setReposDefaut(garde)
+  }, [])
+
   /* ---- Chrono ---- */
   useEffect(() => {
     if (etape !== 'seance' || live?.fin) return
     const t = setInterval(() => setMaintenant(Date.now()), 1000)
     return () => clearInterval(t)
   }, [etape, live?.fin])
+
+  // Fin du repos : un son et une vibration, une seule fois par repos.
+  const reposAnnonce = useRef<number | null>(null)
+  useEffect(() => {
+    if (!live?.reposDebut || live.fin) return
+    const cible = (live.reposCible ?? reposDefaut) * 1000
+    if (maintenant - live.reposDebut >= cible && reposAnnonce.current !== live.reposDebut) {
+      reposAnnonce.current = live.reposDebut
+      sonFinRepos()
+      vibrer(60)
+    }
+  }, [maintenant, live, reposDefaut])
 
   const enregistrer = useCallback(
     (suivant: SeanceLive | null) => {
@@ -173,7 +200,7 @@ export function EcranLive({
       <RecapXP
         {...recap}
         onContinuer={() => {
-          router.push('/seances')
+          router.push('/')
           router.refresh()
         }}
       />
@@ -191,29 +218,20 @@ export function EcranLive({
 
     return (
       <Cadre titre="Séance en cours">
-        <p className="mb-6 text-sm leading-relaxed text-encre-douce">
-          Une séance « {live.nom} » a été commencée {delai} et n&apos;a pas été
-          terminée.
+        <p className="mb-6 text-[16px] leading-relaxed text-encre-douce">
+          Ta séance « {live.nom} » a commencé {delai} et n&apos;est pas terminée.
         </p>
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => setEtape('seance')}
-            className="rounded-bloc bg-accent px-6 py-3.5 font-semibold text-white
-                       transition-colors hover:bg-accent-clair"
-          >
-            Reprendre
-          </button>
+        <div className="flex flex-col gap-2">
+          <BoutonPlein onClick={() => setEtape('seance')}>Reprendre</BoutonPlein>
           <button
             type="button"
             onClick={() => {
+              if (!confirm('Abandonner cette séance ? Rien ne sera enregistré.')) return
               enregistrer(null)
               setEtape('choix')
               void finirLive()
             }}
-            className="rounded-bloc border border-bordure bg-verre px-6 py-3
-                       text-sm font-semibold text-encre-douce transition-colors
-                       hover:text-encre"
+            className="h-12 text-[16px] font-semibold text-encre-douce transition-colors hover:text-encre"
           >
             Abandonner
           </button>
@@ -472,14 +490,15 @@ export function EcranLive({
     }
 
     // Le résumé est calculé avant d'effacer la séance locale.
-    const nbExos = blocs.length
     const volume = blocs.reduce(
       (t, b) => t + b.series.reduce((x, s) => x + s.poids * s.reps, 0),
       0
     )
-    const resume = `${nbExos} exercice${nbExos > 1 ? 's' : ''} · ${Math.round(
-      volume
-    ).toLocaleString('fr-FR')} kg · ${mmss(dureeSec * 1000)}`
+    const stats: StatsSeance = {
+      duree: mss(dureeSec * 1000),
+      tonnage: tonnage(volume),
+      series: blocs.reduce((t, b) => t + b.series.length, 0),
+    }
     const titre = live!.nom || 'Séance'
 
     demarrer(async () => {
@@ -501,7 +520,7 @@ export function EcranLive({
       // Sans XP (SQL pas encore installé, réseau coupé), on
       // revient au carnet comme avant.
       if (r.xp) {
-        setRecap({ ...r.xp, titre, resume })
+        setRecap({ ...r.xp, titre, stats })
         window.scrollTo({ top: 0 })
       } else {
         router.push('/seances')
@@ -524,35 +543,45 @@ export function EcranLive({
     }
 
     return (
-      <main className="securise flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+      <main
+        className="securise flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 30%, rgb(255 75 43 / 0.22), transparent 55%)',
+        }}
+      >
         <Encouragements debut={live.debut} actif />
 
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-2">
+        <p
+          className={`font-mono text-[13px] tracking-[0.1em] uppercase ${
+            fini ? 'text-accent-2' : 'text-accent-clair'
+          }`}
+        >
           {fini ? 'Prêt' : 'Échauffement'}
         </p>
 
         <p
-          className={`font-display leading-[0.85] text-[clamp(6rem,28vw,12rem)] ${
+          className={`font-display text-[clamp(7rem,34vw,13rem)] leading-[0.8] ${
             fini ? 'text-accent-2' : 'text-accent'
           }`}
         >
-          {fini ? '00:00' : mmss(restant)}
+          {fini ? '0:00' : mss(restant)}
         </p>
 
-        <p className="max-w-xs text-sm leading-relaxed text-encre-douce">
+        <p className="max-w-xs text-[16px] leading-relaxed text-encre-douce">
           {fini
             ? 'Échauffement terminé. Tu peux attaquer.'
-            : 'Mobilité, cardio léger, séries à vide — ce qui te met en condition.'}
+            : 'Mobilité, cardio léger, séries à vide : ce qui te met en condition.'}
         </p>
 
-        <div className="mt-4 flex w-full max-w-xs flex-col gap-3">
+        <div className="mt-4 flex w-full max-w-xs flex-col gap-2.5">
           <button
             type="button"
             onClick={() => enregistrer({ ...live, echauffementFin: null })}
-            className={`rounded-bloc px-6 py-3.5 font-semibold transition-colors ${
+            className={`appui h-14 rounded-bloc text-[17px] font-bold transition-colors ${
               fini
                 ? 'bg-accent text-white hover:bg-accent-clair'
-                : 'border border-bordure bg-verre text-encre-douce hover:text-encre'
+                : 'bg-verre text-encre hover:bg-verre-fort'
             }`}
           >
             {fini ? 'Commencer la séance' : "Passer l'échauffement"}
@@ -561,12 +590,9 @@ export function EcranLive({
             <button
               type="button"
               onClick={() =>
-                enregistrer({
-                  ...live,
-                  echauffementFin: live.echauffementFin! + 60000,
-                })
+                enregistrer({ ...live, echauffementFin: live.echauffementFin! + 60000 })
               }
-              className="font-mono text-xs text-encre-douce underline underline-offset-4"
+              className="h-11 text-[15px] font-semibold text-encre-douce hover:text-encre"
             >
               + 1 minute
             </button>
@@ -576,10 +602,11 @@ export function EcranLive({
     )
   }
 
-  /* ---- Écran de fin ---- */
+  /* ---- Bilan avant enregistrement ---- */
   if (finie) {
     if (!live.fin) enregistrer({ ...live, fin: Date.now(), reposDebut: null })
 
+    const avecSeries = live.blocs.filter((b) => b.series.length > 0)
     const volume = live.blocs.reduce(
       (t, b) =>
         t +
@@ -589,55 +616,55 @@ export function EcranLive({
         ),
       0
     )
+    const nbSeries = avecSeries.reduce((t, b) => t + b.series.length, 0)
 
     return (
-      <Cadre titre="Séance terminée">
-        <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.1em] text-accent-2">
-          {faits} exercice{faits > 1 ? 's' : ''} · {Math.round(volume)} kg ·{' '}
-          {mmss(dureeLive(live))}
-        </p>
+      <main className="securise mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-6 pb-7">
+        <div className="px-0.5">
+          <p className="font-mono text-[12px] tracking-[0.08em] text-accent-clair uppercase">
+            Séance terminée
+          </p>
+          <h1 className="mt-1.5 text-[54px] leading-[0.85]">{live.nom || 'Séance'}</h1>
+        </div>
 
-        <ul className="mb-5 divide-y divide-filet">
-          {live.blocs
-            .filter((b) => b.series.length > 0)
-            .map((b) => (
-              <li
-                key={b.exerciceId}
-                className="flex items-baseline justify-between gap-3 py-2.5"
-              >
-                <span className="min-w-0">
-                  <span className="text-sm">{nomExo(b.exerciceId)}</span>
-                  <span className="mt-0.5 block font-mono text-[10.5px] text-encre-douce">
-                    {b.series.map((s) => `${s.poids}×${s.reps}`).join(', ')}
-                  </span>
-                </span>
-              </li>
-            ))}
+        <div className="grid grid-cols-3 text-center">
+          <Stat valeur={mss(dureeLive(live))} libelle="durée" />
+          <Stat valeur={tonnage(volume)} libelle="soulevées" />
+          <Stat valeur={String(nbSeries)} libelle="séries" />
+        </div>
+
+        <ul className="flex flex-col">
+          {avecSeries.map((b) => (
+            <li key={b.exerciceId} className="py-2.5">
+              <p className="text-[17px] font-semibold">{nomExo(b.exerciceId)}</p>
+              <p className="mt-0.5 font-mono text-[14px] text-encre-douce">
+                {b.series.map((s) => `${s.poids}×${s.reps}`).join('  ·  ')}
+              </p>
+            </li>
+          ))}
         </ul>
 
-        <label className="mb-5 block">
-          <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
-            Note de séance
-          </span>
+        <label className="block">
+          <span className="sr-only">Note de séance</span>
           <textarea
             value={live.note}
             onChange={(e) => enregistrer({ ...live, note: e.target.value })}
-            rows={3}
+            rows={2}
             maxLength={280}
-            placeholder="ex : jambes lourdes mais PR au squat"
-            className="w-full resize-y rounded-bloc border border-bordure bg-verre
-                       px-4 py-3 text-sm focus:border-accent focus:outline-none"
+            placeholder="Une note ? ex : jambes lourdes mais record au squat"
+            className="w-full resize-none rounded-carte border border-transparent bg-verre px-4 py-3.5
+                       text-base placeholder:text-encre-douce/60 focus:border-accent focus:outline-none"
           />
         </label>
 
         {erreur && <Alerte>{erreur}</Alerte>}
 
-        <div className="flex flex-col gap-3">
+        <div className="mt-auto flex flex-col gap-2">
           <button
             type="button"
             disabled={enCours}
             onClick={terminer}
-            className="rounded-bloc bg-accent px-6 py-3.5 font-semibold text-white
+            className="appui h-[58px] rounded-carte bg-accent text-[17px] font-bold text-white
                        transition-colors hover:bg-accent-clair disabled:opacity-50"
           >
             {enCours ? 'Enregistrement…' : 'Enregistrer la séance'}
@@ -645,30 +672,32 @@ export function EcranLive({
           <button
             type="button"
             onClick={() => {
-              const dernier = live.blocs.map((b, i) => ({ b, i })).filter((x) => x.b.termine).pop()
+              const dernier = live.blocs
+                .map((b, i) => ({ b, i }))
+                .filter((x) => x.b.termine)
+                .pop()
               if (!dernier) return
               enregistrer({
                 ...live,
                 fin: null,
                 index: dernier.i,
-                blocs: live.blocs.map((b, j) =>
-                  j === dernier.i ? { ...b, termine: false } : b
-                ),
+                blocs: live.blocs.map((b, j) => (j === dernier.i ? { ...b, termine: false } : b)),
               })
             }}
-            className="rounded-bloc border border-bordure bg-verre px-6 py-3 text-sm
-                       font-semibold text-encre-douce transition-colors hover:text-encre"
+            className="h-12 text-[16px] font-semibold text-encre-douce hover:text-encre"
           >
             Revenir en arrière
           </button>
         </div>
-      </Cadre>
+      </main>
     )
   }
 
   /* ---- Exercice en cours ---- */
 
   const bloc = live.blocs[live.index]
+  const exo = exercices.find((e) => e.id === bloc.exerciceId)
+  const groupe = GROUPES.find((g) => g.cle === exo?.groupe)?.nom
   const derniere = dernierPassage(seances, bloc.exerciceId)
   const saisies = bloc.series
     .map((x) => ({ poids: parseFloat(x.poids), reps: parseInt(x.reps, 10) }))
@@ -677,12 +706,71 @@ export function EcranLive({
   const rmSeance = meilleur1RM(saisies)
   const rmPasse = derniere ? meilleur1RM(derniere.series) : null
 
-  const disponibles = exercices.filter(
-    (e) => !live.blocs.some((b) => b.exerciceId === e.id)
-  )
-  const alternatives = bloc.alternatives.filter((a) =>
-    disponibles.some((e) => e.id === a)
-  )
+  const disponibles = exercices.filter((e) => !live.blocs.some((b) => b.exerciceId === e.id))
+  const alternatives = bloc.alternatives.filter((a) => disponibles.some((e) => e.id === a))
+  const courante = bloc.series.findIndex((s) => !s.faite)
+  const restants = live.blocs.filter((b, i) => !b.termine && i !== live.index).length
+  const precedent = live.index > 0 ? live.index - 1 : -1
+
+  function saisir(i: number, champ: 'poids' | 'reps', v: string) {
+    const propre =
+      champ === 'poids' ? v.replace(',', '.').replace(/[^\d.]/g, '') : v.replace(/\D/g, '')
+    majBloc(live!.index, (b) => ({
+      ...b,
+      series: b.series.map((x, k) => (k === i ? { ...x, [champ]: propre } : x)),
+    }))
+  }
+
+  function indice(i: number, champ: 'poids' | 'reps') {
+    const s = derniere?.series[i] ?? derniere?.series.at(-1)
+    return s ? String(s[champ]) : champ === 'poids' ? 'kg' : 'reps'
+  }
+
+  function revenir() {
+    if (precedent < 0) return
+    enregistrer({
+      ...live!,
+      index: precedent,
+      blocs: live!.blocs.map((b, j) => (j === precedent ? { ...b, termine: false } : b)),
+    })
+    setRefusees([])
+    window.scrollTo({ top: 0 })
+  }
+
+  // Bouton « Terminer » du haut : tout ce qui est saisi est gardé,
+  // le reste est passé. On arrive sur le bilan, d'où l'on peut revenir.
+  function toutTerminer() {
+    if (
+      !confirm(
+        'Terminer la séance maintenant ?\n\nLes exercices non commencés seront ignorés.'
+      )
+    )
+      return
+    enregistrer({
+      ...live!,
+      blocs: live!.blocs.map((b) => ({
+        ...b,
+        series: b.series.filter((s) => s.poids !== '' && s.reps !== '' && Number(s.reps) > 0),
+        termine: true,
+      })),
+    })
+  }
+
+  /* Repos : compte à rebours vers la durée visée. */
+  const cible = live.reposCible ?? reposDefaut
+  const ecoule = live.reposDebut ? (maintenant - live.reposDebut) / 1000 : 0
+  const reste = cible - ecoule
+
+  function ajusterRepos(delta: number) {
+    const nouvelle = Math.min(REPOS_MAX_S, Math.max(REPOS_MIN_S, cible + delta))
+    try {
+      localStorage.setItem(CLE_REPOS, String(nouvelle))
+    } catch {
+      // Stockage refusé : la durée vaut pour cette séance seulement.
+    }
+    setReposDefaut(nouvelle)
+    enregistrer({ ...live!, reposCible: nouvelle })
+  }
 
   return (
     <div className="plein-ecran securise-haut flex flex-col">
@@ -690,345 +778,344 @@ export function EcranLive({
           Rien du contenu de la séance ne quitte l'appareil. */}
       <Encouragements debut={live.debut} actif />
 
-      {/* En-tête */}
-      {/* En-tête réduit au strict nécessaire : tout l'espace
-          vertical gagné va aux charges. */}
-      <header className="shrink-0 border-b border-filet px-5 py-3">
-        <div className="flex items-baseline justify-between gap-4 pr-12">
-          <p className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-encre-douce">
-            {live.nom} · {live.index + 1}/{total}
-          </p>
-          <p className="shrink-0 font-mono text-sm text-accent-2">
-            {mmss(live.fin ? dureeLive(live) : maintenant - live.debut)}
-          </p>
-        </div>
-      </header>
-
-      <button
-        type="button"
-        onClick={() => router.push('/seances')}
-        aria-label="Quitter"
-        className="securise-haut absolute right-3 top-0 z-10 flex h-9 w-9 items-center justify-center
-                   text-sm text-encre-douce hover:text-encre"
-      >
-        ✕
-      </button>
-
-      {/* Corps */}
-      <div
-        className={`mx-auto w-full max-w-xl flex-1 overflow-y-auto px-5 pb-8 pt-6
-                    transition-opacity ${live.reposDebut ? 'opacity-40' : ''}`}
-      >
-        <h1 className="text-4xl leading-[1.05] sm:text-5xl">
-          {nomExo(bloc.exerciceId)}
-        </h1>
-        <p className="mt-2 font-mono text-[11px] text-encre-douce">
-          {derniere
-            ? `dernière fois : ${derniere.series.map((x) => `${x.poids}×${x.reps}`).join(', ')}`
-            : 'première fois sur cet exercice'}
-        </p>
-
-        {/* Séries en lignes séparées plutôt qu'en cartes. Les
-            chiffres gagnent en taille, ce qui compte quand
-            l'écran est posé sur un banc à un mètre. */}
-        <div className="mt-6 flex flex-col">
-          {bloc.series.map((s, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 border-b border-filet py-3"
-            >
-              <span
-                className={`w-4 shrink-0 font-mono text-[11px] ${
-                  refusees.includes(i)
-                    ? 'text-refus'
-                    : s.faite
-                      ? 'text-valide'
-                      : 'text-encre-douce'
-                }`}
-              >
-                {i + 1}
-              </span>
-
-              <label className="min-w-0 flex-1">
-                <span className="sr-only">Poids série {i + 1}</span>
-                <span className="flex items-baseline gap-1">
-                <input
-                  type="number"
-                  step="0.5"
-                  inputMode="decimal"
-                  value={s.poids}
-                  onChange={(e) =>
-                    majBloc(live.index, (b) => ({
-                      ...b,
-                      series: b.series.map((x, k) =>
-                        k === i ? { ...x, poids: e.target.value } : x
-                      ),
-                    }))
-                  }
-                  placeholder={
-                    derniere?.series[i]
-                      ? String(derniere.series[i].poids)
-                      : (derniere?.series.at(-1)?.poids.toString() ?? 'kg')
-                  }
-                  className="min-w-0 flex-1 bg-transparent font-display text-3xl
-                             text-encre placeholder:text-encre-douce/35
-                             focus:outline-none"
-                />
-                {/* L'unité juste après le chiffre : deux champs
-                    nus côte à côte ne disent pas lequel est quoi. */}
-                <span className="shrink-0 font-mono text-[10px] text-encre-douce">
-                  kg
-                </span>
-                </span>
-              </label>
-
-              <label className="min-w-0 flex-1">
-                <span className="sr-only">Répétitions série {i + 1}</span>
-                <span className="flex items-baseline gap-1">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={s.reps}
-                  onChange={(e) =>
-                    majBloc(live.index, (b) => ({
-                      ...b,
-                      series: b.series.map((x, k) =>
-                        k === i ? { ...x, reps: e.target.value } : x
-                      ),
-                    }))
-                  }
-                  placeholder={
-                    derniere?.series[i]
-                      ? String(derniere.series[i].reps)
-                      : (derniere?.series.at(-1)?.reps.toString() ?? 'reps')
-                  }
-                  className="min-w-0 flex-1 bg-transparent font-display text-3xl
-                             text-encre placeholder:text-encre-douce/35
-                             focus:outline-none"
-                />
-                <span className="shrink-0 font-mono text-[10px] text-encre-douce">
-                  rep
-                </span>
-                </span>
-              </label>
-
-              <button
-                type="button"
-                onClick={() => validerSerie(i)}
-                aria-label={s.faite ? 'Annuler la série' : 'Valider la série'}
-                className={`appui flex h-8 w-8 shrink-0 items-center justify-center
-                  rounded-full border transition-colors ${
-                    refusees.includes(i)
-                      ? 'tremblement border-refus bg-refus text-fond'
-                      : s.faite
-                        ? 'impulsion border-valide bg-valide text-fond'
-                        : 'border-bordure text-encre-douce/50'
-                  }`}
-              >
-                {refusees.includes(i) ? (
-                  <IconeCroix className="h-4 w-4" />
-                ) : (
-                  <IconeCoche className="h-4 w-4" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  majBloc(live.index, (b) => ({
-                    ...b,
-                    series:
-                      b.series.length > 1
-                        ? b.series.filter((_, k) => k !== i)
-                        : [{ poids: '', reps: '', faite: false }],
-                  }))
-                }
-                aria-label={`Supprimer la série ${i + 1}`}
-                className="shrink-0 text-xs text-encre-douce/40 hover:text-accent"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Le 1RM se met à jour pendant la saisie : il donne un
-            repère immédiat sur la valeur de la série qu'on vient
-            de faire, sans attendre la fin de la séance. */}
-        {rmSeance !== null && (
-          <div className="mt-4 flex items-baseline justify-between gap-3
-                          border-b border-filet pb-3">
-            <span className="section-titre">1RM estimé</span>
-            <span className="text-right">
-              <span className="font-display text-2xl text-accent-2">
-                {rmSeance}
-                <span className="ml-1 font-corps text-[10px] text-encre-douce">
-                  kg
-                </span>
-              </span>
-              {rmPasse !== null && (
-                <span className="ml-3 font-mono text-[10.5px] text-encre-douce">
-                  {rmSeance > rmPasse
-                    ? `+${Math.round((rmSeance - rmPasse) * 10) / 10} vs dernière`
-                    : rmSeance < rmPasse
-                      ? `${Math.round((rmSeance - rmPasse) * 10) / 10} vs dernière`
-                      : 'comme la dernière fois'}
-                </span>
-              )}
-            </span>
-          </div>
-        )}
-
-        {derniere && (
-          <p className="mt-3 font-mono text-[10px] leading-relaxed text-encre-douce/70">
-            Les chiffres grisés rappellent ta dernière séance. Ils ne
-            s&apos;enregistrent pas. Le 1RM est une estimation, pas une mesure.
-          </p>
-        )}
-
+      <header className="mx-auto flex h-[60px] w-full max-w-xl shrink-0 items-center justify-between px-4">
         <button
           type="button"
-          onClick={() =>
-            majBloc(live.index, (b) => ({
-              ...b,
-              series: [
-                ...b.series,
-                {
-                  poids: b.series[b.series.length - 1]?.poids ?? '',
-                  reps: b.series[b.series.length - 1]?.reps ?? '',
-                  faite: false,
-                },
-              ],
-            }))
-          }
-          className="w-full border-b border-filet py-3.5 text-left font-mono
-                     text-[11px] text-encre-douce transition-colors hover:text-encre"
+          onClick={() => router.push('/')}
+          aria-label="Réduire la séance (elle reste en cours)"
+          className="appui flex h-11 w-11 items-center justify-center rounded-bloc bg-verre"
         >
-          + ajouter une série
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
         </button>
+        <p className="flex items-center gap-2" aria-label="Durée de la séance">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
+          <span className="font-mono text-[20px] font-medium tabular-nums">
+            {mss(live.fin ? dureeLive(live) : maintenant - live.debut)}
+          </span>
+        </p>
+        <button
+          type="button"
+          onClick={toutTerminer}
+          className="appui h-11 rounded-bloc bg-verre px-4 text-[15px] font-semibold"
+        >
+          Terminer
+        </button>
+      </header>
 
-        {alternatives.length > 0 && (
-          <div className="mt-6">
-            <p className="section-titre mb-2.5">Si la machine est prise</p>
-            <div className="flex flex-wrap gap-2">
-              {alternatives.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => remplacer(id)}
-                  className="rounded-bloc bg-verre px-4 py-2 text-sm font-semibold
-                             transition-colors hover:bg-verre-fort hover:text-accent-2"
+      <div className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-3 overflow-y-auto px-4 pt-1 pb-6">
+        {/* Exercice */}
+        <div className="px-1 pt-1">
+          <div
+            className="mb-3.5 grid gap-1"
+            style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }}
+            aria-label={`${faits} exercice${faits > 1 ? 's' : ''} terminé${faits > 1 ? 's' : ''} sur ${total}`}
+          >
+            {live.blocs.map((b, i) => (
+              <span
+                key={`${b.exerciceId}-${i}`}
+                className={`h-1 rounded-pilule ${
+                  i === live.index ? 'bg-accent' : b.termine ? 'bg-valide' : 'bg-encre/10'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="font-mono text-[12px] tracking-[0.08em] text-encre-douce uppercase">
+            {live.index + 1} / {total}
+            {groupe ? ` · ${groupe}` : ''}
+          </p>
+          <h1 className="mt-1.5 text-[clamp(2.6rem,13vw,3.4rem)] leading-[0.88]">
+            {nomExo(bloc.exerciceId)}
+          </h1>
+          <p className="mt-2 font-mono text-[14px] text-encre-douce">
+            {derniere
+              ? `Dernière fois · ${derniere.series.map((x) => `${x.poids}×${x.reps}`).join(', ')}`
+              : 'Première fois sur cet exercice'}
+          </p>
+          {rmSeance !== null && (
+            <p className="mt-1 font-mono text-[14px] text-accent-2">
+              1RM estimé {rmSeance} kg
+              {rmPasse !== null && rmSeance !== rmPasse && (
+                <span className="text-encre-douce">
+                  {' '}
+                  · {rmSeance > rmPasse ? '+' : ''}
+                  {Math.round((rmSeance - rmPasse) * 10) / 10} vs dernière
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+
+        {/* Séries */}
+        <div className="rounded-carte bg-verre px-3.5 py-1.5">
+          {bloc.series.map((s, i) => {
+            const refusee = refusees.includes(i)
+
+            if (s.faite) {
+              return (
+                <div
+                  key={i}
+                  className="grid h-[54px] grid-cols-[32px_minmax(0,1fr)_minmax(0,1fr)_52px] items-center gap-2"
                 >
-                  {nomExo(id)}
+                  <span className="font-mono text-[14px] text-encre-douce">{i + 1}</span>
+                  <span className="text-[24px] font-semibold text-encre/80">
+                    {s.poids.replace('.', ',')}{' '}
+                    <span className="text-[13px] font-normal text-encre-douce">kg</span>
+                  </span>
+                  <span className="text-[24px] font-semibold text-encre/80">
+                    {s.reps} <span className="text-[13px] font-normal text-encre-douce">reps</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => validerSerie(i)}
+                    aria-label={`Annuler la série ${i + 1}`}
+                    className="impulsion flex h-11 w-11 items-center justify-center rounded-[12px] bg-valide/15 text-valide"
+                  >
+                    <IconeCoche className="h-5 w-5" />
+                  </button>
+                </div>
+              )
+            }
+
+            if (i === courante) {
+              return (
+                <div
+                  key={i}
+                  className="-mx-2 my-0.5 grid h-[84px] grid-cols-[32px_minmax(0,1fr)_minmax(0,1fr)_52px] items-center gap-2 rounded-[16px] bg-accent/12 px-2"
+                >
+                  <span className="font-mono text-[14px] text-accent-clair">{i + 1}</span>
+                  <label className="block">
+                    <span className="sr-only">Charge série {i + 1}, en kilos</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={s.poids}
+                      onChange={(e) => saisir(i, 'poids', e.target.value)}
+                      placeholder={indice(i, 'poids')}
+                      className={`h-[60px] w-full rounded-bloc border-2 bg-fond text-center font-display text-[44px] leading-none
+                                  placeholder:text-encre-douce/35 focus:outline-none ${
+                                    refusee && s.poids === '' ? 'border-refus' : 'border-transparent focus:border-accent'
+                                  }`}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="sr-only">Répétitions série {i + 1}</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={s.reps}
+                      onChange={(e) => saisir(i, 'reps', e.target.value)}
+                      placeholder={indice(i, 'reps')}
+                      className={`h-[60px] w-full rounded-bloc border-2 bg-fond text-center font-display text-[44px] leading-none
+                                  placeholder:text-encre-douce/35 focus:outline-none ${
+                                    refusee && s.reps === '' ? 'border-refus' : 'border-transparent focus:border-accent'
+                                  }`}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => validerSerie(i)}
+                    aria-label={`Valider la série ${i + 1}`}
+                    className={`appui flex h-[60px] w-[52px] items-center justify-center rounded-bloc text-white transition-colors ${
+                      refusee ? 'tremblement bg-refus' : 'bg-accent hover:bg-accent-clair'
+                    }`}
+                  >
+                    {refusee ? <IconeCroix className="h-6 w-6" /> : <IconeCoche className="h-6 w-6" />}
+                  </button>
+                </div>
+              )
+            }
+
+            // Séries à venir : modifiables, plus discrètes.
+            return (
+              <div
+                key={i}
+                className="grid h-[54px] grid-cols-[32px_minmax(0,1fr)_minmax(0,1fr)_52px] items-center gap-2 text-encre-douce"
+              >
+                <span className="font-mono text-[14px]">{i + 1}</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={s.poids}
+                  onChange={(e) => saisir(i, 'poids', e.target.value)}
+                  placeholder={indice(i, 'poids')}
+                  aria-label={`Charge série ${i + 1}, en kilos`}
+                  className="h-11 w-full min-w-0 rounded-[12px] bg-transparent px-1 text-[24px] font-semibold
+                             placeholder:text-encre-douce/40 focus:bg-fond focus:outline-none"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={s.reps}
+                  onChange={(e) => saisir(i, 'reps', e.target.value)}
+                  placeholder={indice(i, 'reps')}
+                  aria-label={`Répétitions série ${i + 1}`}
+                  className="h-11 w-full min-w-0 rounded-[12px] bg-transparent px-1 text-[24px] font-semibold
+                             placeholder:text-encre-douce/40 focus:bg-fond focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    majBloc(live.index, (b) => ({
+                      ...b,
+                      series: b.series.filter((_, k) => k !== i),
+                    }))
+                  }
+                  aria-label={`Supprimer la série ${i + 1}`}
+                  className="flex h-11 w-11 items-center justify-center text-encre-douce/50 hover:text-accent"
+                >
+                  <IconeCroix className="h-4 w-4" />
                 </button>
-              ))}
+              </div>
+            )
+          })}
+
+          <button
+            type="button"
+            onClick={() =>
+              majBloc(live.index, (b) => ({
+                ...b,
+                series: [
+                  ...b.series,
+                  {
+                    poids: b.series[b.series.length - 1]?.poids ?? '',
+                    reps: b.series[b.series.length - 1]?.reps ?? '',
+                    faite: false,
+                  },
+                ],
+              }))
+            }
+            className="flex h-12 w-full items-center gap-2 px-1 text-[15px] font-semibold text-encre-douce
+                       transition-colors hover:text-encre"
+          >
+            <span aria-hidden className="text-[20px] leading-none">+</span> Ajouter une série
+          </button>
+        </div>
+
+        {/* Repos */}
+        {live.reposDebut && (
+          <div className="flex items-center gap-3 rounded-carte bg-verre py-3.5 pr-3.5 pl-[18px]" role="timer">
+            <div className="flex flex-1 flex-col gap-2">
+              <p className="flex items-baseline gap-2">
+                <span
+                  className={`font-display text-[40px] leading-[0.85] ${
+                    reste > 0 ? 'text-accent-2' : 'text-accent'
+                  }`}
+                >
+                  {reste > 0 ? mss(reste * 1000) : 'Go'}
+                </span>
+                <span className="font-mono text-[13px] text-encre-douce">
+                  {reste > 0 ? 'repos' : `repos fini · +${mss(-reste * 1000)}`}
+                </span>
+              </p>
+              <span className="h-1.5 overflow-hidden rounded-pilule bg-encre/10">
+                <span
+                  className={`block h-full transition-[width] duration-1000 ease-linear ${
+                    reste > 0 ? 'bg-accent-2' : 'bg-accent'
+                  }`}
+                  style={{ width: `${Math.min(100, (ecoule / cible) * 100)}%` }}
+                />
+              </span>
             </div>
+            {reste > 0 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => ajusterRepos(-15)}
+                  aria-label="Retirer 15 secondes"
+                  className="appui h-12 w-12 rounded-bloc bg-encre/[0.06] font-mono text-[14px]"
+                >
+                  −15
+                </button>
+                <button
+                  type="button"
+                  onClick={() => ajusterRepos(15)}
+                  aria-label="Ajouter 15 secondes"
+                  className="appui h-12 w-12 rounded-bloc bg-encre/[0.06] font-mono text-[14px]"
+                >
+                  +15
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => enregistrer({ ...live, reposDebut: null })}
+                aria-label="Fermer le repos"
+                className="appui flex h-12 w-12 items-center justify-center rounded-bloc bg-encre/[0.06]"
+              >
+                <IconeCroix className="h-4 w-4" />
+              </button>
+            )}
           </div>
         )}
 
-        {/* Récapitulatif */}
-        <div className="mt-8">
-          <p className="section-titre mb-3">Séance</p>
-          <ul className="flex flex-col gap-2">
-            {live.blocs.map((b, i) => (
-              <li
-                key={`${b.exerciceId}-${i}`}
-                className={`flex justify-between gap-3 text-sm ${
-                  b.termine ? 'text-accent-2' : 'text-encre-douce'
-                }`}
+        {/* Machine prise, ou exercice à repousser */}
+        {(alternatives.length > 0 || restants > 0) && (
+          <div className="flex flex-wrap items-center gap-2 px-0.5 pt-1">
+            {alternatives.length > 0 && (
+              <span className="text-[14px] text-encre-douce">Machine prise ?</span>
+            )}
+            {alternatives.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => remplacer(id)}
+                className="appui h-10 rounded-pilule bg-verre px-4 text-[14px] font-semibold
+                           transition-colors hover:text-accent-2"
               >
-                <span>
-                  {b.termine && '✓ '}
-                  {nomExo(b.exerciceId)}
-                </span>
-                <span className="font-mono text-[11px]">
-                  {b.termine
-                    ? b.series.length
-                      ? `${b.series.length} série${b.series.length > 1 ? 's' : ''}`
-                      : 'passé'
-                    : i === live.index
-                      ? 'en cours'
-                      : 'à venir'}
-                </span>
-              </li>
+                {nomExo(id)}
+              </button>
             ))}
-          </ul>
-        </div>
+            {restants > 0 && (
+              <button
+                type="button"
+                onClick={repousser}
+                className="appui h-10 rounded-pilule bg-verre px-4 text-[14px] font-semibold text-encre-douce
+                           transition-colors hover:text-encre"
+              >
+                Faire plus tard
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Repos : toute la largeur, chiffre en 64 px. C'est le
-          moment où l'écran est posé sur un banc et regardé de
-          loin — il mérite d'être lu d'un coup d'œil. */}
-      {live.reposDebut && (
-        <div className="shrink-0 border-t border-accent-2/40 bg-accent-2/[0.12]
-                        px-5 py-5 text-center">
-          <p className="section-titre text-accent-2">Repos</p>
-          <p className="arrivee-valeur mt-1.5 font-display text-6xl leading-none
-                        tracking-tight text-accent-2">
-            {mmss(maintenant - live.reposDebut)}
-          </p>
-          <div className="mt-4 flex justify-center gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                enregistrer({ ...live, reposDebut: live.reposDebut! + 30000 })
-              }
-              className="rounded-bloc border border-bordure px-5 py-2.5 text-xs
-                         font-semibold text-encre transition-colors hover:bg-verre"
-            >
-              + 30 s
-            </button>
-            <button
-              type="button"
-              onClick={() => enregistrer({ ...live, reposDebut: null })}
-              className="rounded-bloc bg-verre-fort px-5 py-2.5 text-xs
-                         font-semibold text-encre transition-colors hover:bg-verre"
-            >
-              Terminer
-            </button>
-          </div>
-        </div>
-      )}
-
       {erreur && (
-        <p className="shrink-0 border-t border-accent/40 bg-accent/10 px-5 py-2.5
-                      font-mono text-xs text-accent">
+        <p className="mx-4 mb-2 rounded-bloc bg-accent/10 px-4 py-2.5 font-mono text-xs text-accent">
           {erreur}
         </p>
       )}
 
-      {/* Actions collées en bas, atteignables au pouce. Un seul
-          bouton orange : c'est le geste principal. */}
-      <div className="shrink-0 marge-basse pb-0">
-        <div className="grid grid-cols-2 gap-px bg-filet">
-          <button
-            type="button"
-            onClick={repousser}
-            className="bg-fond py-3.5 text-[13px] font-semibold text-encre-douce
-                       transition-colors hover:text-encre"
-          >
-            Repousser
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const suivant = disponibles.find((e) => e.id !== bloc.exerciceId)
-              if (suivant) remplacer(suivant.id)
-            }}
-            disabled={disponibles.length === 0}
-            className="bg-fond py-3.5 text-[13px] font-semibold text-encre-douce
-                       transition-colors hover:text-encre disabled:opacity-40"
-          >
-            Remplacer
-          </button>
-        </div>
+      {/* Bas : le pouce y arrive sans lâcher la barre. */}
+      <div className="marge-basse mx-auto flex w-full max-w-xl shrink-0 gap-2 px-4 pt-1">
+        <button
+          type="button"
+          onClick={revenir}
+          disabled={precedent < 0}
+          aria-label="Exercice précédent"
+          className="appui flex h-14 w-14 items-center justify-center rounded-[16px] bg-verre disabled:opacity-35"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M15 6l-6 6 6 6" />
+          </svg>
+        </button>
         <button
           type="button"
           onClick={exerciceSuivant}
-          className="appui w-full bg-accent py-4 text-sm font-semibold text-white
-                     transition-colors hover:bg-accent-clair"
+          className={`appui flex h-14 flex-1 items-center justify-center gap-2 rounded-[16px] text-[16px] font-semibold transition-colors ${
+            restants === 0 && courante === -1
+              ? 'bg-accent text-white hover:bg-accent-clair'
+              : 'bg-verre hover:bg-verre-fort'
+          }`}
         >
-          Exercice suivant
+          {restants === 0 ? 'Finir la séance' : 'Exercice suivant'}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M9 6l6 6-6 6" />
+          </svg>
         </button>
       </div>
     </div>
@@ -1039,9 +1126,9 @@ export function EcranLive({
 
 function Cadre({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
-    <main className="securise flex min-h-dvh items-center justify-center px-5 py-12">
-      <div className="w-full max-w-md rounded-carte border border-bordure bg-verre p-6">
-        <h1 className="mb-4 text-3xl">{titre}</h1>
+    <main className="securise flex min-h-dvh items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md rounded-carte bg-verre p-6">
+        <h1 className="mb-4 text-[44px] leading-[0.9]">{titre}</h1>
         {children}
       </div>
     </main>
@@ -1079,6 +1166,31 @@ function ilYA(iso: string) {
   if (jours <= 0) return "aujourd'hui"
   if (jours === 1) return 'hier'
   return `il y a ${jours} j`
+}
+
+function Stat({ valeur, libelle }: { valeur: string; libelle: string }) {
+  return (
+    <div>
+      <p className="font-display text-[36px] leading-none">{valeur}</p>
+      <p className="mt-0.5 text-[13px] text-encre-douce">{libelle}</p>
+    </div>
+  )
+}
+
+/** « 1:24 », « 54:10 », « 1:05:30 » */
+function mss(ms: number) {
+  const t = Math.max(0, Math.floor(ms / 1000))
+  const h = Math.floor(t / 3600)
+  const m = Math.floor((t % 3600) / 60)
+  const sec = String(t % 60).padStart(2, '0')
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`
+}
+
+/** « 840 kg », « 14,2 t » */
+function tonnage(kg: number) {
+  return kg >= 1000
+    ? `${(kg / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} t`
+    : `${Math.round(kg)} kg`
 }
 
 function Alerte({ children }: { children: React.ReactNode }) {

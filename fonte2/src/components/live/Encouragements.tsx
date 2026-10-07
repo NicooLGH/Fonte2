@@ -154,9 +154,9 @@ export function Encouragements({
           key={bulle.cle}
           role="status"
           className="bulle-live pointer-events-none fixed left-1/2 z-40 -translate-x-1/2
-                     whitespace-nowrap rounded-full border border-bordure bg-fond/85
-                     px-4 py-1.5 text-[13px] font-semibold backdrop-blur-sm"
-          style={{ top: 'calc(env(safe-area-inset-top) + 3.25rem)' }}
+                     whitespace-nowrap rounded-full bg-verre px-4 py-2 text-[15px]
+                     font-semibold shadow-lg ring-1 ring-accent/30"
+          style={{ top: 'calc(env(safe-area-inset-top) + 4.25rem)' }}
         >
           {bulle.texte}
         </div>
