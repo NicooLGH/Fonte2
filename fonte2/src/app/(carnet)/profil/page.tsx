@@ -49,6 +49,7 @@ export default async function MonProfil() {
     <VueProfil
       profil={profil}
       encouragementEnvoye={null}
+      nbSeances={total}
       badges={badges && <GrilleBadges etats={badges} moi defis={defis} />}
       historique={
         <Historique

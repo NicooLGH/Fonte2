@@ -14,16 +14,12 @@ import { SeanceDuJour, NiveauEtSemaine } from '@/components/accueil/SeanceDuJour
 import { rappelAAfficher } from '@/lib/rappel'
 import { Rappel } from '@/components/suivi/Rappel'
 import {
-  chargerFil,
-  chargerSignaux,
-  chargerAmis,
   chargerAmisEnSeance,
 } from '@/lib/donnees-social'
 import { chargerAnnonces } from '@/lib/donnees-notifs'
 import { bilanDisponible, calculerBilan, moisPrecedent } from '@/lib/bilan'
 import { BanniereBilan } from '@/components/bilan/Banniere'
 import { Annonces } from '@/components/social/Annonces'
-import { Fil } from '@/components/social/Fil'
 import { Presence } from '@/components/social/Presence'
 import { EnSeance } from '@/components/social/EnSeance'
 import { chargerDefisEnCours } from '@/lib/donnees-defis'
@@ -33,13 +29,11 @@ import { DefisAccueil } from '@/components/defis/CartesDefis'
  * Accueil.
  *
  * 3.0 : la séance du jour (tirée du planning), le niveau et la
- * semaine en haut ; le social en dessous.
+ * semaine en haut ; amis en séance, défis et annonces en dessous.
+ * Le fil des amis a rejoint la page Amis.
  */
 export default async function Accueil() {
   const [
-    fil,
-    signaux,
-    amis,
     annonces,
     rappel,
     releves,
@@ -51,9 +45,6 @@ export default async function Accueil() {
     planning,
     xp,
   ] = await Promise.all([
-    chargerFil(),
-    chargerSignaux(),
-    chargerAmis(),
     chargerAnnonces(),
     chargerRappel(),
     chargerSuiviComplet(),
@@ -133,13 +124,6 @@ export default async function Accueil() {
       {montrerRappel && <Rappel />}
 
       {bilan && !bilan.vide && <BanniereBilan bilan={bilan} />}
-
-      <Fil
-        publications={fil}
-        signaux={signaux}
-        nbAmis={amis.amis.length}
-        actifs={amis.actifsSemaine}
-      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import {
   chargerEncouragementsEnvoyes,
   chargerHistorique,
   compterSeances,
+  chargerNiveauDe,
 } from '@/lib/donnees-social'
 import { Historique } from '@/components/social/Historique'
 import { GrilleBadges } from '@/components/badges/GrilleBadges'
@@ -46,13 +47,13 @@ export default async function ProfilPublicPage({
   if (!profil)
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <h1 className="text-3xl">Profil introuvable</h1>
-        <p className="text-sm text-encre-douce">
+        <h1 className="text-[44px]">Profil introuvable</h1>
+        <p className="text-[16px] text-encre-douce">
           Aucun carnet ne porte le pseudo « {nom} ».
         </p>
         <Link
           href="/amis"
-          className="rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold text-white"
+          className="flex h-12 items-center rounded-pilule bg-accent px-6 text-[16px] font-bold text-white"
         >
           Chercher quelqu&apos;un
         </Link>
@@ -74,11 +75,14 @@ export default async function ProfilPublicPage({
         chargerBadgesDefis(profil.id),
       ])
     : [[], 0, null, null]
+  const niveauPublic = await chargerNiveauDe(profil.id)
 
   return (
     <VueProfil
       profil={profil}
       encouragementEnvoye={envoyes[profil.id] ?? null}
+      niveauPublic={niveauPublic}
+      nbSeances={profil.detail ? total : undefined}
       badges={
         badges && (
           <GrilleBadges

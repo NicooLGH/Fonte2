@@ -1,12 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import {
-  SIGNES_REACTION,
-  dureeLisible,
-  type PublicationSeance,
-  type Signe,
-} from '@/lib/social'
+import type { PublicationSeance, Signe } from '@/lib/social'
+import { Publication } from './Fil'
 import { reagirSeance, retirerReaction } from '@/app/(carnet)/amis/actions'
 import { pageSuivante } from '@/app/(carnet)/profil/actions'
 
@@ -69,7 +65,7 @@ export function Historique({
 
   if (total === 0)
     return (
-      <p className="text-sm italic text-encre-douce">
+      <p className="px-0.5 text-[15px] leading-relaxed text-encre-douce">
         {moi
           ? "Aucune séance enregistrée pour l'instant."
           : 'Cette personne ne partage pas ses séances.'}
@@ -77,150 +73,30 @@ export function Historique({
     )
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {erreur && (
-        <p className="mb-4 rounded-bloc border border-accent/40 bg-accent/10 px-4 py-3
-                      font-mono text-xs text-accent">
-          {erreur}
-        </p>
+        <p className="rounded-bloc bg-accent/10 px-4 py-3 font-mono text-[12px] text-accent">{erreur}</p>
       )}
 
-      <div className="entree-liste divide-y divide-filet">
-        {seances.map((s) => (
-          <Seance key={s.seanceId} s={s} moi={moi} onReagir={reagir} />
-        ))}
-      </div>
+      {seances.map((s) => (
+        <Publication key={s.seanceId} p={s} sansAuteur onReagir={moi ? undefined : reagir} />
+      ))}
 
       {reste > 0 && (
         <button
           type="button"
           onClick={charger}
           disabled={enCours}
-          className="mt-4 w-full border-t border-filet py-3.5 font-mono text-[11px]
-                     text-encre-douce transition-colors hover:text-encre
-                     disabled:opacity-50"
+          className="appui h-12 rounded-bloc bg-verre text-[15px] font-semibold text-encre-douce
+                     hover:text-encre disabled:opacity-50"
         >
-          {enCours
-            ? 'chargement…'
-            : `voir ${reste === 1 ? 'la dernière' : `les ${Math.min(reste, 10)} suivantes`} · ${reste} restante${reste > 1 ? 's' : ''}`}
+          {enCours ? 'Chargement…' : `Voir plus · ${reste} restante${reste > 1 ? 's' : ''}`}
         </button>
       )}
     </div>
   )
 }
 
-function Seance({
-  s,
-  moi,
-  onReagir,
-}: {
-  s: PublicationSeance
-  moi: boolean
-  onReagir: (id: string, signe: Signe, dejaMise: boolean) => void
-}) {
-  const [ouvert, setOuvert] = useState(false)
-  const duree = dureeLisible(s.dureeSec)
-
-  return (
-    <article className="py-4">
-      <button
-        type="button"
-        onClick={() => setOuvert(!ouvert)}
-        aria-expanded={ouvert}
-        className="flex w-full items-baseline justify-between gap-4 text-left"
-      >
-        <span className="min-w-0">
-          <span className="block font-mono text-[11px] text-encre-douce">
-            {s.date}
-            {duree && ` · ${duree}`}
-          </span>
-          <span className="mt-0.5 block truncate text-sm">
-            {s.blocs.map((b) => b.nom).join(', ') || '—'}
-          </span>
-        </span>
-        <span className="shrink-0 text-right">
-          <span className="font-display text-xl">
-            {Math.round(s.volume)}
-            <span className="ml-1 font-corps text-[10px] text-encre-douce">kg</span>
-          </span>
-          <span className="mt-0.5 block font-mono text-[10px] text-encre-douce">
-            {ouvert ? 'masquer' : 'détail'}
-          </span>
-        </span>
-      </button>
-
-      {s.note && (
-        <p className="mt-2 text-[13px] italic leading-relaxed text-encre-douce">
-          {s.note}
-        </p>
-      )}
-
-      {ouvert && s.blocs.length > 0 && (
-        <div className="mt-3 border-l border-filet pl-4">
-          {s.blocs.map((b) => (
-            <div
-              key={b.nom}
-              className="flex items-start justify-between gap-3 border-b border-filet
-                         py-2.5 last:border-0"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">{b.nom}</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {b.series.map((x, i) => (
-                    <span
-                      key={i}
-                      className="rounded-bloc bg-verre px-2 py-0.5 font-mono text-[11px]
-                                 text-encre-douce"
-                    >
-                      {x.poids}×{x.reps}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <span className="shrink-0 font-mono text-[11px] text-encre-douce">
-                {Math.round(b.volume)} kg
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        {Object.entries(s.reactions).map(([signe, n]) => (
-          <span
-            key={signe}
-            className="rounded-bloc bg-verre px-2.5 py-1 font-mono text-[11px]
-                       text-encre-douce"
-          >
-            {signe} {n}
-          </span>
-        ))}
-
-        {!moi &&
-          SIGNES_REACTION.map((signe) => {
-            const choisi = s.maReaction === signe
-            return (
-              <button
-                key={signe}
-                type="button"
-                onClick={() => onReagir(s.seanceId, signe, choisi)}
-                aria-pressed={choisi}
-                aria-label={choisi ? `Retirer ${signe}` : `Réagir ${signe}`}
-                className={`flex h-8 w-8 items-center justify-center rounded-bloc
-                  text-sm transition-colors ${
-                    choisi ? 'bg-accent-2/20' : 'bg-verre hover:bg-verre-fort'
-                  }`}
-              >
-                {signe}
-              </button>
-            )
-          })}
-      </div>
-    </article>
-  )
-}
-
-/** Met à jour les compteurs sans rappeler la base. */
 function recompter(
   actuel: Record<string, number>,
   avant: Signe | null,

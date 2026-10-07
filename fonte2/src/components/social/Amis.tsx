@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { Bouton, Erreur } from '@/components/ui'
+import { Erreur } from '@/components/ui'
+import { Modale } from '@/components/ui/Modale'
 import {
   anciennete,
   presenceLisible,
   estEnLigne,
+  type Demande,
   type ListeAmis,
   type Resultat,
 } from '@/lib/social'
@@ -17,113 +19,71 @@ import {
   retirerAmi,
 } from '@/app/(carnet)/amis/actions'
 
-const APERCU = 5
+/* ============================================================
+   Amis : demandes, recherche, liste
+   ============================================================ */
 
-export function GestionAmis({ liste }: { liste: ListeAmis }) {
+type Agir = (a: () => Promise<{ erreur?: string }>) => void
+
+function useAction() {
   const [erreur, setErreur] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
-
-  function agir(action: () => Promise<{ erreur?: string }>) {
+  const agir: Agir = (action) => {
     setErreur(null)
     demarrer(async () => {
       const r = await action()
       if (r.erreur) setErreur(r.erreur)
     })
   }
+  return { erreur, enCours, agir }
+}
+
+/* ---- Demandes reçues : une ligne chacune ---- */
+
+export function Demandes({ attente }: { attente: Demande[] }) {
+  const { erreur, enCours, agir } = useAction()
+  if (attente.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-6">
-      <Recherche onAgir={agir} enCours={enCours} />
-
+    <div className="flex flex-col">
       <Erreur>{erreur}</Erreur>
-
-      {liste.attente.length > 0 && (
-        <section className="rounded-carte border border-accent/40 bg-accent/5 p-5">
-          <h2 className="mb-4 text-2xl">
-            Demandes reçues
-            <span className="ml-2 rounded-bloc bg-accent px-2 py-0.5 align-middle font-mono text-xs text-white">
-              {liste.attente.length}
-            </span>
-          </h2>
-          <ul className="divide-y divide-filet">
-            {liste.attente.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 py-3">
-                <Avatar valeur={p.avatar} pseudo={p.pseudo} />
-                <div className="min-w-0 flex-1">
-                  <Nom pseudo={p.pseudo} />
-                  <p className="font-mono text-[11px] text-encre-douce">
-                    Souhaite devenir ton ami
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    disabled={enCours}
-                    onClick={() => agir(() => accepterAmi(p.id))}
-                    className="rounded-bloc bg-accent px-4 py-1.5 text-xs font-semibold
-                               text-white transition-colors hover:bg-accent-clair"
-                  >
-                    Accepter
-                  </button>
-                  <button
-                    type="button"
-                    disabled={enCours}
-                    onClick={() => agir(() => retirerAmi(p.id))}
-                    className="rounded-bloc border border-bordure px-4 py-1.5 text-xs
-                               font-semibold text-encre-douce transition-colors hover:text-encre"
-                  >
-                    Refuser
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <MesAmis liste={liste} onAgir={agir} enCours={enCours} />
-
-      {liste.envoyes.length > 0 && (
-        <section className="section pb-5">
-          <p className="section-titre mb-4">Demandes envoyées</p>
-          <ul className="divide-y divide-filet">
-            {liste.envoyes.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 py-3">
-                <Avatar valeur={p.avatar} pseudo={p.pseudo} />
-                <div className="min-w-0 flex-1">
-                  <Nom pseudo={p.pseudo} />
-                  <p className="font-mono text-[11px] text-encre-douce">
-                    En attente de réponse
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={enCours}
-                  onClick={() => agir(() => retirerAmi(p.id))}
-                  className="shrink-0 rounded-bloc border border-bordure px-4 py-1.5
-                             text-xs font-semibold text-encre-douce transition-colors
-                             hover:text-encre"
-                >
-                  Annuler
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {attente.map((p) => (
+        <div key={p.id} className="flex min-h-16 items-center gap-3 px-0.5">
+          <Pastille avatar={p.avatar} pseudo={p.pseudo} />
+          <span className="min-w-0 flex-1 text-[16px]">
+            <strong className="font-semibold">{p.pseudo}</strong>{' '}
+            <span className="text-encre-douce">veut t&apos;ajouter</span>
+          </span>
+          <button
+            type="button"
+            disabled={enCours}
+            onClick={() => agir(() => accepterAmi(p.id))}
+            className="appui h-10 shrink-0 rounded-pilule bg-accent px-4 text-[14px] font-bold text-white
+                       hover:bg-accent-clair disabled:opacity-50"
+          >
+            Accepter
+          </button>
+          <button
+            type="button"
+            disabled={enCours}
+            onClick={() => agir(() => retirerAmi(p.id))}
+            aria-label={`Refuser la demande de ${p.pseudo}`}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pilule bg-verre text-encre-douce
+                       hover:text-encre disabled:opacity-50"
+          >
+            <Croix />
+          </button>
+        </div>
+      ))}
     </div>
   )
 }
 
-/* ---- Recherche ---- */
+/* ---- Bouton « + » et recherche ---- */
 
-function Recherche({
-  onAgir,
-  enCours,
-}: {
-  onAgir: (a: () => Promise<{ erreur?: string }>) => void
-  enCours: boolean
-}) {
+export function AjouterAmi() {
+  const [ouvert, setOuvert] = useState(false)
+  const { erreur, enCours, agir } = useAction()
   const [requete, setRequete] = useState('')
   const [resultats, setResultats] = useState<Resultat[] | null>(null)
   const [cherche, demarrerRecherche] = useTransition()
@@ -140,207 +100,242 @@ function Recherche({
   }
 
   return (
-    <section className="section pb-5">
-      <p className="section-titre mb-2">Trouver quelqu&apos;un</p>
-      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
-        Cherche par pseudo pour envoyer une demande. Sans être ton ami, une
-        personne ne voit que ton pseudo, ton niveau et ta série — jamais tes
-        mensurations ni ton poids.
-      </p>
+    <>
+      <button
+        type="button"
+        onClick={() => setOuvert(true)}
+        aria-label="Ajouter un ami"
+        className="appui flex h-11 w-11 shrink-0 items-center justify-center rounded-bloc bg-verre"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <circle cx="9" cy="8" r="3.5" />
+          <path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6" />
+        </svg>
+      </button>
 
-      <div className="mb-4 flex gap-2">
-        <input
-          value={requete}
-          onChange={(e) => setRequete(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+      <Modale titre="Ajouter un ami" sousTitre="Cherche par pseudo" ouverte={ouvert} onFermer={() => setOuvert(false)}>
+        <div className="flex flex-col gap-4">
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
               e.preventDefault()
               chercher()
-            }
-          }}
-          placeholder="Pseudo à rechercher…"
-          aria-label="Pseudo à rechercher"
-          className="min-w-0 flex-1 rounded-bloc border border-bordure bg-verre px-5 py-2.5
-                     text-sm focus:border-accent focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={chercher}
-          disabled={cherche}
-          className="shrink-0 rounded-bloc bg-accent px-5 py-2.5 text-sm font-semibold
-                     text-white transition-colors hover:bg-accent-clair disabled:opacity-50"
-        >
-          {cherche ? '…' : 'Chercher'}
-        </button>
-      </div>
+            }}
+          >
+            <input
+              value={requete}
+              onChange={(e) => setRequete(e.target.value)}
+              placeholder="Pseudo…"
+              aria-label="Pseudo à rechercher"
+              autoCapitalize="none"
+              autoCorrect="off"
+              className="h-12 min-w-0 flex-1 rounded-bloc border border-transparent bg-verre px-4 text-base
+                         focus:border-accent focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={cherche}
+              className="appui h-12 shrink-0 rounded-bloc bg-accent px-5 text-[15px] font-bold text-white
+                         hover:bg-accent-clair disabled:opacity-50"
+            >
+              {cherche ? '…' : 'Chercher'}
+            </button>
+          </form>
 
-      {resultats !== null &&
-        (resultats.length === 0 ? (
-          <p className="text-sm italic text-encre-douce">
-            Aucun compte ne correspond à ce pseudo.
-          </p>
-        ) : (
-          <ul className="divide-y divide-filet">
-            {resultats.map((r) => (
-              <li key={r.id} className="flex items-center gap-3 py-3">
-                <Avatar valeur={r.avatar} pseudo={r.pseudo} />
-                <Nom pseudo={r.pseudo} className="min-w-0 flex-1" />
+          <Erreur>{erreur}</Erreur>
 
-                {r.relation === 'ami' && (
-                  <span className="shrink-0 font-mono text-[11px] text-encre-douce">
-                    Déjà ami
-                  </span>
-                )}
-                {r.relation === 'demande_envoyee' && (
-                  <span className="shrink-0 font-mono text-[11px] text-encre-douce">
-                    Demande envoyée
-                  </span>
-                )}
-                {r.relation === 'demande_recue' && (
-                  <button
-                    type="button"
-                    disabled={enCours}
-                    onClick={() => onAgir(() => accepterAmi(r.id))}
-                    className="shrink-0 rounded-bloc bg-accent px-4 py-1.5 text-xs
-                               font-semibold text-white hover:bg-accent-clair"
-                  >
-                    Accepter
-                  </button>
-                )}
-                {r.relation === 'inconnu' && (
-                  <button
-                    type="button"
-                    disabled={enCours}
-                    onClick={() => onAgir(() => demanderAmi(r.id))}
-                    className="shrink-0 rounded-bloc bg-accent px-4 py-1.5 text-xs
-                               font-semibold text-white hover:bg-accent-clair"
-                  >
-                    Ajouter
-                  </button>
-                )}
-              </li>
+          {resultats !== null &&
+            (resultats.length === 0 ? (
+              <p className="text-[15px] text-encre-douce">Aucun compte ne correspond à ce pseudo.</p>
+            ) : (
+              <ul className="flex flex-col">
+                {resultats.map((r) => (
+                  <li key={r.id} className="flex min-h-14 items-center gap-3">
+                    <Pastille avatar={r.avatar} pseudo={r.pseudo} />
+                    <Link
+                      href={`/u/${encodeURIComponent(r.pseudo)}`}
+                      className="min-w-0 flex-1 truncate text-[16px] font-semibold"
+                    >
+                      {r.pseudo}
+                    </Link>
+                    {r.relation === 'ami' && <Statut>Déjà ami</Statut>}
+                    {r.relation === 'demande_envoyee' && <Statut>Demande envoyée</Statut>}
+                    {r.relation === 'demande_recue' && (
+                      <PetitBouton disabled={enCours} onClick={() => agir(() => accepterAmi(r.id))}>
+                        Accepter
+                      </PetitBouton>
+                    )}
+                    {r.relation === 'inconnu' && (
+                      <PetitBouton
+                        disabled={enCours}
+                        onClick={() => {
+                          agir(() => demanderAmi(r.id))
+                          setResultats(
+                            resultats.map((x) =>
+                              x.id === r.id ? { ...x, relation: 'demande_envoyee' } : x
+                            )
+                          )
+                        }}
+                      >
+                        Ajouter
+                      </PetitBouton>
+                    )}
+                  </li>
+                ))}
+              </ul>
             ))}
-          </ul>
-        ))}
-    </section>
+
+          <p className="text-[13px] leading-relaxed text-encre-douce">
+            Sans être ton ami, une personne ne voit que ton pseudo, ton niveau et ta série : jamais
+            tes mensurations, ton poids ni tes photos.
+          </p>
+        </div>
+      </Modale>
+    </>
   )
 }
 
-/* ---- Liste d'amis ---- */
+/* ---- Mes amis ---- */
 
-function MesAmis({
-  liste,
-  onAgir,
-  enCours,
-}: {
-  liste: ListeAmis
-  onAgir: (a: () => Promise<{ erreur?: string }>) => void
-  enCours: boolean
-}) {
-  const [tout, setTout] = useState(false)
-  const visibles = tout ? liste.amis : liste.amis.slice(0, APERCU)
-  const reste = liste.amis.length - visibles.length
+export function GestionAmis({ liste }: { liste: ListeAmis }) {
+  const { erreur, enCours, agir } = useAction()
 
   return (
-    <section className="section pb-5">
-      <p className="section-titre mb-2">Mes amis</p>
-      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
-        Leur régularité, pas leurs charges : comparer des poids entre gabarits
-        différents n&apos;apprend rien d&apos;utile.
-      </p>
+    <div className="flex flex-col gap-5">
+      <Erreur>{erreur}</Erreur>
 
       {liste.amis.length === 0 ? (
-        <p className="text-sm italic text-encre-douce">
-          Aucun ami pour l&apos;instant.
+        <p className="px-0.5 text-[15px] leading-relaxed text-encre-douce">
+          Aucun ami pour l&apos;instant. Le bouton + en haut permet d&apos;en chercher un par son
+          pseudo.
         </p>
       ) : (
-        <ul className="divide-y divide-filet">
-          {visibles.map((a) => {
-            const presence = presenceLisible(a.presenceSec)
-            return (
-              <li key={a.id} className="flex items-center gap-3 py-3">
-                <Avatar valeur={a.avatar} pseudo={a.pseudo} />
-                <div className="min-w-0 flex-1">
-                  <Nom pseudo={a.pseudo} />
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5
-                                font-mono text-[10.5px] leading-snug text-encre-douce">
-                    {presence && (
-                      <span className={estEnLigne(a.presenceSec) ? 'text-accent-2' : ''}>
-                        {estEnLigne(a.presenceSec) && '● '}
-                        {presence}
-                      </span>
-                    )}
-                    <span className={a.actifSemaine ? 'text-accent-2' : ''}>
-                      {a.actifSemaine
-                        ? '● entraîné cette semaine'
-                        : 'pas encore actif cette semaine'}
+        <section className="flex flex-col">
+          <p className="px-0.5 pb-1 text-[15px] text-encre-douce">
+            {liste.actifsSemaine} sur {liste.amis.length} entraîné
+            {liste.actifsSemaine > 1 ? 's' : ''} cette semaine
+          </p>
+          <ul className="flex flex-col">
+            {liste.amis.map((a) => {
+              const presence = presenceLisible(a.presenceSec)
+              const enLigne = estEnLigne(a.presenceSec)
+              return (
+                <li key={a.id} className="flex min-h-16 items-center gap-3 px-0.5">
+                  <Pastille avatar={a.avatar} pseudo={a.pseudo} enLigne={enLigne} />
+                  <Link
+                    href={`/u/${encodeURIComponent(a.pseudo)}`}
+                    className="flex min-w-0 flex-1 flex-col gap-0.5"
+                  >
+                    <span className="truncate text-[16px] font-semibold">{a.pseudo}</span>
+                    <span className="truncate text-[13px] text-encre-douce">
+                      {a.actifSemaine ? (
+                        <span className="text-accent-2">Actif cette semaine</span>
+                      ) : (
+                        'Pas encore cette semaine'
+                      )}
+                      {a.streak > 0 && ` · ${a.streak} sem. d'affilée`}
+                      {!enLigne && presence ? ` · ${presence}` : ''}
                     </span>
-                    {a.streak > 0 && (
-                      <span>
-                        {a.streak} semaine{a.streak > 1 ? 's' : ''} d&apos;affilée
-                      </span>
-                    )}
-                    {a.amiDepuis && <span>ami {anciennete(a.amiDepuis)}</span>}
-                  </p>
-                </div>
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={enCours}
+                    onClick={() => {
+                      if (
+                        confirm(
+                          `Retirer ${a.pseudo} de tes amis ?\n\nAmis ${anciennete(a.amiDepuis)}.`
+                        )
+                      )
+                        agir(() => retirerAmi(a.id))
+                    }}
+                    aria-label={`Retirer ${a.pseudo} de tes amis`}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pilule text-encre-douce/60
+                               hover:text-accent"
+                  >
+                    <Croix />
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
+
+      {liste.envoyes.length > 0 && (
+        <section className="flex flex-col">
+          <p className="section-titre px-0.5 pb-1">Demandes envoyées</p>
+          <ul className="flex flex-col">
+            {liste.envoyes.map((p) => (
+              <li key={p.id} className="flex min-h-14 items-center gap-3 px-0.5">
+                <Pastille avatar={p.avatar} pseudo={p.pseudo} />
+                <span className="min-w-0 flex-1 truncate text-[16px]">{p.pseudo}</span>
                 <button
                   type="button"
                   disabled={enCours}
-                  onClick={() => {
-                    if (confirm(`Retirer ${a.pseudo} de tes amis ?`))
-                      onAgir(() => retirerAmi(a.id))
-                  }}
-                  aria-label={`Retirer ${a.pseudo} de tes amis`}
-                  className="shrink-0 rounded-bloc px-3 py-2 text-xs font-semibold
-                             text-encre-douce transition-colors hover:text-accent"
+                  onClick={() => agir(() => retirerAmi(p.id))}
+                  className="h-10 shrink-0 rounded-pilule bg-verre px-4 text-[14px] font-semibold text-encre-douce
+                             hover:text-encre"
                 >
-                  <span className="hidden sm:inline">Retirer</span>
-                  <span className="sm:hidden">✕</span>
+                  Annuler
                 </button>
               </li>
-            )
-          })}
-        </ul>
+            ))}
+          </ul>
+        </section>
       )}
-
-      {reste > 0 && (
-        <Bouton
-          type="button"
-          variante="discret"
-          className="mt-4"
-          onClick={() => setTout(true)}
-        >
-          Voir {reste === 1 ? "l'autre" : `les ${reste} autres`}
-        </Bouton>
-      )}
-    </section>
+    </div>
   )
 }
 
-/* ---- Pièces communes ---- */
+/* ---- Pièces ---- */
 
-function Avatar({ valeur, pseudo }: { valeur: string | null; pseudo: string }) {
+export function Pastille({
+  avatar,
+  pseudo,
+  enLigne = false,
+}: {
+  avatar: string | null
+  pseudo: string
+  enLigne?: boolean
+}) {
   return (
     <Link
       href={`/u/${encodeURIComponent(pseudo)}`}
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full
-                 border border-bordure bg-verre text-xl transition-colors
-                 hover:border-accent-2/60"
+      aria-label={`Profil de ${pseudo}`}
+      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] bg-verre text-[22px]"
     >
-      {valeur ?? '💪'}
+      {avatar ?? '💪'}
+      {enLigne && (
+        <span
+          aria-label="En ligne"
+          className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-fond bg-valide"
+        />
+      )}
     </Link>
   )
 }
 
-function Nom({ pseudo, className }: { pseudo: string; className?: string }) {
+function Statut({ children }: { children: React.ReactNode }) {
+  return <span className="shrink-0 text-[13px] text-encre-douce">{children}</span>
+}
+
+function PetitBouton(props: React.ComponentProps<'button'>) {
   return (
-    <div className={className}>
-      <Link
-        href={`/u/${encodeURIComponent(pseudo)}`}
-        className="font-semibold transition-colors hover:text-accent-2"
-      >
-        {pseudo}
-      </Link>
-    </div>
+    <button
+      type="button"
+      {...props}
+      className="appui h-10 shrink-0 rounded-pilule bg-accent px-4 text-[14px] font-bold text-white
+                 hover:bg-accent-clair disabled:opacity-50"
+    />
+  )
+}
+
+function Croix() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
   )
 }

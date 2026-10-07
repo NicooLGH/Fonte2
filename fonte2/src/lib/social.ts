@@ -63,12 +63,39 @@ export type PublicationSeance = {
   pseudo: string
   avatar: string | null
   date: string
+  /** Heure d'enregistrement (3.0), pour « il y a 2 h ». */
+  cree: string | null
+  /** Nom du modèle utilisé, s'il y en a un. */
+  nom: string | null
+  /** Exercices sur lesquels la séance a battu un record. */
+  records: string[]
   note: string | null
   dureeSec: number | null
   volume: number
   blocs: BlocSeance[]
   reactions: Record<string, number>
   maReaction: Signe | null
+}
+
+/* ---- Classement entre amis ---- */
+
+export type PeriodeClassement = 'semaine' | 'mois' | 'niveau'
+
+export type LigneClassement = {
+  id: string
+  pseudo: string
+  avatar: string | null
+  cadre: string
+  xp: number
+  niveau: number
+  rang: number
+  moi: boolean
+}
+
+export type Classement = {
+  periode: PeriodeClassement
+  joursRestants: number | null
+  lignes: LigneClassement[]
 }
 
 export type Signal = {

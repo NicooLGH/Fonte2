@@ -2,6 +2,8 @@ import 'server-only'
 
 import { creerClientServeur } from './supabase/server'
 import type {
+  Classement,
+  PeriodeClassement,
   ListeAmis,
   PublicationSeance,
   ProfilPublic,
@@ -76,6 +78,9 @@ function versPublication(f: Brut): PublicationSeance {
     pseudo: texte(f.pseudo),
     avatar: texteOuNull(f.avatar),
     date: texte(f.date),
+    cree: texteOuNull(f.cree),
+    nom: texteOuNull(f.nom),
+    records: Array.isArray(f.records) ? (f.records as unknown[]).map(texte).filter(Boolean) : [],
     note: texteOuNull(f.note),
     dureeSec:
       f.duree_sec === null || f.duree_sec === undefined
@@ -100,6 +105,40 @@ export async function chargerFil(): Promise<PublicationSeance[]> {
   const { data, error } = await supabase.rpc('fil_amis')
   if (error || !data) return []
   return (data as Brut[]).map(versPublication)
+}
+
+/**
+ * Classement entre amis (fonte-social3.sql). Vide si la fonction
+ * n'est pas encore installée.
+ */
+export async function chargerClassement(periode: PeriodeClassement): Promise<Classement> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase.rpc('classement_amis', { periode })
+  if (error || !data) return { periode, joursRestants: null, lignes: [] }
+  const d = data as Brut
+  return {
+    periode,
+    joursRestants:
+      d.jours_restants === null || d.jours_restants === undefined ? null : nombre(d.jours_restants),
+    lignes: ((d.lignes ?? []) as Brut[]).map((l) => ({
+      id: texte(l.id),
+      pseudo: texte(l.pseudo),
+      avatar: texteOuNull(l.avatar),
+      cadre: texte(l.cadre) || 'aucun',
+      xp: nombre(l.xp),
+      niveau: nombre(l.niveau),
+      rang: nombre(l.rang),
+      moi: Boolean(l.moi),
+    })),
+  }
+}
+
+/** Niveau public d'un membre (fonte-social3.sql), null si indisponible. */
+export async function chargerNiveauDe(id: string): Promise<number | null> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase.rpc('niveau_de', { target: id })
+  if (error || data === null || data === undefined) return null
+  return Number(data) || 0
 }
 
 /**
