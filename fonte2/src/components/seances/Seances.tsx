@@ -2,535 +2,419 @@
 
 import { useState, useTransition } from 'react'
 import { Modale } from '@/components/ui/Modale'
-import { Bouton, Erreur } from '@/components/ui'
+import { Bouton, Erreur, Succes } from '@/components/ui'
 import { volumeSeance } from '@/lib/xp'
 import { seanceEnTexte, partagerTexte } from '@/lib/export-seance'
-import { IconePartage } from '@/components/Icones'
+import { activite, resumeCardio, type Cardio } from '@/lib/cardio'
+import { cleSemaine, semaineCourante, bornesSemaine } from '@/lib/semaine'
 import type { Exercice, SeanceComplete } from '@/lib/carnet'
+import { SaisieMuscu } from './Saisie'
 import {
   enregistrerSeance,
   supprimerSeance,
-  type BlocSaisi,
+  supprimerCardio,
 } from '@/app/(carnet)/seances/actions'
 
-/** Saisie possible sur les trois derniers jours. */
-const JOURS_SAISIE = 3
-const APERCU = 2
+/* ============================================================
+   Historique
+   ============================================================
+   Séances de muscu et de cardio mêlées, regroupées par semaine.
+   Un appui ouvre le détail : séries, modifier, exporter,
+   supprimer.
+   ============================================================ */
 
-type SerieSaisie = { poids: string; reps: string }
-type BlocEnCours = { exerciceId: string; series: SerieSaisie[] }
+type Ligne =
+  | { genre: 'muscu'; date: string; tri: string; seance: SeanceComplete }
+  | { genre: 'cardio'; date: string; tri: string; cardio: Cardio }
 
-export function Seances({
+const APERCU_SEMAINES = 4
+
+export function Historique({
   seances,
+  cardio,
   exercices,
   pseudo,
 }: {
   seances: SeanceComplete[]
+  cardio: Cardio[]
   exercices: Exercice[]
   pseudo: string
 }) {
-  const [ouvert, setOuvert] = useState(false)
-  const [tout, setTout] = useState(false)
   const [recherche, setRecherche] = useState('')
+  const [tout, setTout] = useState(false)
+  const [ouverte, setOuverte] = useState<Ligne | null>(null)
+  const [modifiee, setModifiee] = useState<SeanceComplete | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [succes, setSucces] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
 
-  // La recherche porte sur la date, le nom des exercices et la
-  // note : c'est par l'un de ces trois qu'on se souvient d'une
-  // séance passée.
+  const nomExo = (id: string) => exercices.find((e) => e.id === id)?.nom ?? 'Exercice supprimé'
+
+  const lignes: Ligne[] = [
+    ...seances.map((s, i) => ({
+      genre: 'muscu' as const,
+      date: s.date,
+      // Les séances arrivent déjà triées : on garde leur ordre dans la journée.
+      tri: `${s.date}-1-${String(9999 - i).padStart(4, '0')}`,
+      seance: s,
+    })),
+    ...cardio.map((c, i) => ({
+      genre: 'cardio' as const,
+      date: c.date,
+      tri: `${c.date}-0-${String(9999 - i).padStart(4, '0')}`,
+      cardio: c,
+    })),
+  ].sort((a, b) => (a.tri < b.tri ? 1 : -1))
+
+  // La recherche porte sur la date, le nom, les exercices, l'activité et la note.
   const q = recherche.trim().toLowerCase()
   const filtrees = q
-    ? seances.filter((s) => {
-        const noms = s.blocs
-          .map((b) => exercices.find((e) => e.id === b.exerciceId)?.nom ?? '')
-          .join(' ')
-        return (
-          s.date.includes(q) ||
-          noms.toLowerCase().includes(q) ||
-          (s.note ?? '').toLowerCase().includes(q)
-        )
+    ? lignes.filter((l) => {
+        const texte =
+          l.genre === 'muscu'
+            ? [
+                l.date,
+                l.seance.nom ?? '',
+                l.seance.note ?? '',
+                ...l.seance.blocs.map((b) => nomExo(b.exerciceId)),
+              ]
+            : [l.date, 'cardio', activite(l.cardio.activite).nom, l.cardio.note ?? '']
+        return texte.join(' ').toLowerCase().includes(q)
       })
-    : seances
+    : lignes
 
-  // Une recherche affiche tous ses résultats : les replier
-  // derrière un bouton irait contre ce qu'on vient de demander.
-  const visibles = tout || q ? filtrees : filtrees.slice(0, APERCU)
-  const reste = filtrees.length - visibles.length
-
-  const nomExo = (id: string) =>
-    exercices.find((e) => e.id === id)?.nom ?? '—'
-
-  function exporter(seance: SeanceComplete) {
-    const texte = seanceEnTexte(seance, exercices, pseudo)
-    void partagerTexte(
-      texte,
-      `fonte-seance-${seance.date}.txt`,
-      `Séance du ${seance.date}`
-    )
+  // Regroupement par semaine, dans l'ordre d'arrivée (le plus récent d'abord).
+  const semaines: { cle: string; lignes: Ligne[] }[] = []
+  for (const l of filtrees) {
+    const cle = cleSemaine(new Date(l.date + 'T12:00:00'))
+    const derniere = semaines[semaines.length - 1]
+    if (derniere?.cle === cle) derniere.lignes.push(l)
+    else semaines.push({ cle, lignes: [l] })
   }
+  const visibles = tout || q ? semaines : semaines.slice(0, APERCU_SEMAINES)
+  const reste = semaines.length - visibles.length
 
-  function supprimer(seance: SeanceComplete) {
-    if (
-      !confirm(
-        `Supprimer la séance du ${seance.date} ?\n\n` +
-          "L'XP et les records qu'elle a rapportés seront annulés."
-      )
-    )
-      return
+  function supprimer(l: Ligne) {
+    const quoi =
+      l.genre === 'muscu' ? `la séance du ${dateLongue(l.date)}` : `ce cardio du ${dateLongue(l.date)}`
+    if (!confirm(`Supprimer ${quoi} ?\n\nL'XP qu'il a rapportée sera retirée.`)) return
+    setErreur(null)
     demarrer(async () => {
-      const r = await supprimerSeance(seance.id)
+      const r =
+        l.genre === 'muscu' ? await supprimerSeance(l.seance.id) : await supprimerCardio(l.cardio.id)
       if (r.erreur) setErreur(r.erreur)
+      else {
+        setSucces(r.succes ?? null)
+        setOuverte(null)
+      }
     })
   }
 
-  return (
-    <section className="section pb-5">
-      <p className="section-titre mb-2">Mes séances</p>
-      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
-        Les exercices travaillés, série par série. Saisie possible sur les trois
-        derniers jours.
-      </p>
+  function exporter(s: SeanceComplete) {
+    void partagerTexte(
+      seanceEnTexte(s, exercices, pseudo),
+      `fonte-seance-${s.date}.txt`,
+      `Séance du ${s.date}`
+    )
+  }
 
-      {seances.length > 2 && (
+  if (lignes.length === 0) {
+    return (
+      <div className="rounded-carte bg-verre px-5 py-8 text-center">
+        <p className="font-display text-[34px] leading-none">Rien pour l&apos;instant</p>
+        <p className="mt-3 text-[15px] leading-relaxed text-encre-douce">
+          Ta première séance apparaîtra ici. Lance-la en direct, ou ajoute-la après coup.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {lignes.length > 3 && (
         <input
           type="search"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
-          placeholder="Chercher une date, un exercice, une note…"
-          aria-label="Chercher dans mes séances"
-          className="mb-4 w-full rounded-bloc border border-bordure bg-verre px-4 py-2.5
-                     text-sm focus:border-accent focus:outline-none"
+          placeholder="Chercher un exercice, une date, une note…"
+          aria-label="Chercher dans l'historique"
+          className="h-12 w-full rounded-bloc border border-transparent bg-verre px-4 text-base
+                     placeholder:text-encre-douce/60 focus:border-accent focus:outline-none"
         />
       )}
 
-      <div className="flex-1">
-        {seances.length === 0 ? (
-          <p className="text-sm italic text-encre-douce">
-            Aucune séance enregistrée.
-          </p>
-        ) : filtrees.length === 0 ? (
-          <p className="text-sm italic text-encre-douce">
-            Aucune séance ne correspond à « {recherche.trim()} ».
-          </p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-filet">
-            {visibles.map((s) => (
-              <li key={s.id} className="flex items-start gap-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-mono text-xs text-encre-douce">{s.date}</p>
-                  <p className="mt-0.5 truncate text-sm">
-                    {s.blocs.map((b) => nomExo(b.exerciceId)).join(', ')}
-                  </p>
-                  {s.note && (
-                    <p className="mt-1 text-xs italic text-encre-douce">
-                      📝 {s.note}
-                    </p>
+      <Succes>{succes}</Succes>
+      <Erreur>{erreur}</Erreur>
+
+      {filtrees.length === 0 && (
+        <p className="text-[15px] text-encre-douce">
+          Rien ne correspond à « {recherche.trim()} ».
+        </p>
+      )}
+
+      {visibles.map((sem) => (
+        <section key={sem.cle}>
+          <div className="mb-1 flex items-baseline justify-between px-1">
+            <p className="etiquette">
+              {sem.cle === semaineCourante() ? 'Cette semaine' : bornesSemaine(sem.cle)}
+            </p>
+            <p className="font-mono text-[12px] text-encre-douce">
+              {sem.lignes.length} {sem.lignes.length > 1 ? 'activités' : 'activité'}
+            </p>
+          </div>
+          <ul className="flex flex-col">
+            {sem.lignes.map((l) => (
+              <li key={l.genre + (l.genre === 'muscu' ? l.seance.id : l.cardio.id)}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSucces(null)
+                    setOuverte(l)
+                  }}
+                  className="appui flex w-full items-center gap-3.5 rounded-bloc py-3 text-left
+                             transition-colors hover:bg-verre"
+                >
+                  <TuileDate iso={l.date} cardio={l.genre === 'cardio'} />
+                  {l.genre === 'muscu' ? (
+                    <>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[17px] font-semibold">
+                          {l.seance.nom || nomsCourts(l.seance, nomExo)}
+                        </span>
+                        <span className="block truncate text-[14px] text-encre-douce">
+                          {l.seance.nom
+                            ? nomsCourts(l.seance, nomExo)
+                            : `${l.seance.blocs.length} exercice${l.seance.blocs.length > 1 ? 's' : ''}`}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right">
+                        <span className="font-display text-[26px] leading-none">
+                          {formaterTonnage(volumeSeance(l.seance))}
+                        </span>
+                        <span className="ml-1 font-mono text-[12px] text-encre-douce">kg</span>
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[17px] font-semibold">
+                          {activite(l.cardio.activite).nom}
+                        </span>
+                        <span className="block truncate text-[14px] text-encre-douce">
+                          {resumeCardio(l.cardio)}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-pilule bg-accent-2/15 px-2.5 py-1 font-mono text-[12px] text-accent-2">
+                        cardio
+                      </span>
+                    </>
                   )}
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-display text-xl">
-                    {Math.round(volumeSeance(s))}
-                    <span className="ml-1 font-corps text-[10px] text-encre-douce">
-                      kg
-                    </span>
-                  </p>
-                  <div className="mt-1 flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => exporter(s)}
-                      aria-label={`Exporter la séance du ${s.date}`}
-                      title="Exporter en texte"
-                      className="appui text-encre-douce transition-colors hover:text-encre"
-                    >
-                      <IconePartage className="h-[15px] w-[15px]" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => supprimer(s)}
-                      aria-label={`Supprimer la séance du ${s.date}`}
-                      className="appui text-xs text-encre-douce transition-colors hover:text-accent"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
+                </button>
               </li>
             ))}
           </ul>
-        )}
+        </section>
+      ))}
 
-        {reste > 0 && (
-          <button
-            type="button"
-            onClick={() => setTout(true)}
-            className="mt-3 w-full rounded-bloc border border-bordure bg-verre
-                       py-2.5 text-xs font-semibold text-encre-douce
-                       transition-colors hover:text-encre"
-          >
-            {reste === 1 ? "Voir l'autre" : `Voir les ${reste} autres`}
-          </button>
-        )}
-      </div>
+      {reste > 0 && (
+        <button
+          type="button"
+          onClick={() => setTout(true)}
+          className="appui h-12 rounded-bloc bg-verre text-[15px] font-semibold text-encre-douce
+                     transition-colors hover:text-encre"
+        >
+          {reste === 1 ? 'Voir la semaine précédente' : `Voir les ${reste} semaines précédentes`}
+        </button>
+      )}
 
-      <Erreur>{erreur}</Erreur>
-
-      <Bouton
-        type="button"
-        className="mt-4"
-        disabled={exercices.length === 0}
-        onClick={() => setOuvert(true)}
-      >
-        {exercices.length === 0
-          ? "Crée d'abord un exercice"
-          : 'Ajouter une séance'}
-      </Bouton>
-
+      {/* Détail */}
       <Modale
-        titre="Nouvelle séance"
-        ouverte={ouvert}
-        onFermer={() => setOuvert(false)}
+        titre={
+          ouverte?.genre === 'muscu'
+            ? ouverte.seance.nom || 'Séance'
+            : ouverte
+              ? `Cardio · ${activite(ouverte.cardio.activite).nom}`
+              : ''
+        }
+        sousTitre={ouverte ? dateLongue(ouverte.date) : undefined}
+        ouverte={ouverte !== null}
+        onFermer={() => setOuverte(null)}
       >
-        <SaisieSeance
-          exercices={exercices}
-          seances={seances}
-          enCours={enCours}
-          onEnregistrer={(date, blocs, note) => {
-            setErreur(null)
-            demarrer(async () => {
-              const r = await enregistrerSeance(date, blocs, note)
-              if (r.erreur) setErreur(r.erreur)
-              else setOuvert(false)
-            })
-          }}
-        />
+        {ouverte?.genre === 'muscu' && (
+          <DetailSeance
+            seance={ouverte.seance}
+            nomExo={nomExo}
+            enCours={enCours}
+            onModifier={() => {
+              setModifiee(ouverte.seance)
+              setOuverte(null)
+            }}
+            onExporter={() => exporter(ouverte.seance)}
+            onSupprimer={() => supprimer(ouverte)}
+          />
+        )}
+        {ouverte?.genre === 'cardio' && (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-2.5">
+              <Chiffre valeur={String(ouverte.cardio.dureeMin)} unite="min" libelle="Durée" />
+              <Chiffre
+                valeur={
+                  ouverte.cardio.distanceKm != null
+                    ? ouverte.cardio.distanceKm.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
+                    : '—'
+                }
+                unite="km"
+                libelle="Distance"
+              />
+            </div>
+            {ouverte.cardio.note && (
+              <p className="text-[15px] leading-relaxed text-encre-douce">{ouverte.cardio.note}</p>
+            )}
+            <Bouton variante="discret" type="button" disabled={enCours} onClick={() => supprimer(ouverte)}>
+              Supprimer
+            </Bouton>
+          </div>
+        )}
       </Modale>
-    </section>
+
+      {/* Modification d'une séance de muscu */}
+      <Modale
+        titre="Modifier la séance"
+        sousTitre={modifiee ? dateLongue(modifiee.date) : undefined}
+        ouverte={modifiee !== null}
+        onFermer={() => setModifiee(null)}
+      >
+        {modifiee && (
+          <SaisieMuscu
+            date={modifiee.date}
+            exercices={exercices}
+            seances={seances}
+            existante={modifiee}
+            enCours={enCours}
+            onEnregistrer={(date, blocs, note) => {
+              setErreur(null)
+              demarrer(async () => {
+                const r = await enregistrerSeance(date, blocs, note, modifiee.id)
+                if (r.erreur) setErreur(r.erreur)
+                else {
+                  setSucces(r.succes ?? null)
+                  setModifiee(null)
+                }
+              })
+            }}
+          />
+        )}
+      </Modale>
+    </div>
   )
 }
 
-/* ============================================================
-   Saisie
-   ============================================================ */
+/* ---- Détail d'une séance ---- */
 
-function SaisieSeance({
-  exercices,
-  seances,
+function DetailSeance({
+  seance,
+  nomExo,
   enCours,
-  onEnregistrer,
+  onModifier,
+  onExporter,
+  onSupprimer,
 }: {
-  exercices: Exercice[]
-  seances: SeanceComplete[]
+  seance: SeanceComplete
+  nomExo: (id: string) => string
   enCours: boolean
-  onEnregistrer: (date: string, blocs: BlocSaisi[], note: string | null) => void
+  onModifier: () => void
+  onExporter: () => void
+  onSupprimer: () => void
 }) {
-  const jours = joursDisponibles()
-  const [date, setDate] = useState(jours[0].iso)
-  const [blocs, setBlocs] = useState<BlocEnCours[]>(() => reprendre(seances, jours[0].iso))
-  const [note, setNote] = useState(() => noteDe(seances, jours[0].iso))
-
-  const existante = seances.find((s) => s.date === date)
-
-  function changerJour(iso: string) {
-    setDate(iso)
-    setBlocs(reprendre(seances, iso))
-    setNote(noteDe(seances, iso))
-  }
-
-  function ajouterExercice(id: string) {
-    if (blocs.some((b) => b.exerciceId === id)) return
-    setBlocs([...blocs, { exerciceId: id, series: [{ poids: '', reps: '' }] }])
-  }
-
-  function majSerie(iBloc: number, iSerie: number, champ: 'poids' | 'reps', v: string) {
-    setBlocs(
-      blocs.map((b, i) =>
-        i !== iBloc
-          ? b
-          : {
-              ...b,
-              series: b.series.map((s, j) =>
-                j === iSerie ? { ...s, [champ]: v } : s
-              ),
-            }
-      )
-    )
-  }
-
-  const disponibles = exercices.filter(
-    (e) => !blocs.some((b) => b.exerciceId === e.id)
-  )
-
+  const series = seance.blocs.reduce((n, b) => n + b.series.length, 0)
   return (
     <div className="flex flex-col gap-5">
-      {/* Choix du jour */}
-      <div>
-        <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
-          Quel jour ?
-        </span>
-        <div className="flex flex-col gap-2">
-          {jours.map((j) => {
-            const prise = seances.some((s) => s.date === j.iso)
-            return (
-              <button
-                key={j.iso}
-                type="button"
-                onClick={() => changerJour(j.iso)}
-                aria-pressed={date === j.iso}
-                className={`flex items-center justify-between rounded-bloc border px-4 py-3
-                  text-left text-sm transition-colors ${
-                    date === j.iso
-                      ? 'border-accent bg-accent/10'
-                      : 'border-bordure bg-verre hover:bg-verre-fort'
-                  }`}
-              >
-                <span className="font-semibold">{j.nom}</span>
-                <span className="font-mono text-[10.5px] text-encre-douce">
-                  {prise ? 'séance existante · modifier' : 'aucune séance'}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-        <p className="mt-2 font-mono text-[10.5px] leading-relaxed text-encre-douce">
-          Une seule séance par jour. Choisir un jour déjà pris remplace son
-          contenu.
-        </p>
+      <div className="grid grid-cols-3 gap-2">
+        <Chiffre valeur={formaterTonnage(volumeSeance(seance))} unite="kg" libelle="Tonnage" />
+        <Chiffre valeur={String(series)} unite="" libelle="Séries" />
+        <Chiffre
+          valeur={seance.dureeSec ? String(Math.round(seance.dureeSec / 60)) : '—'}
+          unite={seance.dureeSec ? 'min' : ''}
+          libelle="Durée"
+        />
       </div>
 
-      {/* Exercices de la séance */}
-      {blocs.map((bloc, iBloc) => {
-        const exo = exercices.find((e) => e.id === bloc.exerciceId)
-        const derniere = dernierPassage(seances, bloc.exerciceId, date)
+      <ul className="flex flex-col gap-3">
+        {seance.blocs.map((b) => (
+          <li key={b.exerciceId}>
+            <p className="text-[17px] font-semibold">{nomExo(b.exerciceId)}</p>
+            <p className="mt-0.5 font-mono text-[14px] text-encre-douce">
+              {b.series.map((s) => `${s.poids}×${s.reps}`).join('  ·  ')}
+            </p>
+          </li>
+        ))}
+      </ul>
 
-        return (
-          <div key={bloc.exerciceId} className="rounded-bloc border border-bordure p-4">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="font-semibold">{exo?.nom}</p>
-              <button
-                type="button"
-                onClick={() => setBlocs(blocs.filter((_, i) => i !== iBloc))}
-                aria-label={`Retirer ${exo?.nom}`}
-                className="text-xs text-encre-douce transition-colors hover:text-accent"
-              >
-                ✕
-              </button>
-            </div>
-
-            {derniere && (
-              <p className="mb-3 font-mono text-[10.5px] text-accent-2">
-                La dernière fois :{' '}
-                {derniere.map((s) => `${s.poids}×${s.reps}`).join(', ')}
-              </p>
-            )}
-
-            <div className="flex flex-col gap-2">
-              {bloc.series.map((serie, iSerie) => (
-                <div key={iSerie} className="flex items-center gap-2">
-                  <span className="w-6 shrink-0 font-mono text-[10.5px] text-encre-douce">
-                    #{iSerie + 1}
-                  </span>
-                  <input
-                    type="number"
-                    step="0.5"
-                    inputMode="decimal"
-                    value={serie.poids}
-                    onChange={(e) => majSerie(iBloc, iSerie, 'poids', e.target.value)}
-                    placeholder={
-                      derniere?.[iSerie]
-                        ? String(derniere[iSerie].poids)
-                        : (derniere?.at(-1)?.poids.toString() ?? 'kg')
-                    }
-                    aria-label={`Poids série ${iSerie + 1}`}
-                    className="min-w-0 flex-1 rounded-bloc border border-bordure bg-fond
-                               px-3 py-2.5 text-center font-display text-xl
-                               focus:border-accent focus:outline-none"
-                  />
-                  <span className="font-mono text-xs text-encre-douce">×</span>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={serie.reps}
-                    onChange={(e) => majSerie(iBloc, iSerie, 'reps', e.target.value)}
-                    placeholder={
-                      derniere?.[iSerie]
-                        ? String(derniere[iSerie].reps)
-                        : (derniere?.at(-1)?.reps.toString() ?? 'reps')
-                    }
-                    aria-label={`Répétitions série ${iSerie + 1}`}
-                    className="min-w-0 flex-1 rounded-bloc border border-bordure bg-fond
-                               px-3 py-2.5 text-center font-display text-xl
-                               focus:border-accent focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setBlocs(
-                        blocs.map((b, i) =>
-                          i !== iBloc
-                            ? b
-                            : {
-                                ...b,
-                                series:
-                                  b.series.length > 1
-                                    ? b.series.filter((_, j) => j !== iSerie)
-                                    : [{ poids: '', reps: '' }],
-                              }
-                        )
-                      )
-                    }
-                    aria-label={`Supprimer la série ${iSerie + 1}`}
-                    className="shrink-0 px-1 text-xs text-encre-douce transition-colors hover:text-accent"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                setBlocs(
-                  blocs.map((b, i) =>
-                    i !== iBloc
-                      ? b
-                      : {
-                          ...b,
-                          series: [
-                            ...b.series,
-                            b.series[b.series.length - 1] ?? { poids: '', reps: '' },
-                          ],
-                        }
-                  )
-                )
-              }
-              className="mt-3 rounded-bloc border border-bordure bg-verre px-4 py-2
-                         text-xs font-semibold text-encre-douce transition-colors
-                         hover:text-encre"
-            >
-              + Ajouter une série
-            </button>
-          </div>
-        )
-      })}
-
-      {/* Ajout d'un exercice */}
-      {disponibles.length > 0 && (
-        <div>
-          <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
-            {blocs.length === 0 ? 'Choisis un exercice' : 'Ajouter un exercice'}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {disponibles.map((e) => (
-              <button
-                key={e.id}
-                type="button"
-                onClick={() => ajouterExercice(e.id)}
-                className="rounded-bloc border border-bordure bg-verre px-4 py-2
-                           text-xs font-semibold text-encre-douce transition-colors
-                           hover:border-accent hover:text-encre"
-              >
-                {e.nom}
-              </button>
-            ))}
-          </div>
-        </div>
+      {seance.note && (
+        <p className="rounded-bloc bg-verre px-4 py-3 text-[15px] leading-relaxed text-encre-douce">
+          {seance.note}
+        </p>
       )}
 
-      {/* Note */}
-      <label className="block">
-        <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
-          Note de séance
-        </span>
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-          maxLength={280}
-          placeholder="ex : jambes lourdes mais PR au squat"
-          className="w-full resize-y rounded-bloc border border-bordure bg-verre
-                     px-4 py-3 text-sm focus:border-accent focus:outline-none"
-        />
-      </label>
-
-      <Bouton
-        type="button"
-        disabled={enCours || blocs.length === 0}
-        onClick={() =>
-          onEnregistrer(
-            date,
-            blocs.map((b) => ({
-              exerciceId: b.exerciceId,
-              series: b.series.map((s) => ({
-                poids: parseFloat(s.poids),
-                reps: parseInt(s.reps, 10),
-              })),
-            })),
-            note.trim() || null
-          )
-        }
-      >
-        {enCours
-          ? 'Enregistrement…'
-          : existante
-            ? 'Mettre à jour la séance'
-            : 'Enregistrer la séance'}
-      </Bouton>
+      <div className="flex flex-col gap-2">
+        <Bouton type="button" onClick={onModifier} disabled={enCours}>
+          Modifier
+        </Bouton>
+        <div className="grid grid-cols-2 gap-2">
+          <Bouton variante="discret" type="button" onClick={onExporter}>
+            Exporter
+          </Bouton>
+          <Bouton variante="discret" type="button" onClick={onSupprimer} disabled={enCours}>
+            Supprimer
+          </Bouton>
+        </div>
+      </div>
     </div>
+  )
+}
+
+function Chiffre({ valeur, unite, libelle }: { valeur: string; unite: string; libelle: string }) {
+  return (
+    <div className="rounded-bloc bg-verre px-3 py-3">
+      <p className="text-[13px] text-encre-douce">{libelle}</p>
+      <p className="mt-1">
+        <span className="font-display text-[30px] leading-none">{valeur}</span>
+        {unite && <span className="ml-1 font-mono text-[12px] text-encre-douce">{unite}</span>}
+      </p>
+    </div>
+  )
+}
+
+function TuileDate({ iso, cardio }: { iso: string; cardio: boolean }) {
+  const d = new Date(iso + 'T12:00:00')
+  return (
+    <span
+      className={`flex h-[52px] w-[52px] shrink-0 flex-col items-center justify-center rounded-bloc ${
+        cardio ? 'bg-accent-2/15 text-accent-2' : 'bg-verre'
+      }`}
+    >
+      <span className="font-display text-[24px] leading-none">{d.getDate()}</span>
+      <span className={`font-mono text-[10px] uppercase ${cardio ? '' : 'text-encre-douce'}`}>
+        {d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '')}
+      </span>
+    </span>
   )
 }
 
 /* ---- Utilitaires ---- */
 
-function joursDisponibles() {
-  return Array.from({ length: JOURS_SAISIE }, (_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const nom =
-      i === 0
-        ? "Aujourd'hui"
-        : i === 1
-          ? 'Hier'
-          : d.toLocaleDateString('fr-FR', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })
-    return { iso, nom }
+function nomsCourts(s: SeanceComplete, nomExo: (id: string) => string) {
+  return s.blocs.map((b) => nomExo(b.exerciceId)).join(', ')
+}
+
+function formaterTonnage(kg: number) {
+  return Math.round(kg).toLocaleString('fr-FR')
+}
+
+function dateLongue(iso: string) {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   })
-}
-
-/** Reprend le contenu d'une séance existante, pour la modifier. */
-function reprendre(seances: SeanceComplete[], date: string): BlocEnCours[] {
-  const s = seances.find((x) => x.date === date)
-  if (!s) return []
-  return s.blocs.map((b) => ({
-    exerciceId: b.exerciceId,
-    series: b.series.map((serie) => ({
-      poids: String(serie.poids),
-      reps: String(serie.reps),
-    })),
-  }))
-}
-
-function noteDe(seances: SeanceComplete[], date: string): string {
-  return seances.find((x) => x.date === date)?.note ?? ''
-}
-
-/** Séries du dernier passage sur cet exercice, hors jour choisi. */
-function dernierPassage(
-  seances: SeanceComplete[],
-  exerciceId: string,
-  sauf: string
-) {
-  const passe = seances
-    .filter((s) => s.date !== sauf)
-    .sort((a, b) => b.date.localeCompare(a.date))
-
-  for (const s of passe) {
-    const bloc = s.blocs.find((b) => b.exerciceId === exerciceId)
-    if (bloc && bloc.series.length) return bloc.series
-  }
-  return null
 }

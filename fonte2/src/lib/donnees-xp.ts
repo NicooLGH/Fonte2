@@ -14,7 +14,7 @@ import { lireBadge } from './defis'
    répondre : on lit donc toujours un chiffre à jour.
    ============================================================ */
 
-const SOURCES: SourceXP[] = ['serie', 'seance', 'record', 'releve', 'semaine', 'badge', 'defi']
+const SOURCES: SourceXP[] = ['serie', 'seance', 'cardio', 'record', 'releve', 'semaine', 'badge', 'defi']
 
 type Brut = Record<string, unknown>
 

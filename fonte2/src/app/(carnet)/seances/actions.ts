@@ -7,6 +7,7 @@ import { semaineDe, type GainXP } from '@/lib/xp'
 import { chargerMonXP, chargerXPSeance } from '@/lib/donnees-xp'
 import { aujourdhui } from '@/lib/semaine'
 import type { Groupe } from '@/types/database'
+import { estActivite, DUREE_MAX_MIN, DISTANCE_MAX_KM, JOURS_SAISIE } from '@/lib/cardio'
 
 export type Reponse = { erreur?: string; succes?: string }
 
@@ -116,25 +117,50 @@ export type BlocSaisi = {
 }
 
 /**
- * Enregistre la séance d'une date donnée.
+ * Une date acceptable pour une saisie après coup : au format
+ * `2026-10-07`, pas dans le futur, pas plus vieille qu'une
+ * semaine. Un jour de marge vers l'avant couvre le décalage
+ * horaire entre le téléphone et le serveur.
+ */
+function dateSaisieValide(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
+  const t = Date.parse(iso + 'T12:00:00Z')
+  if (Number.isNaN(t)) return false
+  const auj = Date.parse(aujourdhui() + 'T12:00:00Z')
+  const ecart = (auj - t) / 86400000
+  return ecart >= -1 && ecart <= JOURS_SAISIE - 1
+}
+
+/**
+ * Enregistre une séance saisie après coup.
  *
- * La base impose une séance par jour et par personne : si elle
- * existe déjà, on remplace son contenu au lieu d'en créer une
- * seconde.
+ * 3.0 : plusieurs séances par jour sont possibles. Sans
+ * `seanceId`, c'est une nouvelle séance ; avec, on remplace le
+ * contenu de celle-là (modification). La base ne compte l'XP de
+ * séance qu'une fois par jour.
  */
 export async function enregistrerSeance(
   date: string,
   blocs: BlocSaisi[],
-  note: string | null
+  note: string | null,
+  seanceId: string | null = null
 ): Promise<Reponse> {
   const { supabase, user } = await moi()
   if (!user) return { erreur: 'Session expirée.' }
+  if (!seanceId && !dateSaisieValide(date))
+    return { erreur: 'Choisis un jour de la semaine écoulée.' }
 
   const propres = blocs
     .map((b) => ({
       ...b,
       series: b.series.filter(
-        (s) => Number.isFinite(s.poids) && Number.isFinite(s.reps) && s.reps > 0
+        (s) =>
+          Number.isFinite(s.poids) &&
+          Number.isFinite(s.reps) &&
+          s.reps > 0 &&
+          s.reps <= 1000 &&
+          s.poids >= 0 &&
+          s.poids <= 2000
       ),
     }))
     .filter((b) => b.series.length > 0)
@@ -143,25 +169,23 @@ export async function enregistrerSeance(
     return { erreur: 'Renseigne au moins une série complète.' }
 
   const xpAvant = await chargerMonXP()
+  const notePropre = note?.trim().slice(0, 280) || null
 
-  const { data: existante } = await supabase
-    .from('seances')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('date', date)
-    .maybeSingle()
+  let id: string
 
-  let seanceId: string
-
-  if (existante) {
-    seanceId = existante.id as string
-    const { error } = await supabase
+  if (seanceId) {
+    // Modification : la séance doit être la sienne (la règle
+    // d'accès de la base le garantit aussi).
+    const { data, error } = await supabase
       .from('seances')
-      .update({ note })
+      .update({ note: notePropre })
       .eq('id', seanceId)
-    if (error) return { erreur: messageErreur(error.message) }
-
-    await supabase.from('series').delete().eq('seance_id', seanceId)
+      .eq('user_id', user.id)
+      .select('id')
+      .maybeSingle()
+    if (error || !data) return { erreur: messageErreur(error?.message) }
+    id = data.id as string
+    await supabase.from('series').delete().eq('seance_id', id)
   } else {
     const { data, error } = await supabase
       .from('seances')
@@ -169,19 +193,19 @@ export async function enregistrerSeance(
         user_id: user.id,
         date,
         week_key: semaineDe(date),
-        note,
+        note: notePropre,
       })
       .select('id')
       .single()
 
     if (error || !data) return { erreur: messageErreur(error?.message) }
-    seanceId = data.id as string
+    id = data.id as string
   }
 
   const lignes = propres.flatMap((bloc) =>
     bloc.series.map((serie, i) => ({
       user_id: user.id,
-      seance_id: seanceId,
+      seance_id: id,
       exercice_id: bloc.exerciceId,
       position: i + 1,
       poids: serie.poids,
@@ -198,7 +222,7 @@ export async function enregistrerSeance(
   const xpApres = await chargerMonXP()
   return {
     succes:
-      (existante ? 'Séance mise à jour' : 'Séance enregistrée') +
+      (seanceId ? 'Séance mise à jour' : 'Séance enregistrée') +
       mentionXP(xpAvant, xpApres),
   }
 }
@@ -253,7 +277,7 @@ export async function supprimerModele(id: string): Promise<Reponse> {
 /**
  * Enregistre une séance faite en direct.
  *
- * Même chemin que la saisie classique, avec la durée en plus.
+ * Même chemin que la saisie, avec la durée en plus.
  * Elle n'est renseignée que pour le mode direct : une séance
  * saisie après coup n'a pas de durée fiable, et mieux vaut ne
  * rien afficher qu'un chiffre inventé.
@@ -284,39 +308,24 @@ export async function enregistrerSeanceLive(
   const xpAvant = await chargerMonXP()
   const nomPropre = nom?.trim().slice(0, 40) || null
 
-  const { data: existante } = await supabase
+  // 3.0 : une nouvelle séance à chaque fois, même s'il y en a
+  // déjà une aujourd'hui. L'XP de séance ne compte qu'une fois
+  // par jour, côté base.
+  const { data, error: erreurSeance } = await supabase
     .from('seances')
+    .insert({
+      user_id: user.id,
+      date,
+      week_key: semaineDe(date),
+      note: note?.trim().slice(0, 280) || null,
+      duree_sec: Math.max(0, Math.min(Math.round(dureeSec), 86400)),
+      nom: nomPropre,
+    })
     .select('id')
-    .eq('user_id', user.id)
-    .eq('date', date)
-    .maybeSingle()
+    .single()
 
-  let seanceId: string
-
-  if (existante) {
-    seanceId = existante.id as string
-    await supabase
-      .from('seances')
-      .update({ note, duree_sec: dureeSec, nom: nomPropre })
-      .eq('id', seanceId)
-    await supabase.from('series').delete().eq('seance_id', seanceId)
-  } else {
-    const { data, error } = await supabase
-      .from('seances')
-      .insert({
-        user_id: user.id,
-        date,
-        week_key: semaineDe(date),
-        note,
-        duree_sec: dureeSec,
-        nom: nomPropre,
-      })
-      .select('id')
-      .single()
-
-    if (error || !data) return { erreur: messageErreur(error?.message) }
-    seanceId = data.id as string
-  }
+  if (erreurSeance || !data) return { erreur: messageErreur(erreurSeance?.message) }
+  const seanceId = data.id as string
 
   const lignes = propres.flatMap((bloc) =>
     bloc.series.map((serie, i) => ({
@@ -343,4 +352,125 @@ export async function enregistrerSeanceLive(
     succes: 'Séance enregistrée',
     xp: xp ? { avant: xpAvant, apres: xp.total, gains: xp.gains } : undefined,
   }
+}
+
+/* ============================================================
+   Cardio
+   ============================================================ */
+
+export async function enregistrerCardio(entree: {
+  date: string
+  activite: string
+  dureeMin: number
+  distanceKm: number | null
+  note: string | null
+}): Promise<Reponse> {
+  const { supabase, user } = await moi()
+  if (!user) return { erreur: 'Session expirée.' }
+
+  if (!dateSaisieValide(entree.date))
+    return { erreur: 'Choisis un jour de la semaine écoulée.' }
+  if (!estActivite(entree.activite)) return { erreur: 'Choisis une activité.' }
+
+  const duree = Math.round(Number(entree.dureeMin))
+  if (!Number.isFinite(duree) || duree < 1 || duree > DUREE_MAX_MIN)
+    return { erreur: 'Indique une durée en minutes.' }
+
+  let distance: number | null = null
+  if (entree.distanceKm != null && String(entree.distanceKm) !== '') {
+    distance = Math.round(Number(entree.distanceKm) * 100) / 100
+    if (!Number.isFinite(distance) || distance <= 0 || distance > DISTANCE_MAX_KM)
+      return { erreur: 'La distance ne semble pas juste.' }
+  }
+
+  const xpAvant = await chargerMonXP()
+
+  const { error } = await supabase.from('cardio').insert({
+    user_id: user.id,
+    date: entree.date,
+    activite: entree.activite,
+    duree_min: duree,
+    distance_km: distance,
+    note: entree.note?.trim().slice(0, 280) || null,
+  })
+  if (error) return { erreur: messageErreur(error.message) }
+
+  revalidatePath('/seances')
+  revalidatePath('/')
+  revalidatePath('/profil')
+  const xpApres = await chargerMonXP()
+  return { succes: 'Cardio enregistré' + mentionXP(xpAvant, xpApres) }
+}
+
+export async function supprimerCardio(id: string): Promise<Reponse> {
+  const { supabase, user } = await moi()
+  if (!user) return { erreur: 'Session expirée.' }
+
+  const { error } = await supabase.from('cardio').delete().eq('id', id).eq('user_id', user.id)
+  if (error) return { erreur: messageErreur(error.message) }
+
+  revalidatePath('/seances')
+  revalidatePath('/')
+  revalidatePath('/profil')
+  return { succes: 'Cardio supprimé' }
+}
+
+/* ============================================================
+   Planning de la semaine
+   ============================================================ */
+
+/**
+ * Ce qu'on prévoit pour un jour. `null` retire le jour du
+ * planning (rien de prévu).
+ */
+export async function planifierJour(
+  jour: number,
+  choix:
+    | { type: 'modele'; modeleId: string }
+    | { type: 'cardio'; activite: string }
+    | { type: 'repos' }
+    | null
+): Promise<Reponse> {
+  const { supabase, user } = await moi()
+  if (!user) return { erreur: 'Session expirée.' }
+  if (!Number.isInteger(jour) || jour < 1 || jour > 7) return { erreur: 'Jour inconnu.' }
+
+  if (choix === null) {
+    const { error } = await supabase
+      .from('planning')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('jour', jour)
+    if (error) return { erreur: messageErreur(error.message) }
+  } else {
+    if (choix.type === 'cardio' && !estActivite(choix.activite))
+      return { erreur: 'Choisis une activité.' }
+
+    if (choix.type === 'modele') {
+      // Le modèle doit être l'un des siens.
+      const { data } = await supabase
+        .from('modeles')
+        .select('id')
+        .eq('id', choix.modeleId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (!data) return { erreur: 'Modèle introuvable.' }
+    }
+
+    const { error } = await supabase.from('planning').upsert(
+      {
+        user_id: user.id,
+        jour,
+        type: choix.type,
+        modele_id: choix.type === 'modele' ? choix.modeleId : null,
+        activite: choix.type === 'cardio' ? choix.activite : null,
+      },
+      { onConflict: 'user_id,jour' }
+    )
+    if (error) return { erreur: messageErreur(error.message) }
+  }
+
+  revalidatePath('/seances')
+  revalidatePath('/')
+  return { succes: 'Planning mis à jour' }
 }

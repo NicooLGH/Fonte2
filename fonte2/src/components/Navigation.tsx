@@ -16,6 +16,7 @@ import {
   IconeAdmin,
   IconeLecture,
   IconeCrayon,
+  IconeCardio,
 } from '@/components/Icones'
 
 /* ============================================================
@@ -262,13 +263,19 @@ function ActionRapide({
               ? 'Le carnet te guide exercice par exercice'
               : 'Nécessaire pour lancer une séance en direct'
           }
-          onClick={() => aller(aDesModeles ? '/live' : '/seances')}
+          onClick={() => aller(aDesModeles ? '/live' : '/seances?onglet=modeles')}
         />
         <Choix
           Ico={IconeCrayon}
           titre="Saisir une séance"
           sous="Sans mode direct, après coup"
-          onClick={() => aller('/seances')}
+          onClick={() => aller('/seances?ajout=muscu')}
+        />
+        <Choix
+          Ico={IconeCardio}
+          titre="Ajouter du cardio"
+          sous="Course, vélo, rameur… +15 XP par jour"
+          onClick={() => aller('/seances?ajout=cardio')}
         />
         <Choix
           Ico={IconeSuivi}

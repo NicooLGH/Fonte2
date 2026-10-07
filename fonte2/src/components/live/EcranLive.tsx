@@ -42,23 +42,28 @@ import type { GainXP } from '@/lib/xp'
    retard dès que le navigateur suspend la page.
    ============================================================ */
 
-type Etape = 'choix' | 'reprise' | 'preparation' | 'seance'
+type Etape = 'choix' | 'reprise' | 'seance'
 
 export function EcranLive({
   userId,
   modeles,
   exercices,
   seances,
+  prevuId = null,
 }: {
   userId: string
   modeles: Modele[]
   exercices: Exercice[]
   seances: SeanceComplete[]
+  /** Modèle à présélectionner : celui du planning, ou celui de l'adresse. */
+  prevuId?: string | null
 }) {
   const router = useRouter()
   const [live, setLive] = useState<SeanceLive | null>(null)
   const [etape, setEtape] = useState<Etape>('choix')
-  const [modeleChoisi, setModeleChoisi] = useState<Modele | null>(null)
+  const [modeleChoisi, setModeleChoisi] = useState<Modele | null>(
+    () => modeles.find((m) => m.id === prevuId) ?? null
+  )
   const [minutes, setMinutes] = useState(0)
   const [maintenant, setMaintenant] = useState(Date.now())
   const [erreur, setErreur] = useState<string | null>(null)
@@ -107,7 +112,7 @@ export function EcranLive({
 
   /* ---- Chrono ---- */
   useEffect(() => {
-    if ((etape !== 'seance' && etape !== 'preparation') || live?.fin) return
+    if (etape !== 'seance' || live?.fin) return
     const t = setInterval(() => setMaintenant(Date.now()), 1000)
     return () => clearInterval(t)
   }, [etape, live?.fin])
@@ -129,7 +134,7 @@ export function EcranLive({
   const nomExo = (id: string) => exercices.find((e) => e.id === id)?.nom ?? '—'
 
   /* ---- Démarrage ---- */
-  function choisirModele(modele: Modele) {
+  function lancer(modele: Modele) {
     const valides = modele.entrees.filter((e) =>
       exercices.some((x) => x.id === e.id)
     )
@@ -138,15 +143,6 @@ export function EcranLive({
       return
     }
     setErreur(null)
-    setModeleChoisi(modele)
-    setEtape('preparation')
-  }
-
-  function lancer() {
-    const modele = modeleChoisi!
-    const valides = modele.entrees.filter((e) =>
-      exercices.some((x) => x.id === e.id)
-    )
 
     localStorage.setItem(CLE_ECHAUFFEMENT, String(minutes))
 
@@ -226,118 +222,134 @@ export function EcranLive({
     )
   }
 
-  if (etape === 'preparation' && modeleChoisi) {
-    return (
-      <Cadre titre={modeleChoisi.nom}>
-        <p className="mb-5 text-sm leading-relaxed text-encre-douce">
-          {modeleChoisi.entrees.map((e) => nomExo(e.id)).join(' · ')}
-        </p>
-
-        <p className="mb-3 font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
-          Échauffement
-        </p>
-        <div className="mb-2 flex flex-wrap gap-2">
-          {DUREES_ECHAUFFEMENT.map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMinutes(m)}
-              aria-pressed={minutes === m}
-              className={`rounded-bloc border px-4 py-2 text-sm font-semibold
-                transition-colors ${
-                  minutes === m
-                    ? 'border-accent bg-accent/15 text-accent'
-                    : 'border-bordure bg-verre text-encre-douce hover:text-encre'
-                }`}
-            >
-              {m === 0 ? 'Aucun' : `${m} min`}
-            </button>
-          ))}
-        </div>
-        <p className="mb-6 font-mono text-[10.5px] leading-relaxed text-encre-douce">
-          Un décompte plein écran avant de commencer. Ce choix est retenu pour
-          tes prochaines séances.
-        </p>
-
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={lancer}
-            className="rounded-bloc bg-accent px-6 py-3.5 font-semibold text-white
-                       transition-colors hover:bg-accent-clair"
-          >
-            Commencer
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setModeleChoisi(null)
-              setEtape('choix')
-            }}
-            className="rounded-bloc border border-bordure bg-verre px-6 py-3
-                       text-sm font-semibold text-encre-douce hover:text-encre"
-          >
-            Changer de modèle
-          </button>
-        </div>
-      </Cadre>
-    )
-  }
-
   if (etape === 'choix' || !live) {
+    if (modeles.length === 0) {
+      return (
+        <Cadre titre="Démarrer">
+          <p className="mb-6 text-[16px] leading-relaxed text-encre-douce">
+            Tu n&apos;as pas encore de modèle. Crée-en un dans l&apos;onglet Modèles :
+            c&apos;est lui qui te guidera en salle.
+          </p>
+          <BoutonPlein onClick={() => router.push('/seances?onglet=modeles')}>
+            Créer un modèle
+          </BoutonPlein>
+        </Cadre>
+      )
+    }
+
+    const choisi = modeleChoisi ?? modeles[0]
+    const prevu = modeles.find((m) => m.id === prevuId) ?? null
+    const autres = modeles.filter((m) => m.id !== prevu?.id)
+
     return (
-      <Cadre titre="Démarrer une séance">
+      <main className="securise mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-4 pb-7">
+        <div className="flex h-11 items-center justify-between">
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            aria-label="Fermer"
+            className="-ml-2 flex h-11 w-11 items-center justify-center text-encre"
+          >
+            <IconeCroix className="h-[22px] w-[22px]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/seances?ajout=muscu')}
+            className="px-0.5 py-2.5 text-[15px] font-semibold text-encre-douce hover:text-encre"
+          >
+            Saisir après coup
+          </button>
+        </div>
+
+        <h1 className="mx-0.5 text-[54px] leading-[0.85]">Démarrer</h1>
+
         {erreur && <Alerte>{erreur}</Alerte>}
 
-        {modeles.length === 0 ? (
-          <>
-            <p className="mb-6 text-sm leading-relaxed text-encre-douce">
-              Tu n&apos;as pas encore de modèle. Crée-en un depuis la page
-              Séances : c&apos;est lui qui te guidera en salle.
+        {prevu && (
+          <button
+            type="button"
+            aria-pressed={choisi.id === prevu.id}
+            onClick={() => setModeleChoisi(prevu)}
+            className={`appui flex flex-col gap-2.5 rounded-carte bg-verre p-[18px] text-left ${
+              choisi.id === prevu.id ? 'ring-2 ring-accent ring-inset' : ''
+            }`}
+          >
+            <span className="flex w-full items-center justify-between">
+              <span className="font-mono text-[12px] tracking-[0.08em] text-accent-clair uppercase">
+                Prévu aujourd&apos;hui
+              </span>
+              <Pastille choisie={choisi.id === prevu.id} />
+            </span>
+            <span className="font-display text-[44px] leading-[0.85]">{prevu.nom}</span>
+            <span className="text-[15px] leading-snug text-encre-douce">
+              {prevu.entrees.map((e) => nomExo(e.id)).join(' · ')}
+            </span>
+          </button>
+        )}
+
+        {autres.length > 0 && (
+          <div className="flex flex-col">
+            <p className="px-0.5 pt-1 pb-1.5 text-[17px] font-bold">
+              {prevu ? 'Mes modèles' : 'Choisis ton modèle'}
             </p>
-            <button
-              type="button"
-              onClick={() => router.push('/seances')}
-              className="w-full rounded-bloc bg-accent px-6 py-3.5 font-semibold
-                         text-white transition-colors hover:bg-accent-clair"
-            >
-              Créer un modèle
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="mb-5 text-sm leading-relaxed text-encre-douce">
-              Choisis ton modèle. Le carnet te guidera exercice par exercice, en
-              te rappelant tes charges de la dernière fois.
-            </p>
-            <div className="flex flex-col gap-3">
-              {modeles.map((m) => (
+            {autres.map((m) => {
+              const actif = choisi.id === m.id
+              const derniere = seances.find((s) => s.nom === m.nom)
+              return (
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => choisirModele(m)}
-                  className="rounded-bloc border border-bordure bg-verre p-4 text-left
-                             transition-colors hover:border-accent"
+                  aria-pressed={actif}
+                  onClick={() => setModeleChoisi(m)}
+                  className="appui flex min-h-16 items-center gap-3.5 px-0.5 text-left"
                 >
-                  <p className="font-semibold">{m.nom}</p>
-                  <p className="mt-1 font-mono text-[11px] text-encre-douce">
-                    {m.entrees.map((e) => nomExo(e.id)).join(' · ')}
-                  </p>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="truncate text-[17px] font-semibold">{m.nom}</span>
+                    <span className="truncate text-[14px] text-encre-douce">
+                      {m.entrees.length} exo{m.entrees.length > 1 ? 's' : ''}
+                      {derniere ? ` · ${ilYA(derniere.date)}` : ''}
+                    </span>
+                  </span>
+                  <Pastille choisie={actif} />
                 </button>
-              ))}
-            </div>
-          </>
+              )
+            })}
+          </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => router.push('/seances')}
-          className="mt-6 w-full text-center font-mono text-xs text-encre-douce
-                     underline underline-offset-4"
-        >
-          Retour au carnet
-        </button>
-      </Cadre>
+        <div className="flex flex-col gap-2.5">
+          <p className="px-0.5 text-[17px] font-bold">Échauffement</p>
+          <div className="grid grid-cols-3 gap-2">
+            {DUREES_ECHAUFFEMENT.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMinutes(m)}
+                aria-pressed={minutes === m}
+                className={`appui h-12 rounded-bloc text-[15px] transition-colors ${
+                  minutes === m
+                    ? 'bg-encre font-semibold text-fond'
+                    : 'bg-verre text-encre-douce hover:text-encre'
+                }`}
+              >
+                {m === 0 ? 'Aucun' : `${m} min`}
+              </button>
+            ))}
+          </div>
+          <p className="px-0.5 text-[13px] leading-relaxed text-encre-douce">
+            Un décompte plein écran avant de commencer. Ce choix est retenu.
+          </p>
+        </div>
+
+        <div className="flex-1" />
+
+        <BoutonPlein onClick={() => lancer(choisi)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z" />
+          </svg>
+          Commencer · {choisi.nom}
+        </BoutonPlein>
+      </main>
     )
   }
 
@@ -1034,6 +1046,39 @@ function Cadre({ titre, children }: { titre: string; children: React.ReactNode }
       </div>
     </main>
   )
+}
+
+function BoutonPlein({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="appui flex h-[58px] w-full items-center justify-center gap-2 rounded-carte bg-accent
+                 px-5 text-[17px] font-bold text-white transition-colors hover:bg-accent-clair"
+    >
+      <span className="flex min-w-0 items-center gap-2 truncate">{children}</span>
+    </button>
+  )
+}
+
+function Pastille({ choisie }: { choisie: boolean }) {
+  return choisie ? (
+    <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-accent text-white">
+      <IconeCoche className="h-[15px] w-[15px]" />
+    </span>
+  ) : (
+    <span className="h-[26px] w-[26px] shrink-0 rounded-full border-[1.5px] border-encre/20" />
+  )
+}
+
+/** « il y a 2 j », « hier », « aujourd'hui ». */
+function ilYA(iso: string) {
+  const jours = Math.round(
+    (new Date(new Date().toDateString()).getTime() - new Date(iso + 'T00:00:00').getTime()) / 86400000
+  )
+  if (jours <= 0) return "aujourd'hui"
+  if (jours === 1) return 'hier'
+  return `il y a ${jours} j`
 }
 
 function Alerte({ children }: { children: React.ReactNode }) {

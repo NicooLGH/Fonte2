@@ -7,6 +7,8 @@ import type { Exercice, SeanceComplete } from './carnet'
 import type { ReleveComplet, Objectifs, CleSuivi } from './suivi'
 import { lireEntrees, type Modele } from './live'
 import type { Rappel } from './rappel'
+import { estActivite, type Cardio } from './cardio'
+import type { JourPlanning, Jour, TypePlanning } from './planning'
 
 /* ============================================================
    Lecture du carnet — serveur uniquement
@@ -46,8 +48,9 @@ export async function chargerSeances(): Promise<SeanceComplete[]> {
 
   const { data: lignesSeances } = await supabase
     .from('seances')
-    .select('id, date, week_key, note, duree_sec')
+    .select('id, date, week_key, note, duree_sec, nom, created_at')
     .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
 
   const seances = lignesSeances ?? []
   if (seances.length === 0) return []
@@ -84,6 +87,7 @@ export async function chargerSeances(): Promise<SeanceComplete[]> {
     semaine: s.week_key as string,
     note: (s.note as string | null) ?? null,
     dureeSec: (s.duree_sec as number | null) ?? null,
+    nom: (s.nom as string | null) ?? null,
     blocs: [...(parSeance.get(s.id as string) ?? new Map())].map(
       ([exerciceId, series]) => ({ exerciceId, series })
     ),
@@ -215,4 +219,49 @@ export async function chargerRappel(): Promise<Rappel> {
     jour: data.day === null || data.day === undefined ? null : Number(data.day),
     semaineEcartee: (data.dismissed_week as string | null) ?? null,
   }
+}
+
+/* ============================================================
+   Cardio et planning (3.0)
+   ============================================================ */
+
+/** Le cardio, du plus récent au plus ancien. */
+export async function chargerCardio(): Promise<Cardio[]> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase
+    .from('cardio')
+    .select('id, date, activite, duree_min, distance_km, note')
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  // Table absente (SQL pas encore passé) : on fait comme s'il
+  // n'y avait rien, plutôt que de casser la page.
+  if (error) return []
+
+  return (data ?? []).map((c) => ({
+    id: c.id as string,
+    date: c.date as string,
+    activite: estActivite(c.activite) ? c.activite : 'autre',
+    dureeMin: Number(c.duree_min),
+    distanceKm: c.distance_km == null ? null : Number(c.distance_km),
+    note: (c.note as string | null) ?? null,
+  }))
+}
+
+/** Le planning de la semaine : un jour sans ligne n'est pas prévu. */
+export async function chargerPlanning(): Promise<JourPlanning[]> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase
+    .from('planning')
+    .select('jour, type, modele_id, activite')
+    .order('jour')
+
+  if (error) return []
+
+  return (data ?? []).map((p) => ({
+    jour: Number(p.jour) as Jour,
+    type: p.type as TypePlanning,
+    modeleId: (p.modele_id as string | null) ?? null,
+    activite: estActivite(p.activite) ? p.activite : null,
+  }))
 }

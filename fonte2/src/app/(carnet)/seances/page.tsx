@@ -1,52 +1,65 @@
-import Link from 'next/link'
-import { chargerExercices, chargerSeances, chargerModeles } from '@/lib/donnees'
-import { Exercices } from '@/components/seances/Exercices'
-import { Modeles } from '@/components/seances/Modeles'
-import { Seances } from '@/components/seances/Seances'
+import {
+  chargerExercices,
+  chargerSeances,
+  chargerModeles,
+  chargerCardio,
+  chargerPlanning,
+} from '@/lib/donnees'
+import { EcranSeances, type CleOnglet } from '@/components/seances/EcranSeances'
 import { creerClientServeur } from '@/lib/supabase/server'
+import { aujourdhui } from '@/lib/semaine'
+import { jourDe, joursDeLaSemaine, type Jour } from '@/lib/planning'
 
-export default async function PageSeances() {
+const ONGLETS: CleOnglet[] = ['historique', 'semaine', 'modeles', 'exercices']
+
+export default async function PageSeances({
+  searchParams,
+}: {
+  searchParams: Promise<{ onglet?: string; ajout?: string }>
+}) {
+  const params = await searchParams
   const supabase = await creerClientServeur()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [exercices, seances, modeles, { data: profil }] = await Promise.all([
+  const [exercices, seances, modeles, cardio, planning, { data: profil }] = await Promise.all([
     chargerExercices(),
     chargerSeances(),
     chargerModeles(),
+    chargerCardio(),
+    chargerPlanning(),
     supabase.from('profiles').select('pseudo').eq('id', user!.id).maybeSingle(),
   ])
 
+  // Jours de la semaine en cours où quelque chose a été fait.
+  const semaine = new Set(joursDeLaSemaine(aujourdhui()))
+  const faits = [
+    ...new Set(
+      [...seances.map((s) => s.date), ...cardio.map((c) => c.date)]
+        .filter((d) => semaine.has(d))
+        .map(jourDe)
+    ),
+  ] as Jour[]
+
+  const onglet = ONGLETS.includes(params.onglet as CleOnglet)
+    ? (params.onglet as CleOnglet)
+    : 'historique'
+  const ajout = params.ajout === 'cardio' ? 'cardio' : params.ajout === 'muscu' ? 'muscu' : null
+
   return (
-    <div className="flex flex-col gap-6 py-4">
-      <header className="flex flex-wrap items-center justify-between gap-4
-                         border-b border-filet pb-5">
-        <h1 className="text-4xl sm:text-5xl">Séances</h1>
-
-        {modeles.length > 0 && (
-          <Link
-            href="/live"
-            className="shrink-0 rounded-bloc bg-accent px-5 py-2.5 text-sm
-                       font-semibold text-white transition-colors hover:bg-accent-clair"
-          >
-            Séance en direct
-          </Link>
-        )}
-      </header>
-
-      {/* Une seule colonne, quelle que soit la largeur.
-          La grille à trois colonnes tassait les modèles sur
-          téléphone et laissait des vides sur grand écran. */}
-      <div className="flex flex-col">
-        <Modeles modeles={modeles} exercices={exercices} />
-        <Seances
-          seances={seances}
-          exercices={exercices}
-          pseudo={(profil?.pseudo as string) ?? ''}
-        />
-        <Exercices exercices={exercices} />
-      </div>
-    </div>
+    <EcranSeances
+      /* Une nouvelle adresse (?ajout=cardio depuis l'accueil) repart de zéro. */
+      key={`${onglet}-${ajout ?? ''}`}
+      exercices={exercices}
+      seances={seances}
+      cardio={cardio}
+      modeles={modeles}
+      planning={planning}
+      faits={faits}
+      pseudo={(profil?.pseudo as string) ?? ''}
+      ongletInitial={onglet}
+      ajoutInitial={ajout}
+    />
   )
 }

@@ -30,7 +30,7 @@ export const BAREME = {
   serieSemainesPlafond: 100,
 } as const
 
-export type SourceXP = 'serie' | 'seance' | 'record' | 'releve' | 'semaine' | 'badge' | 'defi'
+export type SourceXP = 'serie' | 'seance' | 'cardio' | 'record' | 'releve' | 'semaine' | 'badge' | 'defi'
 
 /** Une ligne du journal. */
 export type GainXP = {

@@ -22,6 +22,8 @@ export type Exercice = {
 export type SeanceComplete = Seance & {
   note: string | null
   dureeSec: number | null
+  /** Nom du modèle utilisé en mode direct, s'il y en a un. */
+  nom?: string | null
 }
 
 export const GROUPES: { cle: Groupe; nom: string; ico: string }[] = [

@@ -69,6 +69,15 @@ export function IconeAnalyse(p: Props) {
   )
 }
 
+export function IconeCardio(p: Props) {
+  return (
+    <Svg {...p}>
+      <circle cx="14" cy="4" r="2" />
+      <path d="M6 21l3-6 3 2v5M9 15l1-5 4 1 3 3M10 10l-3 2" />
+    </Svg>
+  )
+}
+
 export function IconeAmis(p: Props) {
   return (
     <Svg {...p}>
