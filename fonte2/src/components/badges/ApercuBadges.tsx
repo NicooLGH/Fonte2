@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { Badge } from './Badge'
 import { BADGES, TOTAL_PALIERS, obtenus, type EtatBadge } from '@/lib/badges'
