@@ -18,7 +18,7 @@ export function Verrou() {
   return (
     <div className="flex flex-col gap-6 py-4">
       <header className="border-b border-filet pb-5">
-        <h1 className="text-4xl sm:text-5xl">Administration</h1>
+        <h1 className="titre-page">Administration</h1>
       </header>
 
       <form action={action} className="flex max-w-sm flex-col gap-5">

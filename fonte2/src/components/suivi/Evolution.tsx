@@ -119,7 +119,7 @@ function Trace({
     <div className="overflow-x-auto">
       <svg
         viewBox={`0 0 ${L} ${H}`}
-        className="w-full min-w-[320px]"
+        className="w-full"
         role="img"
         aria-label={`Évolution sur ${points.length} semaines, de ${Math.min(...valeurs)} à ${Math.max(...valeurs)} ${unite}`}
       >

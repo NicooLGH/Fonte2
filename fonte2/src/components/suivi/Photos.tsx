@@ -21,14 +21,18 @@ export function PhotoSemaine({
   userId,
   semaine,
   aUnePhoto,
+  releves,
 }: {
   userId: string
   semaine: string
   aUnePhoto: boolean
+  /** Pour comparer deux semaines. */
+  releves: ReleveComplet[]
 }) {
   const champ = useRef<HTMLInputElement>(null)
   const [presente, setPresente] = useState(aUnePhoto)
   const [ouverte, setOuverte] = useState(false)
+  const [comparer, setComparer] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
   const [envoi, setEnvoi] = useState(false)
@@ -62,9 +66,12 @@ export function PhotoSemaine({
         return
       }
       setPresente(false)
+      setOuverte(false)
       await marquerPhoto(semaine, false)
     })
   }
+
+  const nbPhotos = releves.filter((r) => r.aPhoto).length + (presente && !aUnePhoto ? 1 : 0)
 
   return (
     <div>
@@ -79,62 +86,80 @@ export function PhotoSemaine({
         }}
       />
 
-      {erreur && (
-        <p className="mb-3 font-mono text-[11px] text-accent">{erreur}</p>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {presente && (
-          <button
-            type="button"
-            onClick={() => setOuverte(true)}
-            className="appui rounded-bloc bg-verre px-4 py-2.5 text-xs font-semibold
-                       transition-colors hover:bg-verre-fort"
-          >
-            Voir la photo
-          </button>
-        )}
-
+      <div className="flex items-center gap-3.5 px-0.5">
         <button
           type="button"
+          onClick={() => (presente ? setOuverte(true) : champ.current?.click())}
           disabled={envoi || enCours}
-          onClick={() => champ.current?.click()}
-          className="appui rounded-bloc bg-verre px-4 py-2.5 text-xs font-semibold
-                     text-encre-douce transition-colors hover:bg-verre-fort
-                     hover:text-encre disabled:opacity-50"
+          aria-label={presente ? 'Voir la photo de la semaine' : 'Ajouter une photo'}
+          className={`appui flex h-16 w-[52px] shrink-0 items-center justify-center rounded-[12px] ${
+            presente ? 'bg-accent-2/15 text-accent-2' : 'bg-verre text-encre-douce'
+          }`}
         >
-          {envoi
-            ? 'Envoi…'
-            : presente
-              ? 'Remplacer'
-              : 'Ajouter une photo'}
+          {presente ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+              <circle cx="12" cy="13" r="3.5" />
+            </svg>
+          )}
         </button>
-
-        {presente && (
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-[16px] font-semibold">
+            {envoi ? 'Envoi…' : presente ? 'Photo de la semaine' : 'Ajouter ma photo'}
+          </span>
+          <span className="text-[14px] text-encre-douce">Visible par toi seul</span>
+        </span>
+        {nbPhotos >= 2 && (
           <button
             type="button"
-            disabled={enCours}
-            onClick={retirer}
-            className="appui rounded-bloc px-4 py-2.5 text-xs font-semibold
-                       text-encre-douce transition-colors hover:text-accent"
+            onClick={() => setComparer(true)}
+            className="appui h-10 shrink-0 rounded-pilule bg-verre px-3.5 text-[14px] font-semibold"
           >
-            Supprimer
+            Comparer
           </button>
         )}
       </div>
 
-      <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-encre-douce">
-        Prise dans les mêmes conditions chaque semaine, elle rend la
-        progression bien plus lisible que les chiffres seuls. Elle ne quitte
-        jamais ton carnet.
-      </p>
+      {erreur && <p className="mt-2 px-0.5 font-mono text-[12px] text-accent">{erreur}</p>}
 
       <Modale
         titre={`Semaine ${libelleCourt(semaine)}`}
+        sousTitre="Visible par toi seul"
         ouverte={ouverte}
         onFermer={() => setOuverte(false)}
       >
-        <Photo userId={userId} semaine={semaine} />
+        <div className="flex flex-col gap-3">
+          <Photo userId={userId} semaine={semaine} />
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={envoi || enCours}
+              onClick={() => champ.current?.click()}
+              className="appui h-12 rounded-bloc bg-verre text-[15px] font-semibold disabled:opacity-50"
+            >
+              Remplacer
+            </button>
+            <button
+              type="button"
+              disabled={enCours}
+              onClick={retirer}
+              className="appui h-12 rounded-bloc bg-verre text-[15px] font-semibold text-encre-douce
+                         hover:text-accent disabled:opacity-50"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </Modale>
+
+      <Modale titre="Comparer" sousTitre="Deux semaines côte à côte" ouverte={comparer} onFermer={() => setComparer(false)}>
+        <Comparaison userId={userId} releves={releves} />
       </Modale>
     </div>
   )
@@ -209,8 +234,8 @@ function Choix({
       <select
         value={valeur}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-bloc border border-bordure bg-verre px-4 py-2.5
-                   text-sm focus:border-accent focus:outline-none"
+        className="h-12 w-full rounded-bloc border border-transparent bg-verre px-4
+                   text-base focus:border-accent focus:outline-none"
       >
         {options.map((r) => (
           <option key={r.semaine} value={r.semaine}>
@@ -236,7 +261,7 @@ function Cote({
   return (
     <div>
       <Photo userId={userId} semaine={semaine} />
-      <p className="mt-2 font-mono text-[10.5px] text-encre-douce">
+      <p className="mt-2 font-mono text-[13px] text-encre-douce">
         {libelleCourt(semaine)}
         {releve?.poids != null && ` · ${releve.poids} kg`}
       </p>

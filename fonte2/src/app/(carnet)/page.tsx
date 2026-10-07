@@ -96,7 +96,8 @@ export default async function Accueil() {
         moisPrecedent(),
         seances,
         releves,
-        await chargerExercices()
+        await chargerExercices(),
+        cardio
       )
     : null
 

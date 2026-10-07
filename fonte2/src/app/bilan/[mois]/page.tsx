@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { creerClientServeur } from '@/lib/supabase/server'
-import { chargerExercices, chargerSeances, chargerSuiviComplet } from '@/lib/donnees'
+import { chargerExercices, chargerSeances, chargerSuiviComplet, chargerCardio } from '@/lib/donnees'
 import { calculerBilan, lireCleMois, nomMois } from '@/lib/bilan'
 import { DerouleBilan } from '@/components/bilan/Deroule'
 import type { Profil } from '@/types/database'
@@ -38,7 +38,7 @@ export default async function PageBilan({
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const [{ data: brut }, exercices, seances, releves] = await Promise.all([
+  const [{ data: brut }, exercices, seances, releves, cardio] = await Promise.all([
     supabase
       .from('profiles')
       .select('pseudo, avatar')
@@ -47,22 +47,23 @@ export default async function PageBilan({
     chargerExercices(),
     chargerSeances(),
     chargerSuiviComplet(),
+    chargerCardio(),
   ])
 
   const profil = brut as Pick<Profil, 'pseudo' | 'avatar'> | null
-  const bilan = calculerBilan(m, seances, releves, exercices)
+  const bilan = calculerBilan(m, seances, releves, exercices, cardio)
 
   if (bilan.vide)
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="text-4xl">Rien à raconter</h1>
-        <p className="max-w-sm text-sm leading-relaxed text-encre-douce">
+      <main className="sombre flex min-h-dvh flex-col items-center justify-center gap-4 bg-fond px-6 text-center text-encre">
+        <h1 className="text-[44px]">Rien à raconter</h1>
+        <p className="max-w-sm text-[16px] leading-relaxed text-encre-douce">
           Aucune séance ni relevé en {bilan.nom}. Le bilan apparaîtra dès que ce
           mois-là aura de quoi être résumé.
         </p>
         <a
           href="/"
-          className="mt-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white"
+          className="mt-2 flex h-12 items-center rounded-pilule bg-accent px-6 text-[16px] font-bold text-white"
         >
           Retour au carnet
         </a>

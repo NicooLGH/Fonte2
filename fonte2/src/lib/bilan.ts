@@ -1,6 +1,7 @@
 import { volumeSeance, type Seance } from './xp'
 import { CHAMPS_SUIVI, type CleSuivi, type ReleveComplet } from './suivi'
 import type { Exercice, SeanceComplete } from './carnet'
+import { cleSemaine } from './semaine'
 
 /* ============================================================
    Bilan mensuel
@@ -40,6 +41,15 @@ export type Bilan = {
   caloriesMoyennes: number | null
   evolutions: Evolution[]
   vide: boolean
+  /** 3.0 : « septembre », sans l'année. */
+  nomCourt: string
+  /** Volume du mois d'avant, pour la comparaison. */
+  volumePrecedent: number
+  nomPrecedent: string
+  /** Volume de chaque semaine qui commence dans le mois. */
+  semainesVolume: { cle: string; volume: number }[]
+  /** Séances de cardio du mois. */
+  nbCardio: number
 }
 
 export function moisPrecedent(depuis: Date = new Date()): Mois {
@@ -67,6 +77,11 @@ export function nomMois(m: Mois): string {
   })
 }
 
+/** « septembre » */
+export function nomMoisCourt(m: Mois): string {
+  return new Date(m.annee, m.mois - 1, 1).toLocaleDateString('fr-FR', { month: 'long' })
+}
+
 /** Le bilan reste proposé la première semaine du mois suivant. */
 export function bilanDisponible(date: Date = new Date()): boolean {
   return date.getDate() <= JOURS_AFFICHAGE
@@ -76,7 +91,8 @@ export function calculerBilan(
   m: Mois,
   seances: SeanceComplete[],
   releves: ReleveComplet[],
-  exercices: Exercice[]
+  exercices: Exercice[],
+  cardio: { date: string }[] = []
 ): Bilan {
   const prefixe = cleMois(m)
   const dansLeMois = (d: string) => d.startsWith(prefixe)
@@ -182,9 +198,30 @@ export function calculerBilan(
       )
     : null
 
+  /* ---- Comparaison et semaines (3.0) ---- */
+  const precedent: Mois =
+    m.mois === 1 ? { annee: m.annee - 1, mois: 12 } : { annee: m.annee, mois: m.mois - 1 }
+  const volumePrecedent = volumeDuMois(precedent, seances)
+
+  const parSemaine = new Map<string, number>()
+  for (const s of duMois) {
+    const cle = cleSemaine(new Date(s.date + 'T12:00:00'))
+    parSemaine.set(cle, (parSemaine.get(cle) ?? 0) + volumeSeance(s))
+  }
+  const semainesVolume = [...parSemaine.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([cle, v]) => ({ cle, volume: Math.round(v) }))
+
+  const nbCardio = cardio.filter((c) => dansLeMois(c.date)).length
+
   return {
     mois: m,
     nom: nomMois(m),
+    nomCourt: nomMoisCourt(m),
+    volumePrecedent,
+    nomPrecedent: nomMoisCourt(precedent),
+    semainesVolume,
+    nbCardio,
     nbSeances: duMois.length,
     semaines: new Set(duMois.map((s) => s.semaine)).size,
     dureeTotale: duMois.reduce((t, s) => t + (s.dureeSec ?? 0), 0),
@@ -195,7 +232,7 @@ export function calculerBilan(
     objectifs,
     caloriesMoyennes,
     evolutions,
-    vide: duMois.length === 0 && relevesDuMois.length === 0,
+    vide: duMois.length === 0 && relevesDuMois.length === 0 && nbCardio === 0,
   }
 }
 

@@ -83,9 +83,9 @@ export function EcranSeances({
 
   return (
     <div className="flex flex-col gap-5 py-4">
-      <header className="flex items-end justify-between gap-4 px-0.5 pt-2">
-        <h1 className="text-[54px] leading-[0.85]">Séances</h1>
-        <div className="flex items-center gap-2">
+      <header className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 px-0.5 pt-2">
+        <h1 className="titre-page">Séances</h1>
+        <div className="flex shrink-0 items-center gap-2">
           {modeles.length > 0 && (
             <Link
               href="/live"

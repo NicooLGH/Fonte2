@@ -18,6 +18,9 @@ import {
 
 /* ============================================================
    Relevé de la semaine
+   ============================================================
+   3.0 : l'affichage des mesures vit dans CarteSuivi. Ici, le
+   bouton et la fenêtre de saisie.
    ============================================================ */
 
 export function Releve({
@@ -52,92 +55,30 @@ export function Releve({
     demarrer(async () => {
       const r = await supprimerReleve(releve.id)
       if (r.erreur) setErreur(r.erreur)
+      else setOuvert(false)
     })
   }
 
   return (
-    <section className="section pb-5">
-      <p className="section-titre mb-2">Relevé de la semaine</p>
-      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
-        Poids, calories et mensurations. Un seul relevé par semaine, tous les
-        champs facultatifs.
-      </p>
-
-      <div className="flex-1">
-        {releve ? (
-          <>
-            <dl className="divide-y divide-filet">
-              {CHAMPS_SUIVI.map((c) => (
-                <div
-                  key={c.cle}
-                  className="flex items-baseline justify-between gap-3 py-2.5"
-                >
-                  <dt className="text-sm text-encre-douce">{c.libelle}</dt>
-                  <dd
-                    className={
-                      releve[c.cle] === null
-                        ? 'text-sm text-encre-douce/50'
-                        : 'font-display text-xl'
-                    }
-                  >
-                    {releve[c.cle] === null ? (
-                      '—'
-                    ) : (
-                      <>
-                        {releve[c.cle]}
-                        <span className="ml-1 font-corps text-[10px] text-encre-douce">
-                          {c.unite}
-                        </span>
-                      </>
-                    )}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-
-            {releve.note && (
-              <p className="mt-3 text-xs italic leading-relaxed text-encre-douce">
-                📝 {releve.note}
-              </p>
-            )}
-            {releve.bonusDimanche && (
-              <p className="mt-3 font-mono text-[10.5px] text-accent-2">
-                📅 Bilan fait le dimanche — bonus obtenu
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm italic text-encre-douce">
-            Aucun relevé pour cette semaine.
-          </p>
-        )}
-      </div>
-
-      <Erreur>{erreur}</Erreur>
-
-      <Bouton type="button" className="mt-4" onClick={() => setOuvert(true)}>
+    <>
+      <Bouton
+        type="button"
+        variante={releve ? 'discret' : 'principal'}
+        onClick={() => {
+          setErreur(null)
+          setOuvert(true)
+        }}
+      >
         {releve ? 'Modifier mon relevé' : 'Ajouter mon relevé'}
       </Bouton>
 
-      {releve && (
-        <button
-          type="button"
-          onClick={supprimer}
-          className="mt-2 w-full rounded-bloc border border-bordure bg-verre py-2.5
-                     text-xs font-semibold text-encre-douce transition-colors
-                     hover:border-accent/50 hover:text-accent"
-        >
-          Supprimer ce relevé
-        </button>
-      )}
-
       <Modale
         titre={releve ? 'Modifier le relevé' : 'Relevé de la semaine'}
-        sousTitre={`Semaine ${semaine}`}
+        sousTitre={`Semaine ${semaine} · tout est facultatif`}
         ouverte={ouvert}
         onFermer={() => setOuvert(false)}
       >
-        <form action={envoyer} className="flex flex-col gap-4">
+        <form action={envoyer} className="flex flex-col gap-2.5">
           {CHAMPS_SUIVI.map((c) => (
             <LigneChamp
               key={c.cle}
@@ -149,21 +90,19 @@ export function Releve({
             />
           ))}
 
-          <label className="block">
-            <span className="mb-2 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
-              Note de la semaine
-            </span>
+          <label className="mt-1.5 block">
+            <span className="sr-only">Note de la semaine</span>
             <textarea
               name="note"
               rows={2}
               maxLength={280}
               defaultValue={releve?.note ?? ''}
-              placeholder="ex : semaine chargée, sommeil moyen"
-              className="w-full resize-y rounded-bloc border border-bordure bg-verre
-                         px-4 py-3 text-sm focus:border-accent focus:outline-none"
+              placeholder="Une note ? ex : semaine chargée, sommeil moyen"
+              className="w-full resize-none rounded-carte border border-transparent bg-verre px-4 py-3.5
+                         text-base placeholder:text-encre-douce/60 focus:border-accent focus:outline-none"
             />
-            <span className="mt-2 block font-mono text-[10.5px] leading-relaxed text-encre-douce">
-              Elle reste privée : personne d&apos;autre ne la voit.
+            <span className="mt-1.5 block px-1 text-[13px] text-encre-douce">
+              Privée : personne d&apos;autre ne la voit.
             </span>
           </label>
 
@@ -172,9 +111,20 @@ export function Releve({
           <Bouton type="submit" disabled={enCours}>
             {enCours ? 'Enregistrement…' : 'Enregistrer'}
           </Bouton>
+
+          {releve && (
+            <button
+              type="button"
+              onClick={supprimer}
+              disabled={enCours}
+              className="h-11 text-[15px] font-semibold text-encre-douce hover:text-accent"
+            >
+              Supprimer ce relevé
+            </button>
+          )}
         </form>
       </Modale>
-    </section>
+    </>
   )
 }
 
@@ -201,49 +151,43 @@ export function BlocObjectifs({ objectifs }: { objectifs: Objectifs }) {
   }
 
   return (
-    <section className="section pb-5">
-      <p className="section-titre mb-2">Objectifs</p>
-      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
-        Ce que tu vises. Une ligne repère apparaît alors sur tes graphiques.
-      </p>
-
-      <div className="flex-1">
-        {definis.length === 0 ? (
-          <p className="text-sm italic text-encre-douce">
-            Aucun objectif défini. C&apos;est facultatif.
-          </p>
-        ) : (
-          <dl className="divide-y divide-filet">
-            {definis.map((c) => (
-              <div
-                key={c.cle}
-                className="flex items-baseline justify-between gap-3 py-2.5"
-              >
-                <dt className="text-sm text-encre-douce">{c.libelle}</dt>
-                <dd className="font-display text-xl">
-                  {objectifs[c.cle]}
-                  <span className="ml-1 font-corps text-[10px] text-encre-douce">
-                    {c.unite}
-                  </span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
+    <>
+      <div className="flex min-h-14 items-center gap-3.5 px-0.5">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-accent/15 text-accent-clair">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="12" cy="12" r="8" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="12" cy="12" r="0.5" />
+          </svg>
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-[16px] font-semibold">Objectifs</span>
+          <span className="truncate text-[14px] text-encre-douce">
+            {definis.length === 0
+              ? 'Une ligne repère sur tes courbes'
+              : definis.map((c) => `${c.cle === 'taille' ? 'Taille' : c.libelle} ${objectifs[c.cle]}`).join(' · ')}
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setErreur(null)
+            setOuvert(true)
+          }}
+          className="appui h-10 shrink-0 rounded-pilule bg-verre px-3.5 text-[14px] font-semibold"
+        >
+          {definis.length ? 'Modifier' : 'Définir'}
+        </button>
       </div>
-
-      <Erreur>{erreur}</Erreur>
-
-      <Bouton type="button" className="mt-4" onClick={() => setOuvert(true)}>
-        {definis.length ? 'Modifier mes objectifs' : 'Définir mes objectifs'}
-      </Bouton>
 
       <Modale
         titre="Mes objectifs"
+        sousTitre="Laisse vide pour retirer un objectif"
         ouverte={ouvert}
         onFermer={() => setOuvert(false)}
       >
-        <form action={envoyer} className="flex flex-col gap-4">
+        <form action={envoyer} className="flex flex-col gap-2.5">
           {CHAMPS_OBJECTIF.map((c) => (
             <LigneChamp
               key={c.cle}
@@ -255,10 +199,6 @@ export function BlocObjectifs({ objectifs }: { objectifs: Objectifs }) {
             />
           ))}
 
-          <p className="font-mono text-[10.5px] leading-relaxed text-encre-douce">
-            Laisse un champ vide pour retirer son objectif.
-          </p>
-
           <Erreur>{erreur}</Erreur>
 
           <Bouton type="submit" disabled={enCours}>
@@ -266,7 +206,7 @@ export function BlocObjectifs({ objectifs }: { objectifs: Objectifs }) {
           </Bouton>
         </form>
       </Modale>
-    </section>
+    </>
   )
 }
 
@@ -286,10 +226,10 @@ function LigneChamp({
   valeur: number | null
 }) {
   return (
-    <label className="flex items-center justify-between gap-4">
-      <span className="text-sm text-encre-douce">
+    <label className="flex items-center justify-between gap-4 rounded-bloc bg-verre py-1.5 pr-1.5 pl-4">
+      <span className="min-w-0 text-[16px]">
         {libelle}
-        <span className="ml-1 font-mono text-[10px] opacity-70">({unite})</span>
+        <span className="ml-1.5 font-mono text-[12px] text-encre-douce">{unite}</span>
       </span>
       <input
         name={cle}
@@ -298,8 +238,9 @@ function LigneChamp({
         inputMode="decimal"
         defaultValue={valeur ?? ''}
         placeholder="—"
-        className="w-28 shrink-0 rounded-bloc border border-bordure bg-fond px-3 py-2.5
-                   text-center font-display text-xl focus:border-accent focus:outline-none"
+        className="h-12 w-28 shrink-0 rounded-[11px] border-2 border-transparent bg-fond px-3
+                   text-center font-display text-[28px] leading-none placeholder:text-encre-douce/40
+                   focus:border-accent focus:outline-none"
       />
     </label>
   )

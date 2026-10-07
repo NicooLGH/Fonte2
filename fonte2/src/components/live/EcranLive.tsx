@@ -279,7 +279,7 @@ export function EcranLive({
           </button>
         </div>
 
-        <h1 className="mx-0.5 text-[54px] leading-[0.85]">Démarrer</h1>
+        <h1 className="mx-0.5 titre-page">Démarrer</h1>
 
         {erreur && <Alerte>{erreur}</Alerte>}
 
@@ -624,7 +624,7 @@ export function EcranLive({
           <p className="font-mono text-[12px] tracking-[0.08em] text-accent-clair uppercase">
             Séance terminée
           </p>
-          <h1 className="mt-1.5 text-[54px] leading-[0.85]">{live.nom || 'Séance'}</h1>
+          <h1 className="mt-1.5 titre-page">{live.nom || 'Séance'}</h1>
         </div>
 
         <div className="grid grid-cols-3 text-center">

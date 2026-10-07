@@ -58,6 +58,24 @@
   --color-filet: rgb(0 0 0 / 0.07);
 }
 
+/* Écrans toujours sombres, même en mode clair : story, création
+   de story et bilan. Les mêmes valeurs que le thème par défaut. */
+.sombre {
+  --color-fond: #0e0f11;
+  --color-encre: #f4f3ee;
+  --color-encre-douce: #8d9096;
+  --color-accent: #ff4b2b;
+  --color-accent-clair: #ff8a63;
+  --color-accent-2: #4cc9f0;
+  --color-valide: #22c55e;
+  --color-refus: #ef4444;
+  --color-verre: #17191c;
+  --color-verre-fort: #212428;
+  --color-bordure: rgb(255 255 255 / 0.06);
+  --color-filet: rgb(255 255 255 / 0.07);
+  color: var(--color-encre);
+}
+
 /* ============================================================
    BLOCS 3.0
    ============================================================
@@ -96,6 +114,11 @@
 }
 
 html {
+  /* Rien ne doit déborder sur les côtés : un seul élément trop
+     large et toute la page glissait à gauche et à droite, barre
+     du bas comprise. `clip` coupe sans créer de zone de
+     défilement, donc les barres collantes continuent de marcher. */
+  overflow-x: clip;
   background: var(--color-fond);
   color: var(--color-encre);
   -webkit-tap-highlight-color: transparent;
@@ -104,6 +127,8 @@ html {
 body {
   font-family: var(--font-corps);
   min-height: 100dvh;
+  overflow-x: clip;
+  max-width: 100vw;
   /* Les deux halos du carnet actuel : orange en haut à gauche,
      bleu à droite. Fixés au fond pour ne pas défiler avec le
      contenu. */
@@ -119,6 +144,17 @@ h1, h2, h3 {
   text-transform: uppercase;
   letter-spacing: 0.01em;
   line-height: 0.95;
+  /* Un mot trop long pour l'écran passe à la ligne au lieu de
+     sortir de la page. */
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+/* Grand titre de page (« Séances », « Progrès »…) : 54 px sur un
+   téléphone normal, plus petit sur un écran étroit. */
+.titre-page {
+  font-size: clamp(2.5rem, 13vw, 3.375rem);
+  line-height: 0.85;
 }
 
 /* Le focus doit rester visible au clavier, mais ne pas
