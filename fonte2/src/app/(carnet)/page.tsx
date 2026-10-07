@@ -24,6 +24,8 @@ import { Presence } from '@/components/social/Presence'
 import { EnSeance } from '@/components/social/EnSeance'
 import { chargerDefisEnCours } from '@/lib/donnees-defis'
 import { DefisAccueil } from '@/components/defis/CartesDefis'
+import { chargerStories } from '@/lib/donnees-stories'
+import { BandeauStories } from '@/components/stories/BandeauStories'
 
 /**
  * Accueil.
@@ -44,6 +46,7 @@ export default async function Accueil() {
     modeles,
     planning,
     xp,
+    stories,
   ] = await Promise.all([
     chargerAnnonces(),
     chargerRappel(),
@@ -55,6 +58,7 @@ export default async function Accueil() {
     chargerModeles(),
     chargerPlanning(),
     chargerMonXP(),
+    chargerStories(),
   ])
 
   // Séance du jour et semaine en cours.
@@ -95,6 +99,8 @@ export default async function Accueil() {
   return (
     <div className="flex flex-col gap-6 py-4">
       <Presence />
+
+      <BandeauStories groupes={stories} />
 
       <SeanceDuJour
         prevu={planning.find((p) => p.jour === jour) ?? null}

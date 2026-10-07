@@ -195,14 +195,27 @@ function Detail({
         ))}
 
         <div className="mt-auto flex flex-col gap-1 pt-4">
-          <button
-            type="button"
-            onClick={onContinuer}
-            className="appui h-[58px] rounded-carte bg-accent text-[17px] font-bold text-white
-                       transition-colors hover:bg-accent-clair"
-          >
-            Continuer
-          </button>
+          <div className="flex gap-2">
+            <Link
+              href="/story/nouvelle?etiquette=seance"
+              aria-label="Partager en story"
+              className="appui flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-carte bg-verre"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+                <circle cx="12" cy="13" r="3.5" />
+              </svg>
+            </Link>
+            <button
+              type="button"
+              onClick={onContinuer}
+              className="appui h-[58px] flex-1 rounded-carte bg-accent text-[17px] font-bold text-white
+                         transition-colors hover:bg-accent-clair"
+            >
+              Continuer
+            </button>
+          </div>
           <Link
             href="/xp?onglet=journal"
             className="flex h-11 items-center justify-center text-[15px] font-semibold text-encre-douce hover:text-encre"

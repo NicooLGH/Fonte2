@@ -124,12 +124,13 @@ function groupes(liste: Notification[]) {
 function lienDe(type: string): string | null {
   if (type === 'ami_demande') return '/amis?onglet=amis'
   if (type === 'ami_accepte' || type === 'reaction' || type === 'encouragement') return '/amis'
+  if (type === 'reaction_story') return '/'
   return null
 }
 
 function Icone({ type }: { type: string }) {
   const style =
-    type === 'reaction' || type === 'encouragement'
+    type === 'reaction' || type === 'reaction_story' || type === 'encouragement'
       ? 'bg-accent/15 text-accent-clair'
       : type.startsWith('ami')
         ? 'bg-accent-2/15 text-accent-2'
@@ -138,7 +139,7 @@ function Icone({ type }: { type: string }) {
     <span className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[13px] ${style}`}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        {type === 'reaction' || type === 'encouragement' ? (
+        {type === 'reaction' || type === 'reaction_story' || type === 'encouragement' ? (
           <path d="M12 22c4 0 7-2.7 7-6.8 0-3.2-2-5.6-3.6-7.3-.4 1.9-1.4 3.1-2.6 3.6.3-3.4-1.3-6.6-4.3-8.5.2 3.1-1.5 5-3 6.8C4.3 11.3 5 13.6 5 15.2 5 19.3 8 22 12 22z" />
         ) : type.startsWith('ami') ? (
           <>
