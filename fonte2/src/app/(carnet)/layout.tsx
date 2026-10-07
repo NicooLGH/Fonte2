@@ -28,14 +28,13 @@ export default async function CarnetLayout({
 
   const { data } = await supabase
     .from('profiles')
-    .select('pseudo, avatar, onboarded')
+    .select('*') // « * » : reste valable même si la colonne `cadre` manque encore
     .eq('id', user.id)
     .maybeSingle()
 
-  const profil = data as Pick<
-    Profil,
-    'pseudo' | 'avatar' | 'onboarded'
-  > | null
+  const profil = data as
+    | (Pick<Profil, 'pseudo' | 'avatar' | 'onboarded'> & { cadre?: string | null })
+    | null
 
   if (!profil || !profil.onboarded || !profil.pseudo) redirect('/bienvenue')
 
@@ -61,21 +60,26 @@ export default async function CarnetLayout({
     <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
       <BarreHaute
         avatar={profil.avatar ?? '💪'}
+        cadre={profil.cadre ?? 'aucun'}
         pseudo={profil.pseudo}
         notifications={cloche}
         admin={admin}
       />
-      <BarreMobile notifications={cloche} />
-      {/* La marge basse laisse la place à la barre de navigation */}
-      {/* La marge basse dégage la barre flottante : sa hauteur,
+      <BarreMobile
+        notifications={cloche}
+        avatar={profil.avatar ?? '💪'}
+        cadre={profil.cadre ?? 'aucun'}
+        pseudo={profil.pseudo}
+      />
+      {/* La marge basse dégage la bulle de navigation : sa hauteur,
           plus la marge du bord, plus la barre d'accueil. */}
       <div
         className="mx-auto max-w-5xl px-4 md:px-6 md:pb-12"
-        style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
       >
         {children}
       </div>
-      <BarreBasse aDesModeles={modeles.length > 0} admin={admin} />
+      <BarreBasse aDesModeles={modeles.length > 0} />
     </div>
   )
 }

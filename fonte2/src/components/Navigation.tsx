@@ -4,15 +4,14 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Modale } from '@/components/ui/Modale'
+import { AvatarCadre } from '@/components/AvatarCadre'
 import {
   IconeAccueil,
   IconeSeances,
   IconeSuivi,
   IconeAnalyse,
   IconeAmis,
-  IconeProfil,
   IconePlus,
-  IconeMenu,
   IconeReglages,
   IconeAdmin,
   IconeLecture,
@@ -25,19 +24,19 @@ import {
    Barre haute sur grand écran, barre basse sur téléphone : le
    pouce atteint mieux le bas.
 
-   La barre basse ne tient que quatre entrées plus le bouton
-   central. « Plus » regroupe donc ce qui n'y rentre pas — sans
-   lui, Suivi et Analyse deviendraient inaccessibles.
+   3.0 : une bulle à quatre rubriques (Accueil, Séances, Progrès,
+   Amis) et le bouton orange à côté. Le profil s'ouvre depuis
+   l'avatar, en haut ; l'administration depuis les réglages.
    ============================================================ */
 
 type Icone = (p: { className?: string }) => React.ReactNode
-type Entree = { href: string; libelle: string; Ico: Icone }
+type Entree = { href: string; libelle: string; Ico: Icone; aussi?: string[] }
 
+/** « Progrès » regroupe le suivi hebdo et l'analyse. */
 const ONGLETS: Entree[] = [
   { href: '/', libelle: 'Accueil', Ico: IconeAccueil },
   { href: '/seances', libelle: 'Séances', Ico: IconeSeances },
-  { href: '/suivi', libelle: 'Suivi', Ico: IconeSuivi },
-  { href: '/analyse', libelle: 'Analyse', Ico: IconeAnalyse },
+  { href: '/suivi', libelle: 'Progrès', Ico: IconeAnalyse, aussi: ['/analyse'] },
   { href: '/amis', libelle: 'Amis', Ico: IconeAmis },
 ]
 
@@ -54,11 +53,13 @@ const ONGLET_ADMIN: Entree = {
 
 export function BarreHaute({
   avatar,
+  cadre,
   pseudo,
   notifications,
   admin,
 }: {
   avatar: string
+  cadre: string
   pseudo: string
   notifications: React.ReactNode
   admin: boolean
@@ -68,8 +69,7 @@ export function BarreHaute({
   return (
     <header
       className="sticky z-40 mx-auto mb-6 hidden max-w-5xl items-center gap-4
-                 rounded-carte border border-bordure bg-fond/70 px-5 py-2.5
-                 backdrop-blur-sm md:flex"
+                 rounded-pilule bg-verre/85 px-5 py-2 backdrop-blur-md md:flex"
       style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
     >
       <Link href="/" className="shrink-0 font-display text-2xl tracking-wide">
@@ -78,14 +78,14 @@ export function BarreHaute({
 
       <nav className="flex flex-1 justify-center gap-1">
         {[...ONGLETS, ...(admin ? [ONGLET_ADMIN] : [])].map((e) => {
-          const actif = estActif(chemin, e.href)
+          const actif = estActif(chemin, e)
           return (
             <Link
               key={e.href}
               href={e.href}
               aria-current={actif ? 'page' : undefined}
-              className={`rounded-bloc px-4 py-2 text-sm font-semibold transition-colors ${
-                actif ? 'bg-verre-fort text-encre' : 'text-encre-douce hover:text-encre'
+              className={`rounded-pilule px-4 py-2 text-[15px] font-semibold transition-colors ${
+                actif ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
               }`}
             >
               {e.libelle}
@@ -99,10 +99,10 @@ export function BarreHaute({
         <Link
           href="/profil"
           title={pseudo}
-          className="flex h-9 w-9 items-center justify-center rounded-bloc
-                     bg-verre text-base transition-colors hover:bg-verre-fort"
+          aria-label={`Mon profil (${pseudo})`}
+          className="ml-1 flex h-10 w-10 items-center justify-center"
         >
-          {avatar}
+          <AvatarCadre avatar={avatar} cadre={cadre} taille={34} />
         </Link>
         <Link
           href="/reglages"
@@ -123,35 +123,31 @@ export function BarreHaute({
    ============================================================ */
 
 /**
- * Barre du haut, sur téléphone.
+ * Barre du haut, sur téléphone : le logo, la cloche, les
+ * réglages et l'avatar, qui mène au profil (3.0 : le profil a
+ * quitté la barre basse pour laisser la place à « Progrès »).
  *
  * Flottante, avec un fond translucide et un flou léger : le
- * contenu passe dessous et se devine sur les bords, ce qui
- * détache la barre de la page au lieu de l'y fondre.
- *
- * Le flou reste discret. Plus prononcé, il transformait le fond
- * en voile laiteux et on ne devinait plus rien derrière — ce qui
- * lui faisait perdre sa raison d'être.
- *
- * La règle « pas de blocs flottants » visait le contenu. La
- * navigation n'en est pas : c'est de l'habillage, qui reste
- * au-dessus pendant que le reste défile.
- *
- * Elle porte la cloche et les réglages, à droite du logo.
+ * contenu passe dessous et se devine sur les bords.
  */
 export function BarreMobile({
   notifications,
+  avatar,
+  cadre,
+  pseudo,
 }: {
   notifications: React.ReactNode
+  avatar: string
+  cadre: string
+  pseudo: string
 }) {
   return (
     <header
       className="sticky z-40 mx-3 mb-3 flex items-center justify-between
-                 rounded-carte border border-bordure bg-fond/70 px-4 py-2.5
-                 backdrop-blur-sm md:hidden"
+                 rounded-carte bg-fond/75 px-3 py-2 backdrop-blur-sm md:hidden"
       style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
     >
-      <Link href="/" className="font-display text-xl tracking-wide">
+      <Link href="/" className="px-1 font-display text-[30px] leading-none tracking-wide">
         FONTE<span className="text-accent">.</span>
       </Link>
 
@@ -160,121 +156,78 @@ export function BarreMobile({
         <Link
           href="/reglages"
           aria-label="Réglages"
-          className="appui flex h-9 w-9 items-center justify-center rounded-bloc
+          className="appui flex h-11 w-11 items-center justify-center rounded-bloc
                      text-encre-douce transition-colors hover:text-encre"
         >
-          <IconeReglages className="h-[18px] w-[18px]" />
+          <IconeReglages className="h-[21px] w-[21px]" />
+        </Link>
+        <Link
+          href="/profil"
+          aria-label={`Mon profil (${pseudo})`}
+          className="appui ml-1 flex h-11 w-11 items-center justify-center"
+        >
+          <AvatarCadre avatar={avatar} cadre={cadre} taille={36} />
         </Link>
       </div>
     </header>
   )
 }
 
-export function BarreBasse({
-  aDesModeles,
-  admin,
-}: {
-  aDesModeles: boolean
-  admin: boolean
-}) {
+/**
+ * Barre basse 3.0 : une bulle avec les quatre rubriques, et le
+ * bouton orange à côté pour lancer ou saisir une séance.
+ */
+export function BarreBasse({ aDesModeles }: { aDesModeles: boolean }) {
   const chemin = usePathname()
-  const [plus, setPlus] = useState(false)
   const [action, setAction] = useState(false)
 
   return (
     <>
       <nav
-        className="fixed inset-x-3 z-40 flex items-center justify-around gap-1
-                   rounded-carte border border-bordure bg-fond/70 px-2 py-2
-                   backdrop-blur-sm md:hidden"
+        aria-label="Navigation principale"
+        className="fixed inset-x-4 z-40 flex items-center gap-2.5 md:hidden"
         style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
-        <LienBas entree={ONGLETS[0]} actif={estActif(chemin, '/')} />
-        <BoutonBas
-          Ico={IconeMenu}
-          libelle="Plus"
-          actif={['/suivi', '/analyse', '/amis'].some((h) =>
-            chemin.startsWith(h)
-          )}
-          onClick={() => setPlus(true)}
-        />
+        <div
+          className="grid h-14 flex-1 grid-cols-4 items-center rounded-pilule
+                     bg-verre/90 px-1.5 shadow-[0_8px_24px_rgb(0_0_0/0.25)] backdrop-blur-md"
+        >
+          {ONGLETS.map((e) => {
+            const actif = estActif(chemin, e)
+            const { Ico } = e
+            return (
+              <Link
+                key={e.href}
+                href={e.href}
+                aria-label={e.libelle}
+                aria-current={actif ? 'page' : undefined}
+                className={`appui mx-0.5 flex h-11 items-center justify-center rounded-pilule transition-colors ${
+                  actif ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+                }`}
+              >
+                <Ico className="h-[22px] w-[22px]" />
+              </Link>
+            )
+          })}
+        </div>
 
         <button
           type="button"
           onClick={() => setAction(true)}
-          aria-label="Ajouter"
-          className="appui mx-1 flex h-12 w-12 shrink-0 items-center justify-center
-                     rounded-carte bg-accent text-white"
+          aria-label="Nouvelle séance"
+          className="appui flex h-14 w-14 shrink-0 items-center justify-center
+                     rounded-full bg-accent text-white shadow-[0_8px_24px_rgb(0_0_0/0.25)]"
         >
           <IconePlus className="h-6 w-6" />
         </button>
-
-        <LienBas entree={ONGLETS[1]} actif={estActif(chemin, '/seances')} />
-        <LienBas
-          entree={{ href: '/profil', libelle: 'Profil', Ico: IconeProfil }}
-          actif={estActif(chemin, '/profil')}
-        />
       </nav>
 
-      <MenuPlus ouvert={plus} onFermer={() => setPlus(false)} admin={admin} />
       <ActionRapide
         ouvert={action}
         onFermer={() => setAction(false)}
         aDesModeles={aDesModeles}
       />
     </>
-  )
-}
-
-/* ============================================================
-   Menu « Plus »
-   ============================================================ */
-
-function MenuPlus({
-  ouvert,
-  onFermer,
-  admin,
-}: {
-  ouvert: boolean
-  onFermer: () => void
-  admin: boolean
-}) {
-  const router = useRouter()
-
-  const entrees = [
-    { href: '/suivi', Ico: IconeSuivi, titre: 'Suivi hebdo', sous: 'Poids, calories et mensurations' },
-    { href: '/analyse', Ico: IconeAnalyse, titre: 'Analyse', sous: 'Équilibre musculaire et assiduité' },
-    { href: '/amis', Ico: IconeAmis, titre: 'Amis', sous: 'Fil, demandes et recherche' },
-    { href: '/profil', Ico: IconeProfil, titre: 'Mon profil', sous: 'Niveau, statistiques et records' },
-    ...(admin
-      ? [
-          {
-            href: '/admin',
-            Ico: IconeAdmin,
-            titre: 'Administration',
-            sous: 'Annonces et notifications',
-          },
-        ]
-      : []),
-  ]
-
-  return (
-    <Modale titre="Naviguer" ouverte={ouvert} onFermer={onFermer}>
-      <div className="flex flex-col gap-2.5">
-        {entrees.map((e) => (
-          <Choix
-            key={e.href}
-            Ico={e.Ico}
-            titre={e.titre}
-            sous={e.sous}
-            onClick={() => {
-              onFermer()
-              router.push(e.href)
-            }}
-          />
-        ))}
-      </div>
-    </Modale>
   )
 }
 
@@ -332,49 +285,9 @@ function ActionRapide({
    Pièces
    ============================================================ */
 
-function estActif(chemin: string, href: string): boolean {
-  return href === '/' ? chemin === '/' : chemin.startsWith(href)
-}
-
-function LienBas({ entree, actif }: { entree: Entree; actif: boolean }) {
-  const { Ico } = entree
-  return (
-    <Link
-      href={entree.href}
-      aria-current={actif ? 'page' : undefined}
-      className={`flex flex-1 flex-col items-center gap-1 py-1.5 transition-colors ${
-        actif ? 'text-encre' : 'text-encre-douce'
-      }`}
-    >
-      <Ico className="h-[21px] w-[21px]" />
-      <span className="text-[10px] font-semibold">{entree.libelle}</span>
-    </Link>
-  )
-}
-
-function BoutonBas({
-  Ico,
-  libelle,
-  actif,
-  onClick,
-}: {
-  Ico: Icone
-  libelle: string
-  actif: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-1 flex-col items-center gap-1 py-1.5 transition-colors ${
-        actif ? 'text-encre' : 'text-encre-douce'
-      }`}
-    >
-      <Ico className="h-[21px] w-[21px]" />
-      <span className="text-[10px] font-semibold">{libelle}</span>
-    </button>
-  )
+function estActif(chemin: string, e: Entree): boolean {
+  if (e.href === '/') return chemin === '/'
+  return [e.href, ...(e.aussi ?? [])].some((h) => chemin.startsWith(h))
 }
 
 function Choix({

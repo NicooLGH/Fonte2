@@ -1,4 +1,5 @@
 import { chargerExercices, chargerSeances } from '@/lib/donnees'
+import { OngletsProgres } from '@/components/OngletsProgres'
 import { nomGroupe, icoGroupe } from '@/lib/carnet'
 import { volumeSeance } from '@/lib/xp'
 import { semaineCourante } from '@/lib/semaine'
@@ -73,8 +74,9 @@ export default async function PageAnalyse() {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header className="border-b border-filet pb-5">
-        <h1 className="text-4xl sm:text-5xl">Analyse</h1>
+      <header className="flex flex-col gap-4">
+        <h1 className="px-0.5 pt-2 text-[54px] leading-[0.85]">Progrès</h1>
+        <OngletsProgres />
       </header>
 
       <section className="section pb-5">

@@ -3,8 +3,16 @@ import { semaineCourante, libelleSemaine, libelleCourt } from '@/lib/semaine'
 import { CHAMPS_SUIVI } from '@/lib/suivi'
 import { Releve, BlocObjectifs } from '@/components/suivi/Releve'
 import { Evolution } from '@/components/suivi/Evolution'
+import { PhotoSemaine, Comparaison } from '@/components/suivi/Photos'
+import { creerClientServeur } from '@/lib/supabase/server'
+import { OngletsProgres } from '@/components/OngletsProgres'
 
 export default async function PageSuivi() {
+  const supabase = await creerClientServeur()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   const [releves, objectifs] = await Promise.all([
     chargerSuiviComplet(),
     chargerObjectifs(),
@@ -15,18 +23,38 @@ export default async function PageSuivi() {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <header className="flex flex-wrap items-baseline justify-between gap-3
-                         border-b border-filet pb-5">
-        <h1 className="text-4xl sm:text-5xl">Suivi hebdo</h1>
-        <p className="font-mono text-[11px] text-encre-douce">
-          semaine {libelleSemaine(semaine)}
-        </p>
+      <header className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-3 px-0.5 pt-2">
+          <h1 className="text-[54px] leading-[0.85]">Progrès</h1>
+          <p className="pb-1 font-mono text-[13px] text-encre-douce">
+            semaine {libelleSemaine(semaine)}
+          </p>
+        </div>
+        <OngletsProgres />
       </header>
 
       <div className="flex flex-col">
         <Releve releve={courant} semaine={libelleSemaine(semaine)} />
         <BlocObjectifs objectifs={objectifs} />
       </div>
+
+      <section className="section pb-5">
+        <p className="section-titre mb-2">Photo de la semaine</p>
+        <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
+          Facultative, et strictement privée : elle ne s&apos;affiche ni sur ton
+          profil, ni pour tes amis.
+        </p>
+        <PhotoSemaine
+          userId={user!.id}
+          semaine={semaine}
+          aUnePhoto={courant?.aPhoto ?? false}
+        />
+      </section>
+
+      <section className="section pb-5">
+        <p className="section-titre mb-4">Comparer deux semaines</p>
+        <Comparaison userId={user!.id} releves={releves} />
+      </section>
 
       <Evolution releves={releves} objectifs={objectifs} />
 

@@ -21,9 +21,13 @@
      de choses pour porter aussi « c'est fait ». */
   --color-valide: #22c55e;
   --color-refus: #ef4444;
-  --color-verre: rgb(255 255 255 / 0.045);
-  --color-verre-fort: rgb(255 255 255 / 0.08);
-  --color-bordure: rgb(255 255 255 / 0.1);
+  /* 3.0 : les blocs sont pleins et sans bordure. `verre` est la
+     couleur d'un bloc, `verre-fort` celle d'un bloc posé dans un
+     bloc, ou d'un élément survolé. La bordure devient un simple
+     souffle : elle ne sert plus qu'aux champs dans les blocs. */
+  --color-verre: #17191c;
+  --color-verre-fort: #212428;
+  --color-bordure: rgb(255 255 255 / 0.06);
   --color-filet: rgb(255 255 255 / 0.07);
 
   /* Polices — les variables sont posées par next/font */
@@ -31,10 +35,10 @@
   --font-corps: var(--police-corps), sans-serif;
   --font-mono: var(--police-mono), monospace;
 
-  /* Arrondis resserrés : 24px faisait « page web », 16 donne
-     la sensation d'une application. */
-  --radius-carte: 16px;
-  --radius-bloc: 12px;
+  /* 3.0 : blocs doux, un peu plus arrondis qu'avant (16 → 20)
+     pour accompagner les fonds pleins. */
+  --radius-carte: 20px;
+  --radius-bloc: 14px;
   --radius-pilule: 999px;
 }
 
@@ -46,11 +50,49 @@
   --color-encre: #16181b;
   --color-encre-douce: #5f6368;
   --color-accent: #e13a18;
-  --color-accent-2: #0369a1;
-  --color-verre: rgb(0 0 0 / 0.035);
-  --color-verre-fort: rgb(0 0 0 / 0.06);
-  --color-bordure: rgb(0 0 0 / 0.1);
+  --color-accent-clair: #c2410c;
+  --color-accent-2: #0284c7;
+  --color-verre: #ffffff;
+  --color-verre-fort: #ebe9e3;
+  --color-bordure: rgb(0 0 0 / 0.07);
   --color-filet: rgb(0 0 0 / 0.07);
+}
+
+/* ============================================================
+   BLOCS 3.0
+   ============================================================
+   Un bloc : fond plein, coins de 20, pas de bordure. On les
+   garde pour les ensembles importants ; le reste se pose
+   directement sur le fond, en lignes.
+   ============================================================ */
+
+.bloc {
+  background: var(--color-verre);
+  border-radius: var(--radius-carte);
+}
+
+/* Le motif des deux cercles, réservé aux blocs forts (séance du
+   jour, gains d'XP, défi à la une, piste de niveaux). Il se
+   place derrière le contenu sans le décaler. */
+.motif-cercles {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.motif-cercles::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -40px;
+  right: -36px;
+  width: 220px;
+  height: 200px;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='200' viewBox='0 0 220 200'%3E%3Ccircle cx='140' cy='80' r='96' fill='none' stroke='rgba(255,75,43,0.12)' stroke-width='24'/%3E%3Ccircle cx='140' cy='80' r='46' fill='none' stroke='rgba(76,201,240,0.09)' stroke-width='14'/%3E%3C/svg%3E") no-repeat;
+}
+/* Variante bleue d'abord, pour les défis. */
+.motif-cercles-bleu::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='200' viewBox='0 0 220 200'%3E%3Ccircle cx='140' cy='80' r='96' fill='none' stroke='rgba(76,201,240,0.11)' stroke-width='24'/%3E%3Ccircle cx='140' cy='80' r='46' fill='none' stroke='rgba(255,75,43,0.09)' stroke-width='14'/%3E%3C/svg%3E");
 }
 
 html {
@@ -136,10 +178,22 @@ h1, h2, h3 {
   border-bottom: none;
 }
 
+/* 3.0 : les titres de section passent de petites capitales
+   grises à un vrai titre lisible, plus gros et en gras. */
 .section-titre {
+  font-family: var(--font-corps);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-encre);
+}
+
+/* La petite étiquette en capitales reste disponible, pour les
+   repères discrets (« Aujourd'hui », « Débloqué »…). */
+.etiquette {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-encre-douce);
 }
