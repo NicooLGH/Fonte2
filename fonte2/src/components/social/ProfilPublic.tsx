@@ -23,6 +23,7 @@ import {
   retirerAmi,
   encourager,
 } from '@/app/(carnet)/amis/actions'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 /**
  * Profil, public ou personnel.
@@ -127,16 +128,10 @@ export function VueProfil({
         <div className="flex items-end gap-3.5 px-0.5">
           <AvatarCadre avatar={profil.avatar ?? '💪'} cadre={profil.cadre} taille={86} />
           <div className="min-w-0 flex-1 pb-0.5">
-            {/* Taille adaptée à la longueur : un long pseudo s'affiche en entier. */}
-            <h1
-              className="leading-[0.88] [overflow-wrap:anywhere]"
-              style={{
-                fontSize:
-                  profil.pseudo.length > 16 ? 28 : profil.pseudo.length > 11 ? 36 : profil.pseudo.length > 7 ? 44 : 54,
-              }}
-            >
+            {/* Une seule ligne : un long pseudo rétrécit au lieu d'être coupé. */}
+            <TexteAjuste as="h1" max={54} min={24} className="leading-[0.9]">
               {profil.pseudo}
-            </h1>
+            </TexteAjuste>
             {nv !== null && nv !== undefined && (
               <span
                 className="mt-1.5 inline-flex h-[26px] items-center rounded-pilule px-2.5 font-mono text-[12px] uppercase"

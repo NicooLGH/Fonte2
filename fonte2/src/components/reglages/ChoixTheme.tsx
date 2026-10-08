@@ -8,6 +8,7 @@ import { AvatarCadre } from '@/components/AvatarCadre'
 import { changerPersonnalisation, changerAvatar } from '@/app/(carnet)/reglages/actions'
 import { Onglets } from '@/components/ui/Controles'
 import { ChoixAvatar } from './ChoixAvatar'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 /* ============================================================
    Thème du profil
@@ -75,9 +76,13 @@ export function ChoixTheme({
         {teinte.anime && <div aria-hidden className="reflet-teinte absolute inset-0" />}
         <div aria-hidden className="absolute inset-0" style={motifCss(forme)} />
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-fond" />
-        <div className="absolute bottom-3 left-4 flex items-end gap-3.5">
+        <div className="absolute inset-x-4 bottom-3 flex items-end gap-3.5">
           <AvatarCadre avatar={visage} cadre={contour} taille={72} />
-          <span className="pb-1 font-display text-[40px] leading-[0.85]">{pseudo}</span>
+          <span className="min-w-0 flex-1 pb-1">
+            <TexteAjuste max={40} min={20} className="font-display leading-[0.9]">
+              {pseudo}
+            </TexteAjuste>
+          </span>
         </div>
       </div>
 

@@ -10,6 +10,7 @@ import {
   type Signe,
 } from '@/lib/social'
 import { reagirSeance, retirerReaction } from '@/app/(carnet)/amis/actions'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 /* ============================================================
    Fil des amis
@@ -142,10 +143,14 @@ export function Publication({
         </header>
       )}
 
-      <p className="font-display text-[34px] leading-[0.9]">
-        {p.nom || 'Séance'}
-        {sansAuteur && <span className="ml-2 font-corps text-[13px] text-encre-douce">{quand}</span>}
-      </p>
+      <div className="flex items-baseline gap-2">
+        <span className="min-w-0 flex-1">
+          <TexteAjuste max={34} min={20} className="font-display leading-[0.95]">
+            {p.nom || 'Séance'}
+          </TexteAjuste>
+        </span>
+        {sansAuteur && <span className="shrink-0 text-[13px] text-encre-douce">{quand}</span>}
+      </div>
 
       <div className="flex flex-wrap gap-1.5">
         {duree && <Etiquette>{duree}</Etiquette>}

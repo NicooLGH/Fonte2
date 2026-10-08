@@ -189,6 +189,7 @@ export function BarreBasse({ aDesModeles }: { aDesModeles: boolean }) {
   // L'onglet touché s'allume tout de suite, sans attendre la page.
   const [vers, setVers] = useState<string | null>(null)
   useEffect(() => setVers(null), [chemin])
+  const indexActif = ONGLETS.findIndex((e) => (vers ? vers === e.href : estActif(chemin, e)))
 
   return (
     <>
@@ -198,11 +199,21 @@ export function BarreBasse({ aDesModeles }: { aDesModeles: boolean }) {
         style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
         <div
-          className="grid h-14 flex-1 grid-cols-4 items-center rounded-pilule
+          className="relative grid h-14 flex-1 grid-cols-4 items-center rounded-pilule
                      bg-verre/90 px-1.5 shadow-[0_8px_24px_rgb(0_0_0/0.25)] backdrop-blur-md"
         >
-          {ONGLETS.map((e) => {
-            const actif = vers ? vers === e.href : estActif(chemin, e)
+          {/* La pastille blanche glisse d'un onglet à l'autre. */}
+          <span
+            aria-hidden
+            className="pastille-nav pointer-events-none absolute top-1.5 left-2 h-11 rounded-pilule bg-encre"
+            style={{
+              width: 'calc((100% - 12px) / 4 - 4px)',
+              transform: `translateX(calc(${Math.max(indexActif, 0)} * (100% + 4px)))`,
+              opacity: indexActif < 0 ? 0 : 1,
+            }}
+          />
+          {ONGLETS.map((e, i) => {
+            const actif = i === indexActif
             const { Ico } = e
             return (
               <Link
@@ -212,11 +223,11 @@ export function BarreBasse({ aDesModeles }: { aDesModeles: boolean }) {
                 onClick={() => setVers(e.href)}
                 aria-label={e.libelle}
                 aria-current={actif ? 'page' : undefined}
-                className={`appui mx-0.5 flex h-11 items-center justify-center rounded-pilule transition-colors ${
-                  actif ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+                className={`appui relative mx-0.5 flex h-11 items-center justify-center rounded-pilule transition-colors duration-300 ${
+                  actif ? 'text-fond' : 'text-encre-douce hover:text-encre'
                 }`}
               >
-                <Ico className="h-[22px] w-[22px]" />
+                <Ico className={`h-[22px] w-[22px] transition-transform duration-300 ${actif ? 'scale-110' : ''}`} />
               </Link>
             )
           })}

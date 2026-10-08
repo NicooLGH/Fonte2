@@ -33,6 +33,7 @@ import { Encouragements } from './Encouragements'
 import { RecapXP, type StatsSeance } from '@/components/xp/RecapXP'
 import { ecrireAttente, lireAttente, type SeanceEnAttente } from '@/lib/attente'
 import type { GainXP } from '@/lib/xp'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 /* ============================================================
    Séance en direct
@@ -360,7 +361,9 @@ export function EcranLive({
               </span>
               <Pastille choisie={choisi.id === prevu.id} />
             </span>
-            <span className="font-display text-[44px] leading-[0.85]">{prevu.nom}</span>
+            <TexteAjuste max={44} min={22} className="w-full text-left font-display leading-[0.9]">
+              {prevu.nom}
+            </TexteAjuste>
             <span className="text-[15px] leading-snug text-encre-douce">
               {prevu.entrees.map((e) => nomExo(e.id)).join(' · ')}
             </span>

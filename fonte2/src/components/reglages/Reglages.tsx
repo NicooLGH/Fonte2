@@ -119,7 +119,7 @@ export function Reglages({
             <input
               name="pseudo"
               defaultValue={pseudo}
-              maxLength={24}
+              maxLength={16}
               className="h-12 min-w-0 flex-1 rounded-bloc border border-transparent bg-fond
                          px-4 text-base focus:border-accent focus:outline-none"
             />

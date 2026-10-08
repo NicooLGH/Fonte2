@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { AvatarCadre } from '@/components/AvatarCadre'
 import type { Classement as Donnees, LigneClassement, PeriodeClassement } from '@/lib/social'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 /* ============================================================
    Classement entre amis
@@ -103,9 +104,9 @@ function Podium({ lignes, periode }: { lignes: LigneClassement[]; periode: Perio
           >
             {i === 1 && <Couronne />}
             <AvatarCadre avatar={l.avatar ?? '💪'} cadre={l.cadre} taille={i === 1 ? 60 : 50} />
-            <span className={`max-w-full truncate text-[15px] font-semibold ${l.moi ? 'text-accent-clair' : ''}`}>
+            <TexteAjuste max={15} min={11} className={`text-center font-semibold ${l.moi ? 'text-accent-clair' : ''}`}>
               {l.moi ? 'Toi' : l.pseudo}
-            </span>
+            </TexteAjuste>
             <div
               className={`flex w-full flex-col items-center justify-start gap-0.5 rounded-t-[16px] pt-3 ${hauteurs[i]} ${
                 i === 1 ? 'bg-accent/20' : 'bg-verre'
@@ -134,8 +135,10 @@ function Ligne({ l, periode }: { l: LigneClassement; periode: PeriodeClassement 
       >
         <span className="w-6 text-center font-mono text-[14px] text-encre-douce">{l.rang}</span>
         <AvatarCadre avatar={l.avatar ?? '💪'} cadre={l.cadre} taille={36} />
-        <span className={`min-w-0 flex-1 truncate text-[16px] font-semibold ${l.moi ? 'text-accent-clair' : ''}`}>
-          {l.moi ? 'Toi' : l.pseudo}
+        <span className="min-w-0 flex-1">
+          <TexteAjuste max={16} min={12} className={`font-semibold ${l.moi ? 'text-accent-clair' : ''}`}>
+            {l.moi ? 'Toi' : l.pseudo}
+          </TexteAjuste>
         </span>
         <span className="font-mono text-[14px] text-encre-douce">{valeur(l, periode)}</span>
       </Link>

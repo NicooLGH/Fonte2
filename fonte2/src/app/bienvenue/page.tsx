@@ -98,7 +98,7 @@ export default function Bienvenue() {
                     setPseudo(e.target.value)
                     setSouci(null)
                   }}
-                  maxLength={24}
+                  maxLength={16}
                   autoComplete="off"
                   autoCapitalize="none"
                   autoFocus

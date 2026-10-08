@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { cleMois, type Bilan } from '@/lib/bilan'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 /**
  * Bannière du bilan, sur l'accueil.
@@ -25,7 +26,9 @@ export function BanniereBilan({ bilan }: { bilan: Bilan }) {
         <span className="font-mono text-[12px] tracking-[0.08em] text-accent-clair uppercase">
           Nouveau · ton bilan
         </span>
-        <span className="font-display text-[40px] leading-[0.85]">{bilan.nomCourt}</span>
+        <TexteAjuste max={40} min={22} className="font-display leading-[0.9]">
+          {bilan.nomCourt}
+        </TexteAjuste>
         <span className="text-[14px] text-encre-douce">
           {bilan.nbSeances + bilan.nbCardio} séance{bilan.nbSeances + bilan.nbCardio > 1 ? 's' : ''}
           {bilan.volume > 0 ? ` · ${tonnes} soulevées` : ''}

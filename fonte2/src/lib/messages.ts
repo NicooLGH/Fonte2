@@ -40,8 +40,8 @@ export function messageErreur(brut: string | undefined | null): string {
   // --- Règles posées en base ---
   if (m.includes('pseudo est déjà pris') || m.includes('profiles_pseudo_unique'))
     return 'Ce pseudo est déjà pris.'
-  if (m.includes('entre 2 et 24'))
-    return 'Le pseudo doit faire entre 2 et 24 caractères.'
+  if (m.includes('entre 2 et 24') || m.includes('entre 2 et 16'))
+    return 'Le pseudo doit faire entre 2 et 16 caractères.'
   if (m.includes('lettres, chiffres'))
     return 'Lettres, chiffres, espaces, tirets et points uniquement.'
   if (m.includes('prochain changement possible'))
@@ -59,12 +59,12 @@ export function messageErreur(brut: string | undefined | null): string {
  * La base les revérifie de toute façon : c'est elle qui décide.
  */
 export const REGLES_PSEUDO =
-  'Entre 2 et 24 caractères. Lettres, chiffres, espaces, tirets et points.'
+  'Entre 2 et 16 caractères. Lettres, chiffres, espaces, tirets et points.'
 
 export function validerPseudo(v: string): string | null {
   const p = v.trim()
   if (p.length < 2) return 'Le pseudo doit faire au moins 2 caractères.'
-  if (p.length > 24) return 'Le pseudo ne peut pas dépasser 24 caractères.'
+  if (p.length > 16) return 'Le pseudo ne peut pas dépasser 16 caractères.'
   if (!/^[A-Za-z0-9 _.-]+$/.test(p))
     return 'Lettres, chiffres, espaces, tirets et points uniquement.'
   return null

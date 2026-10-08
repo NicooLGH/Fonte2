@@ -7,6 +7,7 @@ import { Champ, Bouton, Erreur } from '@/components/ui'
 import type { Exercice } from '@/lib/carnet'
 import type { Modele } from '@/lib/live'
 import { creerModele, supprimerModele } from '@/app/(carnet)/seances/actions'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 export function Modeles({
   modeles,
@@ -45,8 +46,10 @@ export function Modeles({
         modeles.map((m) => (
           <div key={m.id} className="bloc flex flex-col gap-3 p-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-display text-[32px] leading-[0.9] [overflow-wrap:anywhere]">{m.nom}</p>
+              <div className="min-w-0 flex-1">
+                <TexteAjuste as="p" max={32} min={20} className="font-display leading-[0.95]">
+                  {m.nom}
+                </TexteAjuste>
                 <p className="mt-1 font-mono text-[13px] text-encre-douce">
                   {m.entrees.length} exercice{m.entrees.length > 1 ? 's' : ''}
                 </p>

@@ -4,6 +4,7 @@ import type { JourPlanning } from '@/lib/planning'
 import type { Modele } from '@/lib/live'
 import type { SeanceComplete } from '@/lib/carnet'
 import { calculerNiveau } from '@/lib/xp'
+import { TexteAjuste } from '@/components/ui/TexteAjuste'
 
 /* ============================================================
    Accueil : la séance du jour, le niveau et la semaine
@@ -124,11 +125,13 @@ export function SeanceDuJour({
   return (
     <section className="bloc motif-cercles flex flex-col gap-4 p-5" aria-label="Séance du jour">
       <div className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-mono text-[12px] tracking-[0.08em] text-accent-clair uppercase">
             {surtitre}
           </p>
-          <p className="mt-1 font-display text-[clamp(2.75rem,13vw,4rem)] leading-[0.85] [overflow-wrap:anywhere]">{titre}</p>
+          <TexteAjuste as="p" max={60} min={26} className="mt-1 font-display leading-[0.9]">
+            {titre}
+          </TexteAjuste>
         </div>
         {detail && (
           <p className="mb-1 shrink-0 text-right font-mono text-[14px] text-encre-douce">{detail}</p>

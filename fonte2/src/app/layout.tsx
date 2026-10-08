@@ -3,7 +3,6 @@ import { Bebas_Neue, Inter, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { ServiceWorker } from '@/components/Installation'
 import { Gestes } from '@/components/Gestes'
-import { Progression } from '@/components/Progression'
 import { Demarrage } from '@/components/Demarrage'
 
 /*
@@ -95,7 +94,6 @@ export default function RootLayout({
       <body>
         <ServiceWorker />
         <Gestes />
-        <Progression />
         <Demarrage />
         {children}
       </body>
