@@ -28,6 +28,9 @@ export type CleBanniere =
   | 'lave'
   | 'platine'
   | 'or'
+  | 'abysses'
+  | 'volcan'
+  | 'eclipse'
 
 export type Banniere = {
   cle: CleBanniere
@@ -90,7 +93,23 @@ export const BANNIERES: Banniere[] = [
   duo('crepuscule', 'Crépuscule', 30, ['249,115,22', 0.3], ['124,58,237', 0.38]),
   duo('neon', 'Néon', 35, ['34,211,238', 0.3], ['168,85,247', 0.38]),
   duo('lave', 'Lave', 45, ['239,68,68', 0.34], ['245,158,11', 0.3]),
+  duo('abysses', 'Abysses', 50, ['13,148,136', 0.32], ['49,46,129', 0.62]),
   duo('platine', 'Platine', 55, ['226,232,240', 0.26], ['111,224,210', 0.2], true),
+  {
+    // Magma la nuit : rouge vif, cœur orangé, fumée violette.
+    ...duo('volcan', 'Volcan', 65, ['220,38,38', 0.4], ['88,28,135', 0.48]),
+    fond:
+      'radial-gradient(ellipse 120% 100% at 25% 0%, rgb(220 38 38 / 0.4), transparent 70%),' +
+      'radial-gradient(ellipse 100% 90% at 90% 0%, rgb(88 28 135 / 0.48), transparent 70%),' +
+      'radial-gradient(ellipse 60% 40% at 55% 0%, rgb(251 146 60 / 0.22), transparent 70%)',
+  },
+  {
+    // Un anneau de lumière dorée en haut à droite ; le reflet tourne.
+    ...duo('eclipse', 'Éclipse', 75, ['255,228,160', 0.5], ['76,29,149', 0.38], true),
+    fond:
+      'radial-gradient(circle at 74% -14%, transparent 0 52px, rgb(255 228 160 / 0.62) 54px, rgb(255 190 110 / 0.2) 66px, transparent 128px),' +
+      'radial-gradient(ellipse 120% 100% at 18% 0%, rgb(76 29 149 / 0.38), transparent 70%)',
+  },
   duo('or', 'Or massif', 80, ['245,197,66', 0.34], ['180,83,9', 0.4], true),
 ]
 

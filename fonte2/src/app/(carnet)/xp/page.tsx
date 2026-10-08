@@ -1,4 +1,4 @@
-import { chargerMonXP, chargerJournal } from '@/lib/donnees-xp'
+import { chargerMonXP, chargerJournal, chargerRepartition } from '@/lib/donnees-xp'
 import { chargerClassement } from '@/lib/donnees-social'
 import { PageXP } from '@/components/xp/PageXP'
 
@@ -14,17 +14,19 @@ export default async function PageXPServeur({
 }: {
   searchParams: Promise<{ onglet?: string }>
 }) {
-  const [{ onglet }, total, journal, classement] = await Promise.all([
+  const [{ onglet }, total, journal, classement, repartition] = await Promise.all([
     searchParams,
     chargerMonXP(),
     chargerJournal(null),
     chargerClassement('niveau'),
+    chargerRepartition(),
   ])
 
   return (
     <PageXP
       total={total}
       journal={journal}
+      repartition={repartition}
       ongletInitial={onglet === 'bareme' ? 'bareme' : 'journal'}
       amis={classement.lignes
         .filter((l) => !l.moi)

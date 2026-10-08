@@ -37,6 +37,7 @@ export function EcranSeances({
   pseudo,
   ongletInitial,
   ajoutInitial,
+  seanceInitiale = null,
 }: {
   exercices: Exercice[]
   seances: SeanceComplete[]
@@ -49,6 +50,7 @@ export function EcranSeances({
   pseudo: string
   ongletInitial: CleOnglet
   ajoutInitial: 'muscu' | 'cardio' | null
+  seanceInitiale?: string | null
 }) {
   const [onglet, setOnglet] = useState<CleOnglet>(ongletInitial)
   const [ajout, setAjout] = useState<'muscu' | 'cardio' | null>(ajoutInitial)
@@ -128,7 +130,7 @@ export function EcranSeances({
       <Succes>{succes}</Succes>
 
       {onglet === 'historique' && (
-        <Historique seances={seances} cardio={cardio} exercices={exercices} pseudo={pseudo} />
+        <Historique seances={seances} cardio={cardio} exercices={exercices} pseudo={pseudo} seanceInitiale={seanceInitiale} />
       )}
       {onglet === 'semaine' && <Planning planning={planning} modeles={modeles} faits={faits} faitsLibelles={faitsLibelles} />}
       {onglet === 'modeles' && <Modeles modeles={modeles} exercices={exercices} />}

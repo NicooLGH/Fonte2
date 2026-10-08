@@ -43,6 +43,9 @@ export type GainXP = {
   /** Pour un gain de badge : lequel, et quel palier (1 = premier). */
   badge?: string | null
   palier?: number | null
+  /** La séance qui a rapporté ce gain, s'il y en a une. */
+  seanceId?: string | null
+  seanceNom?: string | null
   /** Pour un défi réussi : son badge et son titre. */
   defiBadge?: ConfigBadge | null
   defiTitre?: string | null
@@ -81,9 +84,22 @@ export function volumeSeance(seance: Seance): number {
 
 /* ---- Niveaux ---- */
 
-/** XP cumulé nécessaire pour atteindre le niveau L. */
+/**
+ * XP cumulé nécessaire pour atteindre le niveau L.
+ *
+ * Passer de L à L+1 coûte 200 + 10 × L : Bronze en trois semaines
+ * environ, Légende (80) en un peu plus de deux ans à un rythme
+ * régulier. Pas de plafond. Identique à `xp_pour_niveau` en base
+ * (fonte-session8.sql).
+ */
 export function xpCumulePourNiveau(niveau: number): number {
-  return 10 * niveau * (niveau + 1)
+  const l = Math.max(0, niveau)
+  return 5 * l * l + 195 * l
+}
+
+/** Ce que coûte le passage du niveau L au suivant. */
+export function xpPourPasser(niveau: number): number {
+  return 200 + 10 * Math.max(0, niveau)
 }
 
 export type Niveau = {

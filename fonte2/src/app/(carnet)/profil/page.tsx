@@ -54,7 +54,7 @@ export default async function MonProfil() {
       nbSeances={total}
       badges={badges && <ApercuBadges etats={badges} />}
       piste={
-        <Link href="/xp" className="bloc appui relative flex flex-col gap-1 py-3.5">
+        <Link href="/piste" className="bloc appui relative flex flex-col gap-1 py-3.5">
           <span className="flex items-baseline justify-between px-4">
             <span className="text-[16px] font-semibold">Niveaux</span>
             <span className="font-mono text-[13px] text-encre-douce">

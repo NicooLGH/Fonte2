@@ -34,15 +34,21 @@ export function Historique({
   cardio,
   exercices,
   pseudo,
+  seanceInitiale = null,
 }: {
   seances: SeanceComplete[]
   cardio: Cardio[]
   exercices: Exercice[]
   pseudo: string
+  /** Séance à ouvrir d'emblée (lien « Voir la séance » du journal). */
+  seanceInitiale?: string | null
 }) {
   const [recherche, setRecherche] = useState('')
   const [tout, setTout] = useState(false)
-  const [ouverte, setOuverte] = useState<Ligne | null>(null)
+  const [ouverte, setOuverte] = useState<Ligne | null>(() => {
+    const s = seanceInitiale ? seances.find((x) => x.id === seanceInitiale) : null
+    return s ? { genre: 'muscu', date: s.date, tri: '', seance: s } : null
+  })
   const [modifiee, setModifiee] = useState<SeanceComplete | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [succes, setSucces] = useState<string | null>(null)

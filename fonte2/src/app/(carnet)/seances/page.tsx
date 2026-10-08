@@ -16,7 +16,7 @@ const ONGLETS: CleOnglet[] = ['historique', 'semaine', 'modeles', 'exercices']
 export default async function PageSeances({
   searchParams,
 }: {
-  searchParams: Promise<{ onglet?: string; ajout?: string }>
+  searchParams: Promise<{ onglet?: string; ajout?: string; seance?: string }>
 }) {
   const params = await searchParams
   const supabase = await creerClientServeur()
@@ -51,7 +51,7 @@ export default async function PageSeances({
   return (
     <EcranSeances
       /* Une nouvelle adresse (?ajout=cardio depuis l'accueil) repart de zéro. */
-      key={`${onglet}-${ajout ?? ''}`}
+      key={`${onglet}-${ajout ?? ''}-${params.seance ?? ''}`}
       exercices={exercices}
       seances={seances}
       cardio={cardio}
@@ -62,6 +62,7 @@ export default async function PageSeances({
       pseudo={(profil?.pseudo as string) ?? ''}
       ongletInitial={onglet}
       ajoutInitial={ajout}
+      seanceInitiale={typeof params.seance === 'string' ? params.seance : null}
     />
   )
 }

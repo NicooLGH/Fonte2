@@ -29,6 +29,9 @@ export type CleMotif =
   | 'relief'
   | 'braises'
   | 'fete'
+  | 'constellation'
+  | 'tempete'
+  | 'galaxie'
 
 /** Les formes passent par une image SVG encodée dans l'adresse. */
 function svg(contenu: string, cote: number): string {
@@ -116,7 +119,10 @@ export const MOTIFS: Motif[] = [
   compo('sommets', 'Sommets', 20),
   compo('orage', 'Orage', 25),
   compo('relief', 'Relief', 35),
+  compo('constellation', 'Constellation', 40),
   compo('braises', 'Braises', 55),
+  compo('tempete', 'Tempête', 60),
+  compo('galaxie', 'Galaxie', 70),
   compo('fete', 'Fête', 80),
 ]
 

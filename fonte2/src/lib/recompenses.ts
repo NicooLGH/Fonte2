@@ -70,6 +70,24 @@ function ordre(t: TypeRecompense): number {
   return t === 'cadre' ? 0 : t === 'teinte' ? 1 : 2
 }
 
+/* ---- Paliers à Lingots ----
+   La monnaie arrive avec la session 9 : la piste les annonce
+   déjà, ils seront crédités rétroactivement. Après le niveau 80,
+   un palier tous les 5 niveaux. */
+
+const LINGOTS_AVANT_80 = [2, 4, 7, 12, 15, 18, 22, 27, 33, 38, 43, 48, 53, 58, 63, 68, 73, 78]
+
+export function donneLingots(niveau: number): boolean {
+  return LINGOTS_AVANT_80.includes(niveau) || (niveau > 80 && niveau % 5 === 0)
+}
+
+/** Les récompenses d'un niveau, cadre d'abord. */
+export function recompensesDuNiveau(niveau: number): Recompense[] {
+  return RECOMPENSES.filter((r) => r.niveau === niveau && niveau > 0).sort(
+    (a, b) => ordre(a.type) - ordre(b.type)
+  )
+}
+
 export const LIBELLE_TYPE: Record<TypeRecompense, string> = {
   cadre: 'Cadre',
   teinte: 'Teinte',

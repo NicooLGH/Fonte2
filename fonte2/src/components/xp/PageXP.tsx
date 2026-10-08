@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 import {
   BAREME,
   RANGS,
@@ -9,6 +10,7 @@ import {
   xpCumulePourNiveau,
   type GainXP,
   type PageJournal,
+  type SourceXP,
 } from '@/lib/xp'
 import { bornesSemaine, lundiDe, semaineCourante } from '@/lib/semaine'
 import { PisteNiveaux, type AmiPiste } from './PisteNiveaux'
@@ -30,11 +32,14 @@ export function PageXP({
   journal,
   ongletInitial,
   amis = [],
+  repartition = {},
 }: {
   total: number
   journal: PageJournal
   ongletInitial: Onglet
   amis?: AmiPiste[]
+  /** XP du mois par source. */
+  repartition?: Partial<Record<SourceXP, number>>
 }) {
   const [onglet, setOnglet] = useState<Onglet>(ongletInitial)
   const n = calculerNiveau(total)
@@ -81,10 +86,15 @@ export function PageXP({
         <Bareme niveau={n.niveau} />
       ) : (
         <>
-          <div className="bloc motif-cercles py-3.5">
+          <Link href="/piste" className="bloc motif-cercles appui flex flex-col gap-1 py-3.5">
+            <span className="flex items-baseline justify-between px-4">
+              <span className="text-[16px] font-semibold">Piste</span>
+              <span className="font-mono text-[13px] text-encre-douce">tout voir ›</span>
+            </span>
             <PisteNiveaux niveau={n.niveau} progression={n.progression} amis={amis} />
-          </div>
+          </Link>
           <Semaine entrees={journal.entrees} />
+          <Repartition repartition={repartition} />
           <Journal initial={journal} />
         </>
       )}
@@ -188,6 +198,10 @@ function Bareme({ niveau }: { niveau: number }) {
       </Groupe>
 
       <Groupe titre="Rangs">
+        <p className="border-b border-filet py-3 text-[14px] leading-relaxed text-encre-douce">
+          Passer au niveau suivant coûte 200 + 10 × ton niveau en XP. Les niveaux n&apos;ont pas
+          de fin.
+        </p>
         <div className="grid grid-cols-3 font-mono text-[14px]">
           {RANGS.map((r) => {
             const actuel =
@@ -242,6 +256,12 @@ function Bareme({ niveau }: { niveau: number }) {
           })}
       </Groupe>
 
+      <p className="mt-4 text-[14px] leading-relaxed text-encre-douce">
+        Des Lingots s&apos;ajoutent sur d&apos;autres paliers (2, 4, 7, 12… puis tous les 5
+        niveaux après 80). Ils arrivent avec la boutique.{' '}
+        <Link href="/piste" className="font-semibold text-accent-2">Voir la piste</Link>
+      </p>
+
       <p className="mt-6 text-[13px] leading-relaxed text-encre-douce">
         L&apos;XP ne se perd jamais, sauf si tu supprimes la séance ou le relevé
         qui l&apos;a rapportée.
@@ -293,32 +313,157 @@ function Ligne({
   )
 }
 
+/* ---- D'où vient mon XP ---- */
+
+const CATEGORIES: { cle: string; nom: string; sources: SourceXP[]; couleur: string }[] = [
+  { cle: 'seances', nom: 'Séances', sources: ['seance', 'cardio'], couleur: '#ff4b2b' },
+  { cle: 'records', nom: 'Records', sources: ['record'], couleur: '#4cc9f0' },
+  { cle: 'regularite', nom: 'Régularité', sources: ['serie', 'semaine'], couleur: '#ffb38f' },
+  { cle: 'badges', nom: 'Badges et défis', sources: ['badge', 'defi'], couleur: '#f0c04a' },
+  { cle: 'releves', nom: 'Relevés', sources: ['releve'], couleur: '#8b6fe0' },
+]
+
+function Repartition({ repartition }: { repartition: Partial<Record<SourceXP, number>> }) {
+  const parts = CATEGORIES.map((c) => ({
+    ...c,
+    total: c.sources.reduce((t, s) => t + (repartition[s] ?? 0), 0),
+  }))
+  const total = parts.reduce((t, p) => t + p.total, 0)
+  if (total <= 0) return null
+  const mois = new Date().toLocaleDateString('fr-FR', { month: 'long', timeZone: 'Europe/Paris' })
+
+  return (
+    <section className="bloc flex flex-col gap-3.5 p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[15px] text-encre-douce">D&apos;où vient ton XP · {mois}</span>
+        <span className="font-display text-[32px] leading-none">
+          {total.toLocaleString('fr-FR')} <span className="text-[20px] text-encre-douce">XP</span>
+        </span>
+      </div>
+      <div className="flex h-3 gap-0.5 overflow-hidden rounded-pilule" role="img"
+        aria-label={parts.filter((p) => p.total > 0).map((p) => `${p.nom} ${p.total} XP`).join(', ')}>
+        {parts.filter((p) => p.total > 0).map((p) => (
+          <span key={p.cle} style={{ width: `${(p.total / total) * 100}%`, background: p.couleur }} />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[14px]">
+        {parts.map((p) => (
+          <span key={p.cle} className={`flex items-center gap-2 ${p.total === 0 ? 'opacity-50' : ''}`}>
+            <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: p.couleur }} />
+            <span className="truncate">{p.nom}</span>
+            <span className="ml-auto font-mono text-encre-douce">{p.total.toLocaleString('fr-FR')}</span>
+          </span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 /* ---- Journal ---- */
+
+const FILTRES: { cle: string; nom: string; sources: SourceXP[] | null }[] = [
+  { cle: 'tout', nom: 'Tout', sources: null },
+  { cle: 'seances', nom: 'Séances', sources: ['seance', 'cardio'] },
+  { cle: 'records', nom: 'Records', sources: ['record'] },
+  { cle: 'regularite', nom: 'Régularité', sources: ['serie', 'semaine'] },
+  { cle: 'badges', nom: 'Badges', sources: ['badge'] },
+  { cle: 'defis', nom: 'Défis', sources: ['defi'] },
+  { cle: 'releves', nom: 'Relevés', sources: ['releve'] },
+]
+
+/** Une ligne du journal, ou les gains d'une même séance réunis. */
+type Groupe = {
+  cle: string
+  titre: string
+  sous: string
+  source: SourceXP
+  total: number
+  lignes: GainXP[]
+  seanceId: string | null
+}
+
+function grouper(lignes: GainXP[]): Groupe[] {
+  const groupes: Groupe[] = []
+  const parSeance = new Map<string, Groupe>()
+  lignes.forEach((l, i) => {
+    if (l.seanceId) {
+      const g = parSeance.get(l.seanceId)
+      if (g) {
+        g.lignes.push(l)
+        g.total += l.montant
+        if (l.source === 'seance') g.source = 'seance'
+        return
+      }
+      const nouveau: Groupe = {
+        cle: `s-${l.seanceId}`,
+        titre: l.seanceNom?.trim() || 'Séance',
+        sous: jourCourt(l.date),
+        source: l.source,
+        total: l.montant,
+        lignes: [l],
+        seanceId: l.seanceId,
+      }
+      parSeance.set(l.seanceId, nouveau)
+      groupes.push(nouveau)
+      return
+    }
+    groupes.push({
+      cle: `l-${i}`,
+      titre: l.libelle,
+      sous: jourCourt(l.date),
+      source: l.source,
+      total: l.montant,
+      lignes: [l],
+      seanceId: null,
+    })
+  })
+  // Un « groupe » d'une seule ligne s'affiche comme une ligne.
+  for (const g of groupes)
+    if (g.lignes.length === 1) {
+      g.titre = g.lignes[0].libelle
+    } else {
+      const records = g.lignes.filter((l) => l.source === 'record').length
+      g.sous += records ? ` · ${records} record${records > 1 ? 's' : ''}` : ''
+    }
+  return groupes
+}
 
 function Journal({ initial }: { initial: PageJournal }) {
   const [entrees, setEntrees] = useState<GainXP[]>(initial.entrees)
   const [suite, setSuite] = useState(initial.suite)
+  const [filtre, setFiltre] = useState('tout')
+  const [ouverts, setOuverts] = useState<Set<string>>(new Set())
   const [enCours, demarrer] = useTransition()
+  const pastille = usePastille(filtre)
+  const sources = FILTRES.find((f) => f.cle === filtre)?.sources ?? null
 
   // Regroupées par semaine, dans l'ordre reçu (déjà trié par la base).
-  const semaines: { cle: string; total: number; lignes: GainXP[] }[] = []
+  const semaines: { cle: string; total: number; groupes: Groupe[] }[] = []
+  const parSemaine = new Map<string, GainXP[]>()
   for (const e of entrees) {
-    let s = semaines.at(-1)
-    if (!s || s.cle !== e.semaine) {
-      s = { cle: e.semaine, total: 0, lignes: [] }
-      semaines.push(s)
-    }
-    s.total += e.montant
-    s.lignes.push(e)
+    if (sources && !sources.includes(e.source)) continue
+    if (!parSemaine.has(e.semaine)) parSemaine.set(e.semaine, [])
+    parSemaine.get(e.semaine)!.push(e)
   }
+  for (const [cle, lignes] of parSemaine)
+    semaines.push({ cle, total: lignes.reduce((t, l) => t + l.montant, 0), groupes: grouper(lignes) })
 
   function plus() {
-    const derniere = semaines.at(-1)?.cle
+    const derniere = entrees.at(-1)?.semaine
     if (!derniere) return
     demarrer(async () => {
       const r = await journalSuite(derniere)
       setEntrees((l) => [...l, ...r.entrees])
       setSuite(r.suite)
+    })
+  }
+
+  function basculer(cle: string) {
+    setOuverts((o) => {
+      const n = new Set(o)
+      if (n.has(cle)) n.delete(cle)
+      else n.add(cle)
+      return n
     })
   }
 
@@ -333,6 +478,33 @@ function Journal({ initial }: { initial: PageJournal }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <div
+        ref={pastille.ref}
+        role="group"
+        aria-label="Filtrer le journal"
+        className="defilement-isole relative -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1"
+      >
+        <Pastille pos={pastille.pos} />
+        {FILTRES.map((f) => (
+          <button
+            key={f.cle}
+            type="button"
+            onClick={() => setFiltre(f.cle)}
+            aria-pressed={filtre === f.cle}
+            data-actif={filtre === f.cle}
+            className={`relative h-9 shrink-0 rounded-pilule px-3.5 text-[14px] transition-colors duration-300 ${
+              filtre === f.cle ? `${pastille.fond} font-semibold text-fond` : 'bg-verre text-encre-douce hover:text-encre'
+            }`}
+          >
+            {f.nom}
+          </button>
+        ))}
+      </div>
+
+      {semaines.length === 0 && (
+        <p className="px-0.5 text-[15px] text-encre-douce">Rien de ce type sur ces semaines.</p>
+      )}
+
       {semaines.map((s) => (
         <section key={s.cle} className="flex flex-col">
           <div className="flex items-baseline justify-between px-0.5 pb-1">
@@ -341,17 +513,64 @@ function Journal({ initial }: { initial: PageJournal }) {
             </p>
             <span className="font-mono text-[14px] text-accent-clair">+{s.total}</span>
           </div>
-          <ul className="flex flex-col">
-            {s.lignes.map((l, i) => (
-              <li key={i} className="flex min-h-[54px] items-center gap-3 px-0.5">
-                <IconeSource source={l.source} />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-[16px]">{l.libelle}</span>
-                  <span className="text-[13px] text-encre-douce">{jourCourt(l.date)}</span>
-                </span>
-                <span className="font-mono text-[15px] text-accent-clair">+{l.montant}</span>
-              </li>
-            ))}
+          <ul className="flex flex-col gap-0.5">
+            {s.groupes.map((g) => {
+              const multiple = g.lignes.length > 1
+              const ouvert = multiple && ouverts.has(g.cle)
+              const ligne = (
+                <>
+                  <IconeSource source={g.source} />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className={`truncate text-[16px] ${multiple ? 'font-semibold' : ''}`}>{g.titre}</span>
+                    <span className="text-[13px] text-encre-douce">{g.sous}</span>
+                  </span>
+                  <span className="font-mono text-[15px] text-accent-clair">+{g.total}</span>
+                </>
+              )
+              return (
+                <li key={g.cle} className={`rounded-[16px] ${ouvert ? 'bg-verre' : ''}`}>
+                  {multiple ? (
+                    <button
+                      type="button"
+                      onClick={() => basculer(g.cle)}
+                      aria-expanded={ouvert}
+                      className="flex min-h-[56px] w-full items-center gap-3 px-1.5 text-left"
+                    >
+                      {ligne}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+                        className={`shrink-0 text-encre-douce transition-transform ${ouvert ? 'rotate-180' : ''}`}>
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <div className="flex min-h-[56px] items-center gap-3 px-1.5">{ligne}</div>
+                  )}
+                  {ouvert && (
+                    <div className="flex flex-col pr-3 pb-3 pl-[58px]">
+                      {g.lignes.map((l, i) => (
+                        <div key={i} className="flex justify-between gap-3 border-b border-filet py-2 text-[14px] last:border-0">
+                          <span className={l.source === 'record' ? 'text-accent-2' : ''}>{l.libelle}</span>
+                          <span className="shrink-0 font-mono text-encre-douce">+{l.montant}</span>
+                        </div>
+                      ))}
+                      {g.seanceId && (
+                        <Link
+                          href={`/seances?seance=${encodeURIComponent(g.seanceId)}`}
+                          className="mt-2.5 flex items-center gap-1 text-[14px] font-semibold text-accent-2"
+                        >
+                          Voir la séance
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M9 18l6-6-6-6" />
+                          </svg>
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </section>
       ))}
@@ -382,12 +601,14 @@ function IconeSource({ source }: { source: GainXP['source'] }) {
     badge: 'bg-[#f0c04a]/15 text-[#f0c04a]',
     defi: 'bg-[#f0c04a]/15 text-[#f0c04a]',
     semaine: 'bg-accent/15 text-accent-clair',
+    serie: 'bg-accent/15 text-accent-clair',
+    seance: 'bg-accent/15 text-accent-clair',
     releve: 'bg-accent-2/15 text-accent-2',
     cardio: 'bg-accent-2/15 text-accent-2',
   }
   const chemins: Record<string, React.ReactNode> = {
     seance: <path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" />,
-    serie: <path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" />,
+    serie: <path d="M12 22c4 0 7-2.7 7-6.8 0-3.2-2-5.6-3.6-7.3-.4 1.9-1.4 3.1-2.6 3.6.3-3.4-1.3-6.6-4.3-8.5.2 3.1-1.5 5-3 6.8C4.3 11.3 5 13.6 5 15.2 5 19.3 8 22 12 22z" />,
     cardio: <><circle cx="14" cy="4" r="2" /><path d="M6 21l3-6 3 2v5M9 15l1-5 4 1 3 3M10 10l-3 2" /></>,
     record: <path d="M3 17l6-6 4 4 8-8M15 7h6v6" />,
     releve: <path d="M5 19v-7M12 19V5M19 19v-10M3 21h18" />,

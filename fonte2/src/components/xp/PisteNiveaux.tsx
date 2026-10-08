@@ -110,7 +110,7 @@ export function PisteNiveaux({
   )
 }
 
-function Echantillon({ r }: { r: Recompense }) {
+export function Echantillon({ r }: { r: Recompense }) {
   if (r.type === 'cadre') {
     const c = trouverCadre(r.cle)
     return (

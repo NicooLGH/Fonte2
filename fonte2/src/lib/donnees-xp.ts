@@ -30,7 +30,20 @@ export function lireGain(g: Brut): GainXP {
     palier: g.palier == null ? null : Number(g.palier),
     defiBadge: g.defi_badge ? lireBadge(g.defi_badge) : null,
     defiTitre: typeof g.defi_titre === 'string' ? g.defi_titre : null,
+    seanceId: typeof g.seance_id === 'string' ? g.seance_id : null,
+    seanceNom: typeof g.seance_nom === 'string' ? g.seance_nom : null,
   }
+}
+
+/** D'où vient mon XP depuis le 1er du mois, par source. */
+export async function chargerRepartition(): Promise<Partial<Record<SourceXP, number>>> {
+  const supabase = await creerClientServeur()
+  const { data, error } = await supabase.rpc('ma_repartition_xp')
+  if (error || !data || typeof data !== 'object') return {}
+  const r: Partial<Record<SourceXP, number>> = {}
+  for (const [cle, v] of Object.entries(data as Record<string, unknown>))
+    if (SOURCES.includes(cle as SourceXP)) r[cle as SourceXP] = Number(v) || 0
+  return r
 }
 
 /** Mon total d'XP. 0 si le SQL de l'XP n'est pas encore installé. */
