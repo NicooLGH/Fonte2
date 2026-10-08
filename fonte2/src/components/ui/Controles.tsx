@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 /* ============================================================
    Contrôles 3.0
@@ -31,26 +32,43 @@ export function Onglets({
   /** Nom de la liste d'onglets, pour les lecteurs d'écran. */
   etiquette?: string
 }) {
+  // Un onglet-lien s'allume dès qu'on le touche, sans attendre la page.
+  const [vise, setVise] = useState<string | null>(null)
+  useEffect(() => setVise(null), [actif])
+  const courant = vise ?? actif
+  const n = onglets.length
+  const index = onglets.findIndex((o) => o.cle === courant)
+
   return (
     <div
       role="tablist"
       aria-label={etiquette}
-      className="grid gap-1 rounded-bloc bg-verre p-1"
-      style={{ gridTemplateColumns: `repeat(${onglets.length}, minmax(0, 1fr))` }}
+      className="relative grid gap-1 rounded-bloc bg-verre p-1"
+      style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
     >
+      {/* La pastille glisse d'un onglet à l'autre. */}
+      <span
+        aria-hidden
+        className="pastille-nav pointer-events-none absolute top-1 left-1 h-10 rounded-[11px] bg-encre"
+        style={{
+          width: `calc((100% - 8px - ${(n - 1) * 4}px) / ${n})`,
+          transform: `translateX(calc(${Math.max(index, 0)} * (100% + 4px)))`,
+          opacity: index < 0 ? 0 : 1,
+        }}
+      />
       {onglets.map((o) => {
-        const choisi = o.cle === actif
-        const classes = `flex h-10 items-center justify-center rounded-[11px] px-2 text-[15px] transition-colors ${
-          choisi
-            ? 'bg-encre font-semibold text-fond'
-            : 'text-encre-douce hover:text-encre'
+        const choisi = o.cle === courant
+        const classes = `relative flex h-10 items-center justify-center rounded-[11px] px-2 text-[15px] transition-colors duration-300 ${
+          choisi ? 'font-semibold text-fond' : 'text-encre-douce hover:text-encre'
         }`
         return o.href ? (
           <Link
             key={o.cle}
             href={o.href}
+            prefetch
             role="tab"
             aria-selected={choisi}
+            onClick={() => setVise(o.cle)}
             className={classes}
           >
             {o.libelle}
