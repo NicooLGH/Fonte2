@@ -14,6 +14,7 @@ import { verrouiller } from '@/app/(carnet)/admin/verrou'
 import { AdminDefis } from './AdminDefis'
 import { Onglets } from '@/components/ui/Controles'
 import type { DefiAdmin } from '@/lib/defis'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 const ICONES = ['📢', '🎉', '⚠️', '🔥', '✨', '💪', '🛠️', '🎁', '📅', '❤️']
 type Ton = 'info' | 'succes' | 'alerte'
@@ -36,6 +37,7 @@ export function Admin({
   const [corps, setCorps] = useState('')
   const [ton, setTon] = useState<Ton>('info')
   const [couleur, setCouleur] = useState<string | null>(null)
+  const pastilleTon = usePastille(`${ton}-${couleur ?? ''}`)
   const [icone, setIcone] = useState('')
   const [retirable, setRetirable] = useState(true)
   const [epinglee, setEpinglee] = useState(false)
@@ -148,7 +150,8 @@ export function Admin({
           </label>
 
           <Reglage titre="Style" detail="Couleur de base du bandeau.">
-            <div className="flex gap-1 rounded-bloc bg-verre p-1">
+            <div ref={pastilleTon.ref} className="relative flex gap-1 rounded-bloc bg-verre p-1">
+              <Pastille pos={pastilleTon.pos} arrondi="rounded-bloc" />
               {(['info', 'succes', 'alerte'] as Ton[]).map((t) => (
                 <button
                   key={t}
@@ -158,9 +161,10 @@ export function Admin({
                     setCouleur(null)
                   }}
                   aria-pressed={ton === t && !couleur}
-                  className={`flex-1 rounded-bloc px-3 py-1.5 text-[14px] font-semibold ${
+                  data-actif={ton === t && !couleur}
+                  className={`relative flex-1 rounded-bloc px-3 py-1.5 text-[14px] font-semibold transition-colors duration-300 ${
                     ton === t && !couleur
-                      ? 'bg-encre text-fond'
+                      ? `${pastilleTon.fond} text-fond`
                       : 'text-encre-douce'
                   }`}
                 >
@@ -425,16 +429,19 @@ function Oui({
   valeur: boolean
   onChange: (v: boolean) => void
 }) {
+  const pastille = usePastille(valeur)
   return (
-    <div className="flex gap-1 rounded-bloc bg-verre p-1">
+    <div ref={pastille.ref} className="relative flex gap-1 rounded-bloc bg-verre p-1">
+      <Pastille pos={pastille.pos} arrondi="rounded-bloc" />
       {([true, false] as const).map((v) => (
         <button
           key={String(v)}
           type="button"
           onClick={() => onChange(v)}
           aria-pressed={valeur === v}
-          className={`flex-1 rounded-bloc px-4 py-1.5 text-[14px] font-semibold ${
-            valeur === v ? 'bg-encre text-fond' : 'text-encre-douce'
+          data-actif={valeur === v}
+          className={`relative flex-1 rounded-bloc px-4 py-1.5 text-[14px] font-semibold transition-colors duration-300 ${
+            valeur === v ? `${pastille.fond} text-fond` : 'text-encre-douce'
           }`}
         >
           {v ? 'Oui' : 'Non'}

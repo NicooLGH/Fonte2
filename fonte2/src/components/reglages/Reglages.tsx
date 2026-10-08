@@ -20,6 +20,7 @@ import {
   changerMotDePasse,
   supprimerCompte,
 } from '@/app/(carnet)/reglages/actions'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 
 type Theme = 'sombre' | 'clair' | 'auto'
@@ -55,6 +56,7 @@ export function Reglages({
   aUnCode: boolean
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
+  const pastilleJour = usePastille(jourRappel)
   const [enCours, demarrer] = useTransition()
 
   function agir(action: () => Promise<{ erreur?: string; succes?: string }>) {
@@ -180,15 +182,17 @@ export function Reglages({
           titre="Jour du relevé"
           detail="Ce jour-là, un rappel discret apparaît sur l'accueil si ton relevé n'est pas encore rempli. Écarté, il ne revient pas avant la semaine suivante."
         >
-          <div className="flex flex-wrap gap-1.5">
+          <div ref={pastilleJour.ref} className="relative flex flex-wrap gap-1.5">
+            <Pastille pos={pastilleJour.pos} />
             <button
               type="button"
               disabled={enCours}
               onClick={() => agir(() => definirJourRappel(null))}
               aria-pressed={jourRappel === null}
-              className={`h-10 rounded-pilule px-3.5 text-[14px] transition-colors ${
+              data-actif={jourRappel === null}
+              className={`relative h-10 rounded-pilule px-3.5 text-[14px] transition-colors duration-300 ${
                   jourRappel === null
-                    ? 'bg-encre font-semibold text-fond'
+                    ? `${pastilleJour.fond} font-semibold text-fond`
                     : 'bg-verre-fort text-encre-douce hover:text-encre'
                 }`}
             >
@@ -201,9 +205,10 @@ export function Reglages({
                 disabled={enCours}
                 onClick={() => agir(() => definirJourRappel(j.valeur))}
                 aria-pressed={jourRappel === j.valeur}
-                className={`h-10 rounded-pilule px-3.5 text-[14px] transition-colors ${
+                data-actif={jourRappel === j.valeur}
+                className={`relative h-10 rounded-pilule px-3.5 text-[14px] transition-colors duration-300 ${
                     jourRappel === j.valeur
-                      ? 'bg-encre font-semibold text-fond'
+                      ? `${pastilleJour.fond} font-semibold text-fond`
                       : 'bg-verre-fort text-encre-douce hover:text-encre'
                   }`}
               >
@@ -321,6 +326,7 @@ export function Reglages({
 
 function ChoixThemeAffichage() {
   const [theme, setTheme] = useState<Theme>('sombre')
+  const pastille = usePastille(theme)
 
   useEffect(() => {
     const enregistre = localStorage.getItem('fonte-theme') as Theme | null
@@ -340,7 +346,8 @@ function ChoixThemeAffichage() {
   }
 
   return (
-    <div className="flex gap-1 rounded-bloc bg-verre-fort p-1">
+    <div ref={pastille.ref} className="relative flex gap-1 rounded-bloc bg-verre-fort p-1">
+      <Pastille pos={pastille.pos} arrondi="rounded-[11px]" />
       {(
         [
           ['sombre', '🌙 Sombre'],
@@ -353,8 +360,9 @@ function ChoixThemeAffichage() {
           type="button"
           onClick={() => appliquer(cle)}
           aria-pressed={theme === cle}
-          className={`h-10 flex-1 rounded-[11px] px-3 text-[14px] transition-colors ${
-            theme === cle ? 'bg-encre font-semibold text-fond' : 'text-encre-douce hover:text-encre'
+          data-actif={theme === cle}
+          className={`relative h-10 flex-1 rounded-[11px] px-3 text-[14px] transition-colors duration-300 ${
+            theme === cle ? `${pastille.fond} font-semibold text-fond` : 'text-encre-douce hover:text-encre'
           }`}
         >
           {libelle}
@@ -462,6 +470,7 @@ function ChoixSons() {
   const [actifs, setActifs] = useState(false)
 
   useEffect(() => setActifs(sonsActifs()), [])
+  const pastille = usePastille(actifs)
 
   function basculer(valeur: boolean) {
     setActifs(valeur)
@@ -472,15 +481,17 @@ function ChoixSons() {
   }
 
   return (
-    <div className="flex gap-1 rounded-bloc bg-verre-fort p-1">
+    <div ref={pastille.ref} className="relative flex gap-1 rounded-bloc bg-verre-fort p-1">
+      <Pastille pos={pastille.pos} arrondi="rounded-[11px]" />
       {([true, false] as const).map((v) => (
         <button
           key={String(v)}
           type="button"
           onClick={() => basculer(v)}
           aria-pressed={actifs === v}
-          className={`appui h-10 flex-1 rounded-[11px] px-4 text-[14px] transition-colors ${
-              actifs === v ? 'bg-encre font-semibold text-fond' : 'text-encre-douce hover:text-encre'
+          data-actif={actifs === v}
+          className={`appui relative h-10 flex-1 rounded-[11px] px-4 text-[14px] transition-colors duration-300 ${
+              actifs === v ? `${pastille.fond} font-semibold text-fond` : 'text-encre-douce hover:text-encre'
             }`}
         >
           {v ? 'Activés' : 'Coupés'}

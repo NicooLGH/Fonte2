@@ -20,6 +20,7 @@ import {
   type Objectif,
 } from '@/lib/defis'
 import { enregistrerDefi, changerStatutDefi } from '@/app/(carnet)/admin/actions'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 /* ============================================================
    Administration — défis
@@ -588,22 +589,25 @@ function Segments({
   desactive?: boolean
   aide?: string
 }) {
+  const pastille = usePastille(valeur)
   return (
     <div>
       <span className="mb-2 block text-[15px] font-semibold text-encre-douce">
         {libelle}
       </span>
-      <div className="flex gap-1 rounded-bloc bg-verre p-1">
+      <div ref={pastille.ref} className="relative flex gap-1 rounded-bloc bg-verre p-1">
+        <Pastille pos={pastille.pos} arrondi="rounded-[11px]" />
         {options.map(([v, l]) => (
           <button
             key={v}
             type="button"
             disabled={desactive}
             aria-pressed={valeur === v}
+            data-actif={valeur === v}
             onClick={() => onChange(v)}
-            className={`min-h-10 flex-1 rounded-[11px] px-2 text-[14px] font-semibold transition-colors
+            className={`relative min-h-10 flex-1 rounded-[11px] px-2 text-[14px] font-semibold transition-colors duration-300
               disabled:cursor-not-allowed disabled:opacity-50 ${
-                valeur === v ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+                valeur === v ? `${pastille.fond} text-fond` : 'text-encre-douce hover:text-encre'
               }`}
           >
             {l}

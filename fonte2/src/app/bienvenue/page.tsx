@@ -5,6 +5,7 @@ import { finirBienvenue, type Etat } from '@/app/auth/actions'
 import { Erreur } from '@/components/ui'
 import { REGLES_PSEUDO, validerPseudo } from '@/lib/messages'
 import { AVATARS } from '@/lib/recompenses'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 /* ============================================================
    Arrivée
@@ -37,6 +38,8 @@ export default function Bienvenue() {
   const [rythme, setRythme] = useState<number | null>(3)
   const [objectif, setObjectif] = useState<string | null>(null)
   const [experience, setExperience] = useState<string | null>(null)
+  const pastilleRythme = usePastille(rythme)
+  const pastilleExperience = usePastille(experience)
   const [souci, setSouci] = useState<string | null>(null)
 
   // Le pseudo est refusé par la base (déjà pris) : retour à l'étape 1.
@@ -159,15 +162,17 @@ export default function Bienvenue() {
 
             <div className="flex flex-col gap-2">
               <span className="px-0.5 text-[15px] font-semibold text-encre-douce">Séances par semaine</span>
-              <div className="grid grid-cols-5 gap-2">
+              <div ref={pastilleRythme.ref} className="relative grid grid-cols-5 gap-2">
+                <Pastille pos={pastilleRythme.pos} arrondi="rounded-bloc" />
                 {[2, 3, 4, 5, 6].map((n) => (
                   <button
                     key={n}
                     type="button"
                     onClick={() => setRythme(n)}
                     aria-pressed={rythme === n}
-                    className={`appui h-14 rounded-bloc font-display text-[28px] transition-colors ${
-                      rythme === n ? 'bg-encre text-fond' : 'bg-verre text-encre-douce hover:text-encre'
+                    data-actif={rythme === n}
+                    className={`appui relative h-14 rounded-bloc font-display text-[28px] transition-colors duration-300 ${
+                      rythme === n ? `${pastilleRythme.fond} text-fond` : 'bg-verre text-encre-douce hover:text-encre'
                     }`}
                   >
                     {n === 6 ? '6+' : n}
@@ -201,7 +206,8 @@ export default function Bienvenue() {
 
             <div className="flex flex-col gap-2">
               <span className="px-0.5 text-[15px] font-semibold text-encre-douce">Expérience</span>
-              <div className="grid grid-cols-3 gap-1 rounded-bloc bg-verre p-1">
+              <div ref={pastilleExperience.ref} className="relative grid grid-cols-3 gap-1 rounded-bloc bg-verre p-1">
+                <Pastille pos={pastilleExperience.pos} arrondi="rounded-[11px]" />
                 {[
                   ['debutant', 'Débutant'],
                   ['moyen', 'Moyen'],
@@ -212,8 +218,9 @@ export default function Bienvenue() {
                     type="button"
                     onClick={() => setExperience(cle)}
                     aria-pressed={experience === cle}
-                    className={`h-11 rounded-[11px] text-[15px] transition-colors ${
-                      experience === cle ? 'bg-encre font-semibold text-fond' : 'text-encre-douce hover:text-encre'
+                    data-actif={experience === cle}
+                    className={`relative h-11 rounded-[11px] text-[15px] transition-colors duration-300 ${
+                      experience === cle ? `${pastilleExperience.fond} font-semibold text-fond` : 'text-encre-douce hover:text-encre'
                     }`}
                   >
                     {nom}

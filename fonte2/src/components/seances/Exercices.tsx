@@ -10,6 +10,7 @@ import {
   modifierExercice,
   supprimerExercice,
 } from '@/app/(carnet)/seances/actions'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 export function Exercices({ exercices }: { exercices: Exercice[] }) {
   const [ouvert, setOuvert] = useState(false)
@@ -139,6 +140,7 @@ function FormulaireExercice({
   onEnvoyer: (d: FormData) => void
 }) {
   const [groupe, setGroupe] = useState<Groupe | ''>(exercice?.groupe ?? '')
+  const pastille = usePastille(groupe)
 
   return (
     <form action={onEnvoyer} className="flex flex-col gap-5">
@@ -171,16 +173,18 @@ function FormulaireExercice({
         <span className="mb-2 block px-0.5 text-[15px] font-semibold text-encre-douce">
           Groupe musculaire
         </span>
-        <div className="flex flex-wrap gap-2">
+        <div ref={pastille.ref} className="relative flex flex-wrap gap-2">
+          <Pastille pos={pastille.pos} />
           {GROUPES.map((g) => (
             <button
               key={g.cle}
               type="button"
               onClick={() => setGroupe(groupe === g.cle ? '' : g.cle)}
               aria-pressed={groupe === g.cle}
-              className={`h-10 rounded-pilule px-4 text-[14px] transition-colors ${
+              data-actif={groupe === g.cle}
+              className={`relative h-10 rounded-pilule px-4 text-[14px] transition-colors duration-300 ${
                   groupe === g.cle
-                    ? 'bg-encre font-semibold text-fond'
+                    ? `${pastille.fond} font-semibold text-fond`
                     : 'bg-verre text-encre-douce hover:text-encre'
                 }`}
             >

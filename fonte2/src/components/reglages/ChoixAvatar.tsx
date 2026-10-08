@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { AVATARS } from '@/lib/recompenses'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 /* ============================================================
    Choix de l'avatar
@@ -25,21 +26,24 @@ export function ChoixAvatar({
   // On ouvre la famille de l'avatar actuel.
   const initiale = AVATARS.findIndex((f) => f.liste.includes(avatar))
   const [famille, setFamille] = useState(initiale < 0 ? 0 : initiale)
+  const pastille = usePastille(famille)
 
   return (
     <div className="flex flex-col gap-3">
 
-      <div role="tablist" className="defilement-isole -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+      <div ref={pastille.ref} role="tablist" className="defilement-isole relative -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+        <Pastille pos={pastille.pos} />
         {AVATARS.map((f, i) => (
           <button
             key={f.famille}
             type="button"
             role="tab"
             aria-selected={famille === i}
+            data-actif={famille === i}
             onClick={() => setFamille(i)}
-            className={`h-10 shrink-0 rounded-full px-4 text-[14px] transition-colors ${
+            className={`relative h-10 shrink-0 rounded-full px-4 text-[14px] transition-colors duration-300 ${
               famille === i
-                ? 'bg-encre font-semibold text-fond'
+                ? `${pastille.fond} font-semibold text-fond`
                 : 'bg-verre text-encre-douce hover:text-encre'
             }`}
           >

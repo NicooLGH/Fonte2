@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { AvatarCadre } from '@/components/AvatarCadre'
 import type { Classement as Donnees, LigneClassement, PeriodeClassement } from '@/lib/social'
 import { TexteAjuste } from '@/components/ui/TexteAjuste'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 /* ============================================================
    Classement entre amis
@@ -31,19 +32,22 @@ export function Classement({
   const podium = lignes.slice(0, 3)
   const suite = lignes.slice(3)
   const seul = lignes.length <= 1
+  const pastille = usePastille(periode)
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-1.5">
+      <div ref={pastille.ref} className="relative flex items-center gap-1.5">
+        <Pastille pos={pastille.pos} />
         {PERIODES.map((p) => (
           <button
             key={p.cle}
             type="button"
             onClick={() => setPeriode(p.cle)}
             aria-pressed={p.cle === periode}
-            className={`flex h-[38px] items-center rounded-pilule px-4 text-[15px] transition-colors ${
+            data-actif={p.cle === periode}
+            className={`relative flex h-[38px] items-center rounded-pilule px-4 text-[15px] transition-colors duration-300 ${
               p.cle === periode
-                ? 'bg-encre font-semibold text-fond'
+                ? `${pastille.fond} font-semibold text-fond`
                 : 'bg-verre text-encre-douce hover:text-encre'
             }`}
           >

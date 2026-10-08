@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { libelleCourt } from '@/lib/semaine'
 import { CHAMPS_SUIVI, type CleSuivi, type Objectifs, type ReleveComplet } from '@/lib/suivi'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 /* ============================================================
    Progrès · Suivi
@@ -35,6 +36,7 @@ export function CarteSuivi({
   semaine: string
 }) {
   const [champ, setChamp] = useState<CleSuivi>('poids')
+  const pastille = usePastille(champ)
   const def = CHAMPS_SUIVI.find((c) => c.cle === champ)!
 
   const tries = [...releves].sort((a, b) => a.semaine.localeCompare(b.semaine))
@@ -97,7 +99,8 @@ export function CarteSuivi({
           </p>
         )}
 
-        <div className="-mx-[18px] flex gap-1.5 overflow-x-auto px-[18px]" role="group" aria-label="Mesure affichée">
+        <div ref={pastille.ref} className="relative -mx-[18px] flex gap-1.5 overflow-x-auto px-[18px]" role="group" aria-label="Mesure affichée">
+          <Pastille pos={pastille.pos} />
           {CHAMPS_SUIVI.map((c) => {
             const choisie = c.cle === champ
             return (
@@ -105,10 +108,11 @@ export function CarteSuivi({
                 key={c.cle}
                 type="button"
                 aria-pressed={choisie}
+                data-actif={choisie}
                 onClick={() => setChamp(c.cle)}
-                className={`h-[34px] shrink-0 rounded-pilule px-3 text-[14px] transition-colors ${
+                className={`relative h-[34px] shrink-0 rounded-pilule px-3 text-[14px] transition-colors duration-300 ${
                   choisie
-                    ? 'bg-encre font-semibold text-fond'
+                    ? `${pastille.fond} font-semibold text-fond`
                     : 'bg-encre/[0.06] text-encre-douce hover:text-encre'
                 }`}
               >

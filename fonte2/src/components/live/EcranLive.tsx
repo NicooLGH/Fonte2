@@ -34,6 +34,7 @@ import { RecapXP, type StatsSeance } from '@/components/xp/RecapXP'
 import { ecrireAttente, lireAttente, type SeanceEnAttente } from '@/lib/attente'
 import type { GainXP } from '@/lib/xp'
 import { TexteAjuste } from '@/components/ui/TexteAjuste'
+import { usePastille, Pastille as PastilleGlissante } from '@/components/ui/Pastille'
 
 /* ============================================================
    Séance en direct
@@ -76,6 +77,7 @@ export function EcranLive({
     () => modeles.find((m) => m.id === prevuId) ?? null
   )
   const [minutes, setMinutes] = useState(0)
+  const pastilleEchauffement = usePastille(minutes)
   const [maintenant, setMaintenant] = useState(Date.now())
   const [erreur, setErreur] = useState<string | null>(null)
   // Séries dont la validation a échoué : le rouge n'apparaît
@@ -402,16 +404,18 @@ export function EcranLive({
 
         <div className="flex flex-col gap-2.5">
           <p className="px-0.5 text-[17px] font-bold">Échauffement</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div ref={pastilleEchauffement.ref} className="relative grid grid-cols-3 gap-2">
+            <PastilleGlissante pos={pastilleEchauffement.pos} arrondi="rounded-bloc" />
             {DUREES_ECHAUFFEMENT.map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setMinutes(m)}
                 aria-pressed={minutes === m}
-                className={`appui h-12 rounded-bloc text-[15px] transition-colors ${
+                data-actif={minutes === m}
+                className={`appui relative h-12 rounded-bloc text-[15px] transition-colors duration-300 ${
                   minutes === m
-                    ? 'bg-encre font-semibold text-fond'
+                    ? `${pastilleEchauffement.fond} font-semibold text-fond`
                     : 'bg-verre text-encre-douce hover:text-encre'
                 }`}
               >

@@ -18,6 +18,7 @@ import {
   IconeCrayon,
   IconeCardio,
 } from '@/components/Icones'
+import { usePastille, Pastille } from '@/components/ui/Pastille'
 
 /* ============================================================
    Navigation
@@ -66,6 +67,12 @@ export function BarreHaute({
   admin: boolean
 }) {
   const chemin = usePathname()
+  // L'onglet touché s'allume tout de suite, la pastille y glisse.
+  const [vers, setVers] = useState<string | null>(null)
+  useEffect(() => setVers(null), [chemin])
+  const liens = [...ONGLETS, ...(admin ? [ONGLET_ADMIN] : [])]
+  const actifHref = vers ?? liens.find((e) => estActif(chemin, e))?.href ?? null
+  const pastille = usePastille(actifHref)
 
   return (
     <header
@@ -77,23 +84,28 @@ export function BarreHaute({
         FONTE<span className="text-accent">.</span>
       </Link>
 
-      <nav className="flex flex-1 justify-center gap-1">
-        {[...ONGLETS, ...(admin ? [ONGLET_ADMIN] : [])].map((e) => {
-          const actif = estActif(chemin, e)
+      <nav className="flex flex-1 justify-center">
+        <div ref={pastille.ref} className="relative flex gap-1">
+        <Pastille pos={pastille.pos} />
+        {liens.map((e) => {
+          const actif = e.href === actifHref
           return (
             <Link
               key={e.href}
               href={e.href}
               prefetch
+              onClick={() => setVers(e.href)}
+              data-actif={actif}
               aria-current={actif ? 'page' : undefined}
-              className={`rounded-pilule px-4 py-2 text-[15px] font-semibold transition-colors ${
-                actif ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
+              className={`relative rounded-pilule px-4 py-2 text-[15px] font-semibold transition-colors duration-300 ${
+                actif ? `${pastille.fond} text-fond` : 'text-encre-douce hover:text-encre'
               }`}
             >
               {e.libelle}
             </Link>
           )
         })}
+        </div>
       </nav>
 
       <div className="flex shrink-0 items-center gap-2">
