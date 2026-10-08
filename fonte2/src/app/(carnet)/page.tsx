@@ -26,6 +26,8 @@ import { chargerDefisEnCours } from '@/lib/donnees-defis'
 import { DefisAccueil } from '@/components/defis/CartesDefis'
 import { chargerStories } from '@/lib/donnees-stories'
 import { BandeauStories } from '@/components/stories/BandeauStories'
+import { chargerLingots } from '@/lib/donnees-lingots'
+import { BonusDuJour } from '@/components/lingots/BonusDuJour'
 
 /**
  * Accueil.
@@ -47,6 +49,7 @@ export default async function Accueil() {
     planning,
     xp,
     stories,
+    lingots,
   ] = await Promise.all([
     chargerAnnonces(),
     chargerRappel(),
@@ -59,6 +62,7 @@ export default async function Accueil() {
     chargerPlanning(),
     chargerMonXP(),
     chargerStories(),
+    chargerLingots(),
   ])
 
   // Séance du jour et semaine en cours.
@@ -101,6 +105,8 @@ export default async function Accueil() {
       <Presence />
 
       <BandeauStories groupes={stories} />
+
+      <BonusDuJour etat={lingots} />
 
       <SeanceDuJour
         prevu={planning.find((p) => p.jour === jour) ?? null}

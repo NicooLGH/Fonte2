@@ -13,6 +13,8 @@ import {
   type Recompense,
 } from '@/lib/recompenses'
 import { equiperRecompense } from '@/app/(carnet)/piste/actions'
+import { montantPalier } from '@/lib/lingots'
+import { IconeLingot as Lingot } from '@/components/lingots/IconeLingot'
 import { Echantillon, type AmiPiste } from './PisteNiveaux'
 import { ApercuEntete } from './ApercuEntete'
 
@@ -198,7 +200,7 @@ export function EcranPiste({
                     {l <= n.niveau ? <IconeOk /> : <IconeCadenas />}
                   </span>
                 )}
-                {lingots && !riche && <PuceLingots />}
+                {lingots && !riche && <PuceLingots montant={montantPalier(l)} credite={l <= n.niveau} />}
                 {estMoi && (
                   <span className="shrink-0 rounded-pilule bg-encre px-3 py-1.5 text-[14px] font-bold text-fond">
                     Toi · {Math.round(n.progression * 100)} %
@@ -251,7 +253,7 @@ export function EcranPiste({
       </ol>
 
       <p className="px-0.5 text-[13px] leading-relaxed text-encre-douce">
-        Les niveaux continuent après {haut}. Après le niveau 80, des Lingots tous les 5 niveaux.
+        Les niveaux continuent après {haut}. Après le niveau 80, +500 Lingots tous les 5 niveaux.
       </p>
 
       <FicheNiveau
@@ -386,13 +388,14 @@ function FicheNiveau({
 
         {lingots && (
           <div className="flex items-center gap-3 rounded-bloc bg-[#f0c04a]/10 p-3">
-            <IconeLingot className="h-6 w-6 text-[#f0c04a]" />
+            <Lingot className="h-7 w-7 shrink-0 text-[#f0c04a]" plein={0.25} />
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[16px] font-semibold">Lingots</span>
+              <span className="text-[16px] font-semibold">+{montantPalier(l).toLocaleString('fr-FR')} Lingots</span>
               <span className="text-[13px] text-encre-douce">
-                Arrivent bientôt avec la boutique. Les paliers déjà passés seront crédités.
+                {atteint ? 'Crédités sur ton solde.' : `Versés en atteignant le niveau ${l}.`}
               </span>
             </span>
+            {atteint && <IconeOk />}
           </div>
         )}
 
@@ -446,22 +449,21 @@ function FicheNiveau({
 
 /* ---- Petits éléments ---- */
 
-function PuceLingots() {
+function PuceLingots({ montant, credite }: { montant: number; credite: boolean }) {
   return (
-    <span className="flex shrink-0 items-center gap-2 rounded-pilule bg-[#f0c04a]/10 px-3 py-1.5 text-[14px] font-semibold text-[#f0c04a]">
-      <IconeLingot className="h-4 w-4" />
-      Lingots
-      <span className="font-mono text-[11px] font-normal uppercase opacity-80">bientôt</span>
+    <span
+      className={`flex shrink-0 items-center gap-1.5 rounded-pilule px-3 py-1.5 text-[14px] font-semibold ${
+        credite ? 'bg-[#f0c04a]/10 text-[#f0c04a]/70' : 'bg-[#f0c04a]/10 text-[#f0c04a]'
+      }`}
+    >
+      <Lingot className="h-4 w-4" />+{montant.toLocaleString('fr-FR')}
+      {credite && (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8"
+          strokeLinecap="round" strokeLinejoin="round" aria-label="Crédité">
+          <path d="M5 12.5l4.5 4.5L19 7.5" />
+        </svg>
+      )}
     </span>
-  )
-}
-
-function IconeLingot({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className={className}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9 9.5h6M9 14.5h6M12 7v10" />
-    </svg>
   )
 }
 

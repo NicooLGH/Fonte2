@@ -1,5 +1,6 @@
 import { BANNIERES } from './bannieres'
 import { MOTIFS } from './motifs'
+import { montantPalier } from './lingots'
 
 /* ============================================================
    Récompenses de niveau
@@ -71,14 +72,11 @@ function ordre(t: TypeRecompense): number {
 }
 
 /* ---- Paliers à Lingots ----
-   La monnaie arrive avec la session 9 : la piste les annonce
-   déjà, ils seront crédités rétroactivement. Après le niveau 80,
-   un palier tous les 5 niveaux. */
-
-const LINGOTS_AVANT_80 = [2, 4, 7, 12, 15, 18, 22, 27, 33, 38, 43, 48, 53, 58, 63, 68, 73, 78]
+   Montants dans lib/lingots.ts ; crédités par la base. Après le
+   niveau 80, un palier tous les 5 niveaux. */
 
 export function donneLingots(niveau: number): boolean {
-  return LINGOTS_AVANT_80.includes(niveau) || (niveau > 80 && niveau % 5 === 0)
+  return montantPalier(niveau) > 0
 }
 
 /** Les récompenses d'un niveau, cadre d'abord. */

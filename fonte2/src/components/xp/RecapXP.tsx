@@ -13,6 +13,8 @@ import {
   LIBELLE_TYPE,
   type Recompense,
 } from '@/lib/recompenses'
+import { lingotsEntre } from '@/lib/lingots'
+import { IconeLingot } from '@/components/lingots/IconeLingot'
 import { fondBanniere } from '@/lib/bannieres'
 import { motifCss } from '@/lib/motifs'
 
@@ -59,6 +61,7 @@ export function RecapXP({
         rang={nApres.rang}
         nouveauRang={nApres.rang !== nAvant.rang}
         debloques={recompensesEntre(nAvant.niveau, nApres.niveau)}
+        lingots={lingotsEntre(nAvant.niveau, nApres.niveau)}
         onContinuer={() => setEtape('detail')}
       />
     )
@@ -286,6 +289,7 @@ export function PassageNiveau({
   rang,
   nouveauRang,
   debloques = [],
+  lingots = 0,
   onContinuer,
 }: {
   niveau: number
@@ -293,6 +297,8 @@ export function PassageNiveau({
   nouveauRang: boolean
   /** Teintes, motifs et cadres débloqués par ce passage. */
   debloques?: Recompense[]
+  /** Lingots des paliers franchis (crédités par la base). */
+  lingots?: number
   onContinuer: () => void
 }) {
   const suivant = rangSuivant(niveau)
@@ -342,6 +348,23 @@ export function PassageNiveau({
               : ' · le sommet'}
           </p>
         </div>
+
+        {lingots > 0 && (
+          <Link
+            href="/lingots"
+            className="flex items-center gap-4 rounded-carte bg-[#f0c04a]/12 p-[18px] ring-[1.5px] ring-[#f0c04a]/35 ring-inset"
+          >
+            <IconeLingot className="h-12 w-12 shrink-0 text-[#f0c04a]" plein={0.25} />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="font-mono text-[12px] tracking-[0.08em] text-encre-douce uppercase">
+                Ce niveau te rapporte
+              </span>
+              <span className="font-display text-[40px] leading-[0.9] text-[#f0c04a]">
+                +{lingots.toLocaleString('fr-FR')} Lingots
+              </span>
+            </span>
+          </Link>
+        )}
 
         {debloques.map((r) => (
           <div key={`${r.type}-${r.cle}`} className="bloc motif-cercles flex items-center gap-4 p-[18px]">

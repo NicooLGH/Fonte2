@@ -257,8 +257,8 @@ function Bareme({ niveau }: { niveau: number }) {
       </Groupe>
 
       <p className="mt-4 text-[14px] leading-relaxed text-encre-douce">
-        Des Lingots s&apos;ajoutent sur d&apos;autres paliers (2, 4, 7, 12… puis tous les 5
-        niveaux après 80). Ils arrivent avec la boutique.{' '}
+        Des Lingots s&apos;ajoutent sur d&apos;autres paliers : de 50 au niveau 2 à 500 au
+        niveau 78, puis 500 tous les 5 niveaux après 80.{' '}
         <Link href="/piste" className="font-semibold text-accent-2">Voir la piste</Link>
       </p>
 
