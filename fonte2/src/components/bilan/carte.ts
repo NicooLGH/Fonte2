@@ -1,5 +1,6 @@
 import { cleMois, type Bilan } from '@/lib/bilan'
 import { dureeLisible } from '@/lib/social'
+import { avatarTexte } from '@/lib/boutique'
 
 /* ============================================================
    Cartes téléchargeables
@@ -63,7 +64,7 @@ export async function dessinerCarte({
   mono(ctx, 'BILAN MENSUEL', L - M, 100, 24, '#8d9096', 'right')
 
   ctx.font = '56px sans-serif'
-  ctx.fillText(avatar, M, 196)
+  ctx.fillText(avatarTexte(avatar), M, 196)
 
   display(ctx, bilan.nom.toUpperCase(), M, 288, 84, '#f4f3ee')
   mono(ctx, pseudo.toUpperCase(), M, 330, 26, '#4cc9f0')

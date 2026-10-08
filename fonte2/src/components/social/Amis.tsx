@@ -18,6 +18,7 @@ import {
   accepterAmi,
   retirerAmi,
 } from '@/app/(carnet)/amis/actions'
+import { Visage } from '@/components/Visage'
 
 /* ============================================================
    Amis : demandes, recherche, liste
@@ -305,7 +306,7 @@ export function Pastille({
       aria-label={`Profil de ${pseudo}`}
       className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] bg-verre text-[22px]"
     >
-      {avatar ?? '💪'}
+      <Visage avatar={avatar} />
       {enLigne && (
         <span
           aria-label="En ligne"

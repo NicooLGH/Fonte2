@@ -11,6 +11,7 @@ import {
 } from '@/lib/social'
 import { reagirSeance, retirerReaction } from '@/app/(carnet)/amis/actions'
 import { TexteAjuste } from '@/components/ui/TexteAjuste'
+import { Visage } from '@/components/Visage'
 
 /* ============================================================
    Fil des amis
@@ -127,7 +128,7 @@ export function Publication({
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-verre-fort text-[20px]"
             aria-label={`Profil de ${p.pseudo}`}
           >
-            {p.avatar ?? '💪'}
+            <Visage avatar={p.avatar} />
           </Link>
           <div className="min-w-0 flex-1">
             <Link href={lien} className="block truncate text-[16px] font-semibold hover:text-accent-2">

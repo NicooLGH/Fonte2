@@ -32,6 +32,13 @@ export type CleMotif =
   | 'constellation'
   | 'tempete'
   | 'galaxie'
+  // Boutique (session 10)
+  | 'halteres'
+  | 'pluie'
+  | 'bulles'
+  | 'topographie'
+  | 'neon'
+  | 'feu'
 
 /** Les formes passent par une image SVG encodée dans l'adresse. */
 function svg(contenu: string, cote: number): string {
@@ -52,6 +59,8 @@ export type Motif = {
   niveau: number
   /** Un seul dessin recadré, et non un carreau répété. */
   composition?: boolean
+  /** Vendu en boutique : ni libre, ni sur la piste. */
+  boutique?: boolean
 }
 
 /** Une composition de la collection (voir compositions.ts). */
@@ -124,6 +133,14 @@ export const MOTIFS: Motif[] = [
   compo('tempete', 'Tempête', 60),
   compo('galaxie', 'Galaxie', 70),
   compo('fete', 'Fête', 80),
+
+  // ---- Boutique ----
+  { ...compo('halteres', 'Haltères', 0), boutique: true },
+  { ...compo('pluie', 'Pluie', 0), boutique: true },
+  { ...compo('bulles', 'Bulles', 0), boutique: true },
+  { ...compo('topographie', 'Topographie', 0), boutique: true },
+  { ...compo('neon', 'Néon', 0), boutique: true },
+  { ...compo('feu', 'Feu d’artifice', 0), boutique: true },
 ]
 
 /** La taille du carreau, quand le motif en a une. */

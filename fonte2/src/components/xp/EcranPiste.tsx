@@ -17,6 +17,7 @@ import { montantPalier } from '@/lib/lingots'
 import { IconeLingot as Lingot } from '@/components/lingots/IconeLingot'
 import { Echantillon, type AmiPiste } from './PisteNiveaux'
 import { ApercuEntete } from './ApercuEntete'
+import { Visage } from '@/components/Visage'
 
 /* ============================================================
    Piste complète
@@ -209,7 +210,7 @@ export function EcranPiste({
                 {ici.length > 0 && (
                   <span className="flex min-w-0 items-center gap-2 text-[14px] text-encre-douce">
                     <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[10px] bg-verre-fort text-[15px]">
-                      {ici[0].avatar ?? '💪'}
+                      <Visage avatar={ici[0].avatar} />
                     </span>
                     <span className="truncate">
                       {ici[0].pseudo}

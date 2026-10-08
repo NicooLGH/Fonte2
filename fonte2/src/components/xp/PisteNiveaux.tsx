@@ -1,6 +1,7 @@
 import { RECOMPENSES, cadre as trouverCadre, type Recompense } from '@/lib/recompenses'
 import { fondBanniere } from '@/lib/bannieres'
 import { motifCss } from '@/lib/motifs'
+import { Visage } from '@/components/Visage'
 
 /* ============================================================
    Piste de niveaux
@@ -53,7 +54,7 @@ export function PisteNiveaux({
               title={ici.map((a) => a.pseudo).join(', ')}
             >
               <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[10px] bg-verre-fort text-[15px]">
-                {ici[0].avatar ?? '💪'}
+                <Visage avatar={ici[0].avatar} />
               </span>
               {ici.length > 1 && (
                 <span className="-ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-pilule bg-encre px-1 font-mono text-[10px] text-fond">

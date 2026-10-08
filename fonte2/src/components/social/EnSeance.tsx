@@ -11,6 +11,7 @@ import {
   type SigneLive,
 } from '@/lib/live-social'
 import { vibrer } from '@/lib/sons'
+import { Visage } from '@/components/Visage'
 
 /* ============================================================
    En séance maintenant
@@ -123,7 +124,7 @@ export function EnSeance({ initiaux }: { initiaux: AmiEnSeance[] }) {
                   className="relative flex h-10 w-10 shrink-0 items-center justify-center
                              rounded-bloc bg-verre text-lg"
                 >
-                  {a.avatar ?? '💪'}
+                  <Visage avatar={a.avatar} />
                   <span
                     className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full
                                border-2 border-fond bg-valide"

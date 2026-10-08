@@ -4,6 +4,7 @@ import { creerClientServeur } from '@/lib/supabase/server'
 import { chargerMonXP } from '@/lib/donnees-xp'
 import { calculerNiveau } from '@/lib/xp'
 import { ChoixTheme } from '@/components/reglages/ChoixTheme'
+import { chargerPossessions } from '@/lib/donnees-boutique'
 
 /** Personnaliser son profil : teinte, motif, cadre et avatar. */
 export default async function PageApparence() {
@@ -13,13 +14,14 @@ export default async function PageApparence() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const [{ data }, xp] = await Promise.all([
+  const [{ data }, xp, possessions] = await Promise.all([
     supabase
       .from('profiles')
       .select('pseudo, avatar, bio, banniere, motif, cadre')
       .eq('id', user.id)
       .maybeSingle(),
     chargerMonXP(),
+    chargerPossessions(),
   ])
   const p = (data ?? {}) as Record<string, string | null>
 
@@ -44,6 +46,7 @@ export default async function PageApparence() {
         niveau={calculerNiveau(xp).niveau}
         pseudo={p.pseudo ?? ''}
         avatar={p.avatar ?? '💪'}
+        possessions={possessions}
       />
     </div>
   )

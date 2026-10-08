@@ -94,10 +94,10 @@ export function EcranLingots({ etat }: { etat: EtatLingots }) {
 
       {/* Tarifs à venir */}
       <section className="bloc flex flex-col gap-3 p-4">
-        <div className="flex items-baseline justify-between">
+        <Link href="/boutique" className="appui -m-1 flex items-center justify-between rounded-bloc p-1">
           <span className="text-[16px] font-bold">Boutique</span>
-          <span className="font-mono text-[11px] text-[#f0c04a] uppercase">bientôt</span>
-        </div>
+          <span className="text-[14px] font-semibold text-[#f0c04a]">Ouvrir ›</span>
+        </Link>
         <div className="grid grid-cols-3 gap-1.5">
           {TARIFS_COSMETIQUES.map((t) => (
             <div key={t.nom} className="flex flex-col gap-1 rounded-bloc bg-verre-fort p-2.5">
@@ -107,6 +107,7 @@ export function EcranLingots({ etat }: { etat: EtatLingots }) {
           ))}
         </div>
         <div className="flex flex-col">
+          <p className="pt-1 pb-0.5 text-[13px] text-encre-douce">Premium en Lingots · bientôt</p>
           {TARIFS_PREMIUM.map((t) => (
             <div key={t.nom} className="flex items-baseline justify-between gap-3 border-b border-filet py-2.5 last:border-0">
               <span className="flex min-w-0 flex-col">

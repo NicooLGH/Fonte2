@@ -31,6 +31,13 @@ export type CleBanniere =
   | 'abysses'
   | 'volcan'
   | 'eclipse'
+  // Boutique (session 10)
+  | 'menthe'
+  | 'corail'
+  | 'lilas'
+  | 'sorbet'
+  | 'lagon'
+  | 'boreale'
 
 export type Banniere = {
   cle: CleBanniere
@@ -42,6 +49,8 @@ export type Banniere = {
   anime?: boolean
   /** Couleurs « r,g,b » pour la carte de partage (canvas). */
   canvas: [string, string?]
+  /** Vendue en boutique : ni libre, ni sur la piste. */
+  boutique?: boolean
 }
 
 /** Teinte simple, d'origine. */
@@ -111,6 +120,21 @@ export const BANNIERES: Banniere[] = [
       'radial-gradient(ellipse 120% 100% at 18% 0%, rgb(76 29 149 / 0.38), transparent 70%)',
   },
   duo('or', 'Or massif', 80, ['245,197,66', 0.34], ['180,83,9', 0.4], true),
+
+  // ---- Boutique ----
+  { ...simple('menthe', 'Menthe', '110,231,183', 0.26), boutique: true },
+  { ...simple('corail', 'Corail', '255,127,110', 0.3), boutique: true },
+  { ...simple('lilas', 'Lilas', '196,167,255', 0.28), boutique: true },
+  { ...duo('sorbet', 'Sorbet', 0, ['255,179,138', 0.36], ['255,95,162', 0.34]), boutique: true },
+  { ...duo('lagon', 'Lagon', 0, ['45,212,191', 0.34], ['14,116,144', 0.55]), boutique: true },
+  {
+    ...duo('boreale', 'Aurore boréale', 0, ['74,222,128', 0.36], ['168,85,247', 0.38], true),
+    boutique: true,
+    fond:
+      'radial-gradient(ellipse 60% 100% at 15% 0%, rgb(74 222 128 / 0.36), transparent 70%),' +
+      'radial-gradient(ellipse 60% 100% at 50% 0%, rgb(34 211 238 / 0.32), transparent 70%),' +
+      'radial-gradient(ellipse 60% 100% at 85% 0%, rgb(168 85 247 / 0.38), transparent 70%)',
+  },
 ]
 
 export function banniere(cle: string | null | undefined): Banniere {

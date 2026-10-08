@@ -7,6 +7,7 @@ import { IconeCroix, IconePartage } from '@/components/Icones'
 import { peindreMotif } from '@/lib/motifs'
 import { banniere as trouverBanniere } from '@/lib/bannieres'
 import { cadre as trouverCadre } from '@/lib/recompenses'
+import { avatarTexte } from '@/lib/boutique'
 
 /* ============================================================
    Carte de profil partageable
@@ -131,7 +132,7 @@ export function CarteProfil({
       ctx.restore()
     }
     ctx.font = '110px sans-serif'
-    ctx.fillText(avatar, 72, 470)
+    ctx.fillText(avatarTexte(avatar), 72, 470)
 
     /* ---- Pseudo, ajusté à la largeur ---- */
     let taille = 150

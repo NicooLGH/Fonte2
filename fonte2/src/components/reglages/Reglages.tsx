@@ -21,6 +21,7 @@ import {
   supprimerCompte,
 } from '@/app/(carnet)/reglages/actions'
 import { usePastille, Pastille } from '@/components/ui/Pastille'
+import { Visage } from '@/components/Visage'
 
 
 type Theme = 'sombre' | 'clair' | 'auto'
@@ -95,7 +96,7 @@ export function Reglages({
           </span>
           <span className="flex items-center gap-2">
             <span aria-hidden className="h-6 w-6 rounded-[7px]" style={{ background: `${fondBanniere(banniere)}, var(--color-fond)` }} />
-            <span className="text-[20px] text-encre-douce">{avatar}</span>
+            <span className="text-[20px] text-encre-douce"><Visage avatar={avatar} /></span>
             <span className="text-encre-douce">›</span>
           </span>
         </Link>

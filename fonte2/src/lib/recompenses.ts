@@ -32,8 +32,17 @@ export const CADRES: { cle: CleCadre; nom: string; niveau: number; couleur: stri
   { cle: 'legende', nom: 'Légende', niveau: 80, couleur: '#f5c542' },
 ]
 
+/** Cadres de la boutique : des styles, pas des rangs. */
+export const CADRES_BOUTIQUE: { cle: string; nom: string; niveau: number; couleur: string }[] = [
+  { cle: 'cuivre', nom: 'Cuivre', niveau: 0, couleur: '#d08a5a' },
+  { cle: 'ardoise', nom: 'Ardoise', niveau: 0, couleur: '#7c8aa0' },
+  { cle: 'neon', nom: 'Néon', niveau: 0, couleur: '#4cc9f0' },
+  { cle: 'glace', nom: 'Glace', niveau: 0, couleur: '#dff4ff' },
+  { cle: 'flamme', nom: 'Flamme', niveau: 0, couleur: '#ff6a1a' },
+]
+
 export function cadre(cle: string | null | undefined) {
-  return CADRES.find((c) => c.cle === cle) ?? CADRES[0]
+  return CADRES.find((c) => c.cle === cle) ?? CADRES_BOUTIQUE.find((c) => c.cle === cle) ?? CADRES[0]
 }
 
 /* ---- Toutes les récompenses ---- */
@@ -47,8 +56,8 @@ export type Recompense = {
 }
 
 export const RECOMPENSES: Recompense[] = [
-  ...BANNIERES.map((b) => ({ type: 'teinte' as const, cle: b.cle, nom: b.nom, niveau: b.niveau })),
-  ...MOTIFS.map((m) => ({ type: 'motif' as const, cle: m.cle, nom: m.nom, niveau: m.niveau })),
+  ...BANNIERES.filter((b) => !b.boutique).map((b) => ({ type: 'teinte' as const, cle: b.cle, nom: b.nom, niveau: b.niveau })),
+  ...MOTIFS.filter((m) => !m.boutique).map((m) => ({ type: 'motif' as const, cle: m.cle, nom: m.nom, niveau: m.niveau })),
   ...CADRES.map((c) => ({ type: 'cadre' as const, cle: c.cle, nom: c.nom, niveau: c.niveau })),
 ].map((r) => ({ ...r, origine: r.niveau > 0 ? ('niveau' as const) : ('libre' as const) }))
 
