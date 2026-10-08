@@ -88,7 +88,7 @@ export function CarteSuivi({
         </div>
 
         {points.length >= 2 ? (
-          <Courbe points={points} cible={cible} unite={def.unite} libelle={def.libelle} />
+          <Courbe key={champ} points={points} cible={cible} unite={def.unite} libelle={def.libelle} />
         ) : (
           <p className="text-[15px] leading-relaxed text-encre-douce">
             {points.length === 0
@@ -154,9 +154,14 @@ export function CarteSuivi({
 
 /* ---- La courbe ---- */
 
-const L = 322
-const H = 96
+const L = 340
+const H = 168
+const M = { haut: 14, bas: 24, gauche: 34, droite: 10 }
 
+/**
+ * Courbe détaillée : valeurs repères à gauche, semaines en bas,
+ * un point par relevé. Toucher un point affiche sa valeur.
+ */
 function Courbe({
   points,
   cible,
@@ -168,65 +173,122 @@ function Courbe({
   unite: string
   libelle: string
 }) {
+  const [choisi, setChoisi] = useState(points.length - 1)
   const valeurs = points.map((p) => p.valeur)
   const bornes = [...valeurs, ...(cible !== undefined ? [cible] : [])]
   let min = Math.min(...bornes)
   let max = Math.max(...bornes)
   const amplitude = max - min || Math.abs(max) * 0.1 || 1
-  min -= amplitude * 0.12
-  max += amplitude * 0.12
+  min -= amplitude * 0.15
+  max += amplitude * 0.15
 
-  const haut = 8
-  const bas = 18 // place pour l'étiquette de l'objectif
-  const x = (i: number) => 4 + (i / (points.length - 1)) * (L - 12)
-  const y = (v: number) => haut + (H - haut - bas) * (1 - (v - min) / (max - min))
-
+  const largeur = L - M.gauche - M.droite
+  const hauteur = H - M.haut - M.bas
+  const x = (i: number) => M.gauche + (points.length === 1 ? largeur / 2 : (i / (points.length - 1)) * largeur)
+  const y = (v: number) => M.haut + hauteur * (1 - (v - min) / (max - min))
   const ligne = points.map((p, i) => `${x(i).toFixed(1)},${y(p.valeur).toFixed(1)}`).join(' ')
-  const fin = points[points.length - 1]
+  const aire = `${x(0).toFixed(1)},${(M.haut + hauteur).toFixed(1)} ${ligne} ${x(points.length - 1).toFixed(1)},${(M.haut + hauteur).toFixed(1)}`
+  const pas = Math.max(1, Math.ceil(points.length / 6))
+  const repere = [max, (max + min) / 2, min]
+  const sel = points[choisi] ?? points[points.length - 1]
+  const precedent = points[choisi - 1]
 
   return (
-    <svg
-      viewBox={`0 0 ${L} ${H}`}
-      className="h-auto w-full"
-      role="img"
-      aria-label={`${libelle} sur ${points.length} semaines, de ${nombre(points[0].valeur)} à ${nombre(fin.valeur)} ${unite}${
-        cible !== undefined ? `, objectif ${nombre(cible)} ${unite}` : ''
-      }`}
-    >
-      {cible !== undefined && (
-        <>
-          <line
-            x1="0"
-            x2={L}
-            y1={y(cible)}
-            y2={y(cible)}
-            stroke="var(--color-accent-clair)"
-            strokeWidth="1"
-            strokeDasharray="4 5"
-            opacity="0.7"
-          />
-          <text
-            x={L}
-            y={Math.min(H - 2, y(cible) + 14)}
-            textAnchor="end"
-            style={{ fontFamily: "var(--font-mono)" }}
-            fontSize="11"
-            fill="var(--color-accent-clair)"
-          >
-            objectif {nombre(cible)}
-          </text>
-        </>
-      )}
-      <polyline
-        points={ligne}
-        fill="none"
-        stroke="var(--color-accent-2)"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx={x(points.length - 1)} cy={y(fin.valeur)} r="5" fill="var(--color-accent-2)" />
-    </svg>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-3 font-mono text-[13px]">
+        <span className="text-encre-douce">{libelleCourt(sel.semaine)}</span>
+        <span>
+          <strong className="text-[15px] font-semibold text-encre">
+            {nombre(sel.valeur)} {unite}
+          </strong>
+          {precedent && (
+            <span className="ml-2 text-encre-douce">
+              {sel.valeur - precedent.valeur >= 0 ? '+' : '−'}
+              {nombre(Math.abs(arrondi(sel.valeur - precedent.valeur)))} vs {libelleCourt(precedent.semaine)}
+            </span>
+          )}
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${L} ${H}`}
+        className="h-auto w-full touch-pan-y"
+        role="img"
+        aria-label={`${libelle} sur ${points.length} semaines, de ${nombre(points[0].valeur)} à ${nombre(points[points.length - 1].valeur)} ${unite}${
+          cible !== undefined ? `, objectif ${nombre(cible)} ${unite}` : ''
+        }`}
+      >
+        <defs>
+          <linearGradient id="aire-suivi" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-accent-2)" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="var(--color-accent-2)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Repères horizontaux et valeurs */}
+        {repere.map((v, i) => (
+          <g key={i}>
+            <line x1={M.gauche} x2={L - M.droite} y1={y(v)} y2={y(v)} stroke="var(--color-filet)" strokeWidth="1" />
+            <text x={M.gauche - 6} y={y(v) + 4} textAnchor="end" fontSize="11" fill="currentColor" opacity="0.55">
+              {Math.round(v)}
+            </text>
+          </g>
+        ))}
+
+        {cible !== undefined && (
+          <>
+            <line
+              x1={M.gauche}
+              x2={L - M.droite}
+              y1={y(cible)}
+              y2={y(cible)}
+              stroke="var(--color-accent-clair)"
+              strokeWidth="1.2"
+              strokeDasharray="4 5"
+            />
+            <text x={L - M.droite} y={y(cible) - 5} textAnchor="end" fontSize="11" fill="var(--color-accent-clair)">
+              objectif {nombre(cible)}
+            </text>
+          </>
+        )}
+
+        <polygon points={aire} fill="url(#aire-suivi)" />
+        <polyline points={ligne} fill="none" stroke="var(--color-accent-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Ligne verticale sur le point choisi */}
+        <line x1={x(choisi)} x2={x(choisi)} y1={M.haut} y2={M.haut + hauteur} stroke="var(--color-accent-2)" strokeOpacity="0.35" strokeWidth="1" />
+
+        {points.map((p, i) => (
+          <g key={p.semaine}>
+            <circle
+              cx={x(i)}
+              cy={y(p.valeur)}
+              r={i === choisi ? 6 : 3.5}
+              fill={i === choisi ? 'var(--color-accent-2)' : 'var(--color-fond)'}
+              stroke="var(--color-accent-2)"
+              strokeWidth="2"
+            />
+            {/* Zone de toucher plus large que le point */}
+            <rect
+              x={x(i) - largeur / Math.max(1, points.length - 1) / 2}
+              y={M.haut}
+              width={largeur / Math.max(1, points.length - 1)}
+              height={hauteur}
+              fill="transparent"
+              onClick={() => setChoisi(i)}
+              style={{ cursor: 'pointer' }}
+            />
+          </g>
+        ))}
+
+        {points.map((p, i) =>
+          i % pas === 0 || i === points.length - 1 ? (
+            <text key={`x${p.semaine}`} x={x(i)} y={H - 6} textAnchor="middle" fontSize="11" fill="currentColor" opacity="0.55">
+              {libelleCourt(p.semaine)}
+            </text>
+          ) : null
+        )}
+      </svg>
+    </div>
   )
 }
 
@@ -234,8 +296,9 @@ function Courbe({
 
 export function HistoriqueReleves({ releves }: { releves: ReleveComplet[] }) {
   const [tout, setTout] = useState(false)
+  const [ouvert, setOuvert] = useState<string | null>(null)
   const tries = [...releves].sort((a, b) => b.semaine.localeCompare(a.semaine))
-  const visibles = tout ? tries : tries.slice(0, 4)
+  const visibles = tout ? tries : tries.slice(0, 6)
 
   if (tries.length === 0) return null
 
@@ -244,33 +307,87 @@ export function HistoriqueReleves({ releves }: { releves: ReleveComplet[] }) {
       <p className="section-titre mb-1 px-0.5">Historique</p>
       <ul className="flex flex-col">
         {visibles.map((r) => {
-          const n = CHAMPS_SUIVI.filter((c) => r[c.cle] !== null).length
+          const precedent = tries[tries.indexOf(r) + 1]
+          const mesures = CHAMPS_SUIVI.filter((c) => r[c.cle] !== null)
+          const deplie = ouvert === r.id
           return (
-            <li key={r.id} className="flex min-h-14 items-center gap-3.5 border-b border-filet px-0.5">
-              <span className="flex h-10 w-12 shrink-0 items-center justify-center rounded-[12px] bg-verre font-mono text-[13px]">
-                {libelleCourt(r.semaine)}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-[16px] font-semibold">
-                  {r.poids !== null ? `${nombre(r.poids)} kg` : `${n} mesure${n > 1 ? 's' : ''}`}
+            <li key={r.id} className="border-b border-filet last:border-0">
+              <button
+                type="button"
+                onClick={() => setOuvert(deplie ? null : r.id)}
+                aria-expanded={deplie}
+                className="flex min-h-14 w-full items-center gap-3.5 px-0.5 text-left"
+              >
+                <span className="flex h-10 w-12 shrink-0 items-center justify-center rounded-[12px] bg-verre font-mono text-[13px]">
+                  {libelleCourt(r.semaine)}
                 </span>
-                <span className="truncate text-[14px] text-encre-douce">
-                  {dateCourte(r.date)}
-                  {r.poids !== null && n > 1 ? ` · ${n} mesures` : ''}
-                  {r.aPhoto ? ' · photo' : ''}
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-[16px] font-semibold">
+                    {r.poids !== null ? `${nombre(r.poids)} kg` : `${mesures.length} mesure${mesures.length > 1 ? 's' : ''}`}
+                    {r.poids !== null && precedent?.poids != null && (
+                      <span className="ml-2 font-mono text-[13px] font-normal text-encre-douce">
+                        {r.poids - precedent.poids >= 0 ? '+' : '−'}
+                        {nombre(Math.abs(arrondi(r.poids - precedent.poids)))}
+                      </span>
+                    )}
+                  </span>
+                  <span className="truncate text-[14px] text-encre-douce">
+                    {dateCourte(r.date)} · {mesures.length} mesure{mesures.length > 1 ? 's' : ''}
+                    {r.aPhoto ? ' · photo' : ''}
+                  </span>
                 </span>
-              </span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+                  className={`shrink-0 text-encre-douce transition-transform ${deplie ? 'rotate-180' : ''}`}>
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+
+              {deplie && (
+                <div className="flex flex-col gap-2 pb-3 pl-[62px]">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                    {CHAMPS_SUIVI.map((c) => {
+                      const v = r[c.cle]
+                      const avant = precedent?.[c.cle] ?? null
+                      return (
+                        <div key={c.cle} className="flex items-baseline justify-between gap-2">
+                          <dt className="truncate text-[14px] text-encre-douce">{COURT[c.cle]}</dt>
+                          <dd className="shrink-0 text-[15px] font-semibold">
+                            {v === null ? (
+                              <span className="font-normal text-encre-douce/50">—</span>
+                            ) : (
+                              <>
+                                {nombre(v)}
+                                {v !== null && avant !== null && v !== avant && (
+                                  <span className="ml-1 font-mono text-[11px] font-normal text-encre-douce">
+                                    {v > avant ? '+' : '−'}
+                                    {nombre(Math.abs(arrondi(v - avant)))}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </dd>
+                        </div>
+                      )
+                    })}
+                  </dl>
+                  {r.note && <p className="selectionnable text-[14px] leading-relaxed text-encre-douce">{r.note}</p>}
+                  {r.bonusDimanche && (
+                    <p className="font-mono text-[12px] text-accent-2">Relevé du dimanche · bonus XP</p>
+                  )}
+                </div>
+              )}
             </li>
           )
         })}
       </ul>
-      {tries.length > 4 && !tout && (
+      {tries.length > 6 && !tout && (
         <button
           type="button"
           onClick={() => setTout(true)}
           className="appui mt-3 h-12 rounded-bloc bg-verre text-[15px] font-semibold text-encre-douce hover:text-encre"
         >
-          Voir les {tries.length - 4} autres semaines
+          Voir les {tries.length - 6} autres semaines
         </button>
       )}
     </section>

@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import type { PublicationSeance, Signe } from '@/lib/social'
+import type { PublicationSeance } from '@/lib/social'
 import { Publication } from './Fil'
-import { reagirSeance, retirerReaction } from '@/app/(carnet)/amis/actions'
 import { pageSuivante } from '@/app/(carnet)/profil/actions'
 
 /* ============================================================
@@ -27,7 +26,6 @@ export function Historique({
   moi: boolean
 }) {
   const [seances, setSeances] = useState(initiales)
-  const [erreur, setErreur] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
 
   const reste = total - seances.length
@@ -36,30 +34,6 @@ export function Historique({
     demarrer(async () => {
       const suite = await pageSuivante(cible, seances.length)
       setSeances((s) => [...s, ...suite])
-    })
-  }
-
-  function reagir(id: string, signe: Signe, dejaMise: boolean) {
-    setErreur(null)
-    demarrer(async () => {
-      const r = dejaMise
-        ? await retirerReaction(id)
-        : await reagirSeance(id, signe)
-      if (r.erreur) {
-        setErreur(r.erreur)
-        return
-      }
-      setSeances((liste) =>
-        liste.map((s) =>
-          s.seanceId === id
-            ? {
-                ...s,
-                maReaction: dejaMise ? null : signe,
-                reactions: recompter(s.reactions, s.maReaction, dejaMise ? null : signe),
-              }
-            : s
-        )
-      )
     })
   }
 
@@ -74,12 +48,9 @@ export function Historique({
 
   return (
     <div className="flex flex-col gap-3">
-      {erreur && (
-        <p className="rounded-bloc bg-accent/10 px-4 py-3 font-mono text-[12px] text-accent">{erreur}</p>
-      )}
 
       {seances.map((s) => (
-        <Publication key={s.seanceId} p={s} sansAuteur onReagir={moi ? undefined : reagir} />
+        <Publication key={s.seanceId} p={s} sansAuteur interactif={!moi} />
       ))}
 
       {reste > 0 && (
@@ -95,18 +66,4 @@ export function Historique({
       )}
     </div>
   )
-}
-
-function recompter(
-  actuel: Record<string, number>,
-  avant: Signe | null,
-  apres: Signe | null
-): Record<string, number> {
-  const suite = { ...actuel }
-  if (avant) {
-    suite[avant] = (suite[avant] ?? 1) - 1
-    if (suite[avant] <= 0) delete suite[avant]
-  }
-  if (apres) suite[apres] = (suite[apres] ?? 0) + 1
-  return suite
 }

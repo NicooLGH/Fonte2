@@ -11,6 +11,19 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+
+  /*
+   * Navigation instantanée : une page déjà visitée ou préchargée
+   * est gardée 60 s côté navigateur et réaffichée sans attendre le
+   * serveur. Une action (séance, réaction…) la rafraîchit de toute
+   * façon aussitôt.
+   */
+  experimental: {
+    staleTimes: {
+      dynamic: 60,
+      static: 300,
+    },
+  },
 }
 
 export default nextConfig

@@ -1,8 +1,7 @@
 /**
- * Un `template` est recréé à chaque navigation, contrairement à
- * un `layout` qui persiste. C'est ce qui permet de rejouer
- * l'animation d'entrée à chaque changement de page.
+ * Plus d'animation d'entrée à chaque page (3.0) : elle donnait
+ * l'impression d'un chargement à chaque navigation.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
-  return <div className="entree-page">{children}</div>
+  return <>{children}</>
 }

@@ -29,16 +29,6 @@ export function Fil({
   nbAmis: number
 }) {
   const [visibles, setVisibles] = useState(PAS)
-  const [erreur, setErreur] = useState<string | null>(null)
-  const [, demarrer] = useTransition()
-
-  function reagir(seanceId: string, signe: Signe, dejaMise: boolean) {
-    setErreur(null)
-    demarrer(async () => {
-      const r = dejaMise ? await retirerReaction(seanceId) : await reagirSeance(seanceId, signe)
-      if (r.erreur) setErreur(r.erreur)
-    })
-  }
 
   if (nbAmis === 0) {
     return (
@@ -65,12 +55,8 @@ export function Fil({
 
   return (
     <div className="flex flex-col gap-3">
-      {erreur && (
-        <p className="rounded-bloc bg-accent/10 px-4 py-3 font-mono text-[12px] text-accent">{erreur}</p>
-      )}
-
       {publications.slice(0, visibles).map((p) => (
-        <Publication key={p.seanceId} p={p} onReagir={reagir} />
+        <Publication key={p.seanceId} p={p} />
       ))}
 
       {reste > 0 && (
@@ -90,15 +76,43 @@ export function Fil({
 
 export function Publication({
   p,
-  onReagir,
   sansAuteur = false,
+  interactif = true,
 }: {
   p: PublicationSeance
-  onReagir?: (id: string, signe: Signe, dejaMise: boolean) => void
   /** Sur le profil de l'ami, son nom est déjà en haut. */
   sansAuteur?: boolean
+  /** Faux sur ses propres séances : on ne réagit pas à soi-même. */
+  interactif?: boolean
 }) {
   const [detail, setDetail] = useState(false)
+  // Réaction affichée tout de suite ; la base suit en arrière-plan.
+  const [maReaction, setMaReaction] = useState<Signe | null>(p.maReaction)
+  const [reactions, setReactions] = useState<Record<string, number>>(p.reactions)
+  const [erreur, setErreur] = useState<string | null>(null)
+  const [, demarrer] = useTransition()
+
+  function reagir(signe: Signe) {
+    const avant = { maReaction, reactions }
+    const nouveau = maReaction === signe ? null : signe
+    const compte = { ...reactions }
+    if (maReaction) {
+      compte[maReaction] = (compte[maReaction] ?? 1) - 1
+      if (compte[maReaction] <= 0) delete compte[maReaction]
+    }
+    if (nouveau) compte[nouveau] = (compte[nouveau] ?? 0) + 1
+    setMaReaction(nouveau)
+    setReactions(compte)
+    setErreur(null)
+    demarrer(async () => {
+      const r = nouveau ? await reagirSeance(p.seanceId, nouveau) : await retirerReaction(p.seanceId)
+      if (r.erreur) {
+        setMaReaction(avant.maReaction)
+        setReactions(avant.reactions)
+        setErreur(r.erreur)
+      }
+    })
+  }
   const duree = dureeLisible(p.dureeSec)
   const quand = p.cree ? dateRelative(p.cree) : dateRelative(p.date + 'T12:00:00')
   const lien = `/u/${encodeURIComponent(p.pseudo)}`
@@ -145,29 +159,16 @@ export function Publication({
 
       {p.note && <p className="selectionnable text-[15px] leading-relaxed">{p.note}</p>}
 
-      {detail && p.blocs.length > 0 && (
-        <ul className="flex flex-col">
-          {p.blocs.map((b) => (
-            <li key={b.nom} className="border-b border-filet py-2.5 last:border-0">
-              <p className="text-[15px] font-semibold">{b.nom}</p>
-              <p className="mt-0.5 font-mono text-[13px] text-encre-douce">
-                {b.series.map((s) => `${s.poids}×${s.reps}`).join('  ·  ')}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-
       <div className="flex items-center gap-1.5">
         {SIGNES_REACTION.map((signe) => {
-          const choisi = p.maReaction === signe
-          const n = p.reactions[signe] ?? 0
+          const choisi = maReaction === signe
+          const n = reactions[signe] ?? 0
           return (
             <button
               key={signe}
               type="button"
-              disabled={!onReagir}
-              onClick={() => onReagir?.(p.seanceId, signe, choisi)}
+              disabled={!interactif}
+              onClick={() => reagir(signe)}
               aria-pressed={choisi}
               aria-label={`${choisi ? 'Retirer' : 'Réagir'} ${signe}${n ? `, ${n}` : ''}`}
               className={`appui flex h-9 min-w-9 items-center justify-center gap-1 rounded-pilule px-2 text-[16px] transition-colors ${
@@ -205,6 +206,20 @@ export function Publication({
           </button>
         )}
       </div>
+      {detail && p.blocs.length > 0 && (
+        <ul className="flex flex-col">
+          {p.blocs.map((b) => (
+            <li key={b.nom} className="border-b border-filet py-2.5 last:border-0">
+              <p className="text-[15px] font-semibold">{b.nom}</p>
+              <p className="mt-0.5 font-mono text-[13px] text-encre-douce">
+                {b.series.map((s) => `${s.poids}×${s.reps}`).join('  ·  ')}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {erreur && <p className="font-mono text-[12px] text-accent">{erreur}</p>}
     </article>
   )
 }
@@ -222,7 +237,5 @@ function Etiquette({ children, bleu = false }: { children: React.ReactNode; bleu
 }
 
 function tonnage(kg: number) {
-  return kg >= 1000
-    ? `${(kg / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} t`
-    : `${Math.round(kg)} kg`
+  return `${Math.round(kg).toLocaleString('fr-FR')} kg`
 }

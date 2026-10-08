@@ -8,8 +8,6 @@ import type { Exercice } from '@/lib/carnet'
 import type { Modele } from '@/lib/live'
 import { creerModele, supprimerModele } from '@/app/(carnet)/seances/actions'
 
-const APERCU = 2
-
 export function Modeles({
   modeles,
   exercices,
@@ -18,95 +16,89 @@ export function Modeles({
   exercices: Exercice[]
 }) {
   const [ouvert, setOuvert] = useState(false)
-  const [tout, setTout] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
 
-  const visibles = tout ? modeles : modeles.slice(0, APERCU)
-  const reste = modeles.length - visibles.length
   const nomExo = (id: string) => exercices.find((e) => e.id === id)?.nom ?? '—'
 
   return (
-    <section className="section pb-5">
-      <p className="section-titre mb-2">Modèles</p>
-      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
-        Tes séances types, enregistrées une fois et relancées en un geste.
-      </p>
+    <div className="flex flex-col gap-3">
+      <button
+        type="button"
+        disabled={exercices.length === 0}
+        onClick={() => {
+          setErreur(null)
+          setOuvert(true)
+        }}
+        className="appui flex h-14 items-center justify-center gap-2 rounded-carte border-[1.5px] border-dashed
+                   border-encre/25 text-[16px] font-semibold text-encre-douce hover:text-encre disabled:opacity-50"
+      >
+        <span aria-hidden className="text-[22px] leading-none">+</span>
+        {exercices.length === 0 ? "Crée d'abord un exercice" : 'Nouveau modèle'}
+      </button>
 
-      <div className="flex-1">
-        {modeles.length === 0 ? (
-          <p className="text-sm italic text-encre-douce">
-            Aucun modèle. Crée ta première séance type pour pouvoir la lancer en
-            direct.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {visibles.map((m) => (
-              <li
-                key={m.id}
-                className="border-b border-filet py-3 last:border-0"
-              >
-                <p className="font-semibold">{m.nom}</p>
-                <p className="mt-0.5 truncate font-mono text-[10.5px] text-encre-douce">
-                  {m.entrees.map((e) => nomExo(e.id)).join(' · ')}
+      {modeles.length === 0 ? (
+        <p className="px-0.5 text-[15px] leading-relaxed text-encre-douce">
+          Un modèle, c&apos;est ta séance type : enregistrée une fois, relancée en un geste.
+        </p>
+      ) : (
+        modeles.map((m) => (
+          <div key={m.id} className="bloc flex flex-col gap-3 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-display text-[32px] leading-[0.9] [overflow-wrap:anywhere]">{m.nom}</p>
+                <p className="mt-1 font-mono text-[13px] text-encre-douce">
+                  {m.entrees.length} exercice{m.entrees.length > 1 ? 's' : ''}
                 </p>
-                <div className="mt-3 flex gap-2">
-                  <Link
-                    href="/live"
-                    className="flex-1 rounded-bloc bg-accent px-3 py-1.5 text-center
-                               text-xs font-semibold text-white hover:bg-accent-clair"
-                  >
-                    Démarrer
-                  </Link>
-                  <button
-                    type="button"
-                    disabled={enCours}
-                    onClick={() => {
-                      if (!confirm(`Supprimer le modèle « ${m.nom} » ?`)) return
-                      demarrer(async () => {
-                        const r = await supprimerModele(m.id)
-                        if (r.erreur) setErreur(r.erreur)
-                      })
-                    }}
-                    className="rounded-bloc px-3 py-1.5 text-xs text-encre-douce
-                               transition-colors hover:text-accent"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {reste > 0 && (
-          <button
-            type="button"
-            onClick={() => setTout(true)}
-            className="mt-3 w-full rounded-bloc border border-bordure bg-verre py-2.5
-                       text-xs font-semibold text-encre-douce hover:text-encre"
-          >
-            Voir {reste === 1 ? "l'autre" : `les ${reste} autres`}
-          </button>
-        )}
-      </div>
+              </div>
+              <button
+                type="button"
+                disabled={enCours}
+                aria-label={`Supprimer le modèle ${m.nom}`}
+                onClick={() => {
+                  if (!confirm(`Supprimer le modèle « ${m.nom} » ?`)) return
+                  demarrer(async () => {
+                    const r = await supprimerModele(m.id)
+                    if (r.erreur) setErreur(r.erreur)
+                  })
+                }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pilule text-encre-douce hover:text-accent"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+            <ol className="flex flex-col gap-1">
+              {m.entrees.map((e, i) => (
+                <li key={e.id + i} className="flex items-baseline gap-2.5 text-[15px]">
+                  <span className="w-4 font-mono text-[12px] text-encre-douce">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate">{nomExo(e.id)}</span>
+                  {e.alternatives.length > 0 && (
+                    <span className="shrink-0 font-mono text-[12px] text-accent-2">
+                      +{e.alternatives.length} alt.
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+            <Link
+              href={`/live?modele=${m.id}`}
+              className="appui flex h-12 items-center justify-center gap-2 rounded-bloc bg-accent text-[16px] font-bold text-white hover:bg-accent-clair"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z" />
+              </svg>
+              Démarrer
+            </Link>
+          </div>
+        ))
+      )}
 
       <Erreur>{erreur}</Erreur>
 
-      <Bouton
-        type="button"
-        className="mt-4"
-        disabled={exercices.length === 0}
-        onClick={() => setOuvert(true)}
-      >
-        {exercices.length === 0 ? "Crée d'abord un exercice" : 'Créer un modèle'}
-      </Bouton>
-
-      <Modale
-        titre="Nouveau modèle"
-        ouverte={ouvert}
-        onFermer={() => setOuvert(false)}
-      >
+      <Modale titre="Nouveau modèle" ouverte={ouvert} onFermer={() => setOuvert(false)}>
         <FormulaireModele
           exercices={exercices}
           enCours={enCours}
@@ -121,7 +113,7 @@ export function Modeles({
           }}
         />
       </Modale>
-    </section>
+    </div>
   )
 }
 
@@ -173,7 +165,7 @@ function FormulaireModele({
       />
 
       <div>
-        <span className="mb-3 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+        <span className="mb-2 block px-0.5 text-[15px] font-semibold text-encre-douce">
           Exercices, dans l&apos;ordre
         </span>
         <div className="flex flex-wrap gap-2">
@@ -185,11 +177,10 @@ function FormulaireModele({
                 type="button"
                 onClick={() => basculer(e.id)}
                 aria-pressed={i >= 0}
-                className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
-                  transition-colors ${
+                className={`h-10 rounded-pilule px-4 text-[14px] transition-colors ${
                     i >= 0
-                      ? 'border-accent bg-accent/15 text-accent'
-                      : 'border-bordure bg-verre text-encre-douce hover:text-encre'
+                      ? 'bg-encre font-semibold text-fond'
+                      : 'bg-verre text-encre-douce hover:text-encre'
                   }`}
               >
                 {i >= 0 && <span className="mr-1.5 opacity-70">{i + 1}</span>}
@@ -202,17 +193,17 @@ function FormulaireModele({
 
       {choisis.length > 0 && (
         <div>
-          <span className="mb-1 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+          <span className="mb-1 block px-0.5 text-[15px] font-semibold text-encre-douce">
             Alternatives
           </span>
-          <p className="mb-3 text-xs leading-relaxed text-encre-douce">
+          <p className="mb-3 px-0.5 text-[13px] leading-relaxed text-encre-douce">
             Pour chaque exercice, indique un ou deux remplaçants si la machine
             est prise. Facultatif.
           </p>
           <div className="flex flex-col gap-4">
             {choisis.map((id) => (
               <div key={id}>
-                <p className="mb-2 text-sm font-semibold">
+                <p className="mb-2 text-[15px] font-semibold">
                   {exercices.find((e) => e.id === id)?.nom}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -224,11 +215,10 @@ function FormulaireModele({
                         type="button"
                         onClick={() => basculerAlt(id, e.id)}
                         aria-pressed={(alts[id] ?? []).includes(e.id)}
-                        className={`rounded-bloc border px-3 py-1.5 text-[11px]
-                          transition-colors ${
+                        className={`h-9 rounded-pilule px-3.5 text-[13px] transition-colors ${
                             (alts[id] ?? []).includes(e.id)
-                              ? 'border-accent-2 bg-accent-2/15 text-accent-2'
-                              : 'border-bordure bg-verre text-encre-douce'
+                              ? 'bg-accent-2/20 font-semibold text-accent-2'
+                              : 'bg-verre text-encre-douce'
                           }`}
                       >
                         {e.nom}

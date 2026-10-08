@@ -33,6 +33,7 @@ export function EcranSeances({
   modeles,
   planning,
   faits,
+  faitsLibelles = {},
   pseudo,
   ongletInitial,
   ajoutInitial,
@@ -43,6 +44,8 @@ export function EcranSeances({
   modeles: Modele[]
   planning: JourPlanning[]
   faits: Jour[]
+  /** Ce qui a été fait chaque jour de la semaine (« Push + Course »). */
+  faitsLibelles?: Record<number, string>
   pseudo: string
   ongletInitial: CleOnglet
   ajoutInitial: 'muscu' | 'cardio' | null
@@ -127,7 +130,7 @@ export function EcranSeances({
       {onglet === 'historique' && (
         <Historique seances={seances} cardio={cardio} exercices={exercices} pseudo={pseudo} />
       )}
-      {onglet === 'semaine' && <Planning planning={planning} modeles={modeles} faits={faits} />}
+      {onglet === 'semaine' && <Planning planning={planning} modeles={modeles} faits={faits} faitsLibelles={faitsLibelles} />}
       {onglet === 'modeles' && <Modeles modeles={modeles} exercices={exercices} />}
       {onglet === 'exercices' && <Exercices exercices={exercices} />}
 

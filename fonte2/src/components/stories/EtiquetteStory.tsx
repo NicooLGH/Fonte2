@@ -51,7 +51,5 @@ function Puce({ children, bleu = false }: { children: React.ReactNode; bleu?: bo
 }
 
 function tonnes(kg: number) {
-  return kg >= 1000
-    ? `${(kg / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} t`
-    : `${Math.round(kg)} kg`
+  return `${Math.round(kg).toLocaleString('fr-FR')} kg`
 }

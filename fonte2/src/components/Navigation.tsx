@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Modale } from '@/components/ui/Modale'
 import { AvatarCadre } from '@/components/AvatarCadre'
 import {
@@ -84,6 +84,7 @@ export function BarreHaute({
             <Link
               key={e.href}
               href={e.href}
+              prefetch
               aria-current={actif ? 'page' : undefined}
               className={`rounded-pilule px-4 py-2 text-[15px] font-semibold transition-colors ${
                 actif ? 'bg-encre text-fond' : 'text-encre-douce hover:text-encre'
@@ -99,6 +100,7 @@ export function BarreHaute({
         {notifications}
         <Link
           href="/profil"
+          prefetch
           title={pseudo}
           aria-label={`Mon profil (${pseudo})`}
           className="ml-1 flex h-10 w-10 items-center justify-center"
@@ -107,6 +109,7 @@ export function BarreHaute({
         </Link>
         <Link
           href="/reglages"
+          prefetch
           aria-label="Réglages"
           className="flex h-9 w-9 items-center justify-center rounded-bloc
                      bg-verre text-encre-douce transition-colors
@@ -156,6 +159,7 @@ export function BarreMobile({
         {notifications}
         <Link
           href="/reglages"
+          prefetch
           aria-label="Réglages"
           className="appui flex h-11 w-11 items-center justify-center rounded-bloc
                      text-encre-douce transition-colors hover:text-encre"
@@ -164,6 +168,7 @@ export function BarreMobile({
         </Link>
         <Link
           href="/profil"
+          prefetch
           aria-label={`Mon profil (${pseudo})`}
           className="appui ml-1 flex h-11 w-11 items-center justify-center"
         >
@@ -181,6 +186,9 @@ export function BarreMobile({
 export function BarreBasse({ aDesModeles }: { aDesModeles: boolean }) {
   const chemin = usePathname()
   const [action, setAction] = useState(false)
+  // L'onglet touché s'allume tout de suite, sans attendre la page.
+  const [vers, setVers] = useState<string | null>(null)
+  useEffect(() => setVers(null), [chemin])
 
   return (
     <>
@@ -194,12 +202,14 @@ export function BarreBasse({ aDesModeles }: { aDesModeles: boolean }) {
                      bg-verre/90 px-1.5 shadow-[0_8px_24px_rgb(0_0_0/0.25)] backdrop-blur-md"
         >
           {ONGLETS.map((e) => {
-            const actif = estActif(chemin, e)
+            const actif = vers ? vers === e.href : estActif(chemin, e)
             const { Ico } = e
             return (
               <Link
                 key={e.href}
                 href={e.href}
+                prefetch
+                onClick={() => setVers(e.href)}
                 aria-label={e.libelle}
                 aria-current={actif ? 'page' : undefined}
                 className={`appui mx-0.5 flex h-11 items-center justify-center rounded-pilule transition-colors ${

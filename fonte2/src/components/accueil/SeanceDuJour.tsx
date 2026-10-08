@@ -128,7 +128,7 @@ export function SeanceDuJour({
           <p className="font-mono text-[12px] tracking-[0.08em] text-accent-clair uppercase">
             {surtitre}
           </p>
-          <p className="mt-1 truncate font-display text-[64px] leading-[0.85]">{titre}</p>
+          <p className="mt-1 font-display text-[clamp(2.75rem,13vw,4rem)] leading-[0.85] [overflow-wrap:anywhere]">{titre}</p>
         </div>
         {detail && (
           <p className="mb-1 shrink-0 text-right font-mono text-[14px] text-encre-douce">{detail}</p>

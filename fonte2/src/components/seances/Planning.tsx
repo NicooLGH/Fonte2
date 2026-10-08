@@ -28,11 +28,14 @@ export function Planning({
   planning,
   modeles,
   faits,
+  faitsLibelles = {},
 }: {
   planning: JourPlanning[]
   modeles: Modele[]
   /** Jours de la semaine en cours où une activité est déjà enregistrée. */
   faits: Jour[]
+  /** Ce qui a été fait ces jours-là. */
+  faitsLibelles?: Record<number, string>
 }) {
   const [edite, setEdite] = useState<Jour | null>(null)
   const [choix, setChoix] = useState<Choix>(null)
@@ -88,15 +91,16 @@ export function Planning({
           const actif = p && p.type !== 'repos' && texte
           const estAuj = jour === auj
           const fait = faits.includes(jour)
+          const quoi = faitsLibelles[jour]
 
           return (
             <li key={jour}>
               <button
                 type="button"
                 onClick={() => ouvrir(jour)}
-                aria-label={`${JOURS[jour - 1].long} : ${texte ?? 'rien de prévu'}. Modifier.`}
+                aria-label={`${JOURS[jour - 1].long} : ${texte ?? 'rien de prévu'}${quoi ? `, fait : ${quoi}` : ''}. Modifier.`}
                 className={`appui flex w-full items-center gap-3.5 rounded-bloc pl-4 pr-3.5 text-left transition-colors ${
-                  actif || estAuj ? 'h-[60px] bg-verre' : 'h-[52px] hover:bg-verre'
+                  actif || estAuj || fait ? 'min-h-[60px] bg-verre py-2' : 'h-[52px] hover:bg-verre'
                 } ${estAuj ? 'ring-2 ring-accent ring-inset' : ''}`}
               >
                 <span className="flex w-10 flex-col">
@@ -107,14 +111,27 @@ export function Planning({
                   </span>
                   {estAuj && <span className="font-mono text-[10px] text-accent-clair">auj.</span>}
                 </span>
-                <span
-                  className={`flex-1 truncate ${
-                    actif
-                      ? `text-[17px] font-semibold ${p?.type === 'cardio' ? 'text-accent-2' : ''}`
-                      : 'text-[16px] text-encre-douce'
-                  }`}
-                >
-                  {texte ?? 'Rien de prévu'}
+                <span className="flex min-w-0 flex-1 flex-col">
+                  {texte || !fait ? (
+                    <span
+                      className={`truncate ${
+                        actif
+                          ? `text-[17px] font-semibold ${p?.type === 'cardio' ? 'text-accent-2' : ''}`
+                          : 'text-[16px] text-encre-douce'
+                      }`}
+                    >
+                      {texte ?? 'Rien de prévu'}
+                    </span>
+                  ) : null}
+                  {fait && quoi && (
+                    <span
+                      className={`truncate ${
+                        texte ? 'text-[13px] text-valide' : 'text-[17px] font-semibold text-valide'
+                      }`}
+                    >
+                      {texte ? `Fait · ${quoi}` : quoi}
+                    </span>
+                  )}
                 </span>
                 {fait && (
                   <span

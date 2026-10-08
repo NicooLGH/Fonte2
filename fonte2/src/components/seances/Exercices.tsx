@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Modale } from '@/components/ui/Modale'
 import { Champ, Bouton, Erreur } from '@/components/ui'
-import { GROUPES, icoGroupe, nomGroupe, type Exercice } from '@/lib/carnet'
+import { GROUPES, type Exercice } from '@/lib/carnet'
 import type { Groupe } from '@/types/database'
 import {
   creerExercice,
@@ -11,17 +11,11 @@ import {
   supprimerExercice,
 } from '@/app/(carnet)/seances/actions'
 
-const APERCU = 3
-
 export function Exercices({ exercices }: { exercices: Exercice[] }) {
   const [ouvert, setOuvert] = useState(false)
   const [edite, setEdite] = useState<Exercice | null>(null)
-  const [tout, setTout] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
-
-  const visibles = tout ? exercices : exercices.slice(0, APERCU)
-  const reste = exercices.length - visibles.length
 
   function envoyer(donnees: FormData) {
     setErreur(null)
@@ -46,84 +40,72 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
     })
   }
 
-  return (
-    <section className="section pb-5">
-      <p className="section-titre mb-2">Mes exercices</p>
-      <p className="mb-4 text-[13px] leading-relaxed text-encre-douce">
-        Les mouvements que tu pratiques. Ils deviennent sélectionnables dans tes
-        séances.
-      </p>
+  // Rangés par groupe musculaire, les non classés à la fin.
+  const groupes = [
+    ...GROUPES.map((g) => ({ cle: g.cle as string, nom: g.nom, liste: exercices.filter((e) => e.groupe === g.cle) })),
+    { cle: 'aucun', nom: 'Sans groupe', liste: exercices.filter((e) => !e.groupe) },
+  ].filter((g) => g.liste.length > 0)
 
-      <div className="flex-1">
-        {exercices.length === 0 ? (
-          <p className="text-sm italic text-encre-douce">
-            Aucun exercice. Crée le premier pour pouvoir enregistrer une séance.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {visibles.map((exo) => (
-              <li
-                key={exo.id}
-                className="border-b border-filet py-3 last:border-0"
-              >
-                <p className="font-semibold">{exo.nom}</p>
-                <p className="mt-0.5 font-mono text-[10.5px] text-encre-douce">
-                  {icoGroupe(exo.groupe)} {nomGroupe(exo.groupe)}
-                  {exo.objectif !== null && ` · objectif ${exo.objectif} kg`}
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEdite(exo)
-                      setOuvert(true)
-                    }}
-                    className="flex-1 rounded-bloc border border-bordure bg-verre
-                               px-3 py-1.5 text-xs font-semibold text-encre-douce
-                               transition-colors hover:text-encre"
-                  >
-                    Modifier
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => supprimer(exo)}
-                    aria-label={`Supprimer ${exo.nom}`}
-                    className="rounded-bloc px-3 py-1.5 text-xs text-encre-douce
-                               transition-colors hover:text-accent"
-                  >
-                    ✕
-                  </button>
-                </div>
+  return (
+    <div className="flex flex-col gap-4">
+      <button
+        type="button"
+        onClick={() => {
+          setEdite(null)
+          setErreur(null)
+          setOuvert(true)
+        }}
+        className="appui flex h-14 items-center justify-center gap-2 rounded-carte border-[1.5px] border-dashed
+                   border-encre/25 text-[16px] font-semibold text-encre-douce hover:text-encre"
+      >
+        <span aria-hidden className="text-[22px] leading-none">+</span>
+        Ajouter un exercice
+      </button>
+
+      {exercices.length === 0 && (
+        <p className="px-0.5 text-[15px] leading-relaxed text-encre-douce">
+          Aucun exercice pour l&apos;instant. Ils deviennent ensuite sélectionnables dans tes séances.
+        </p>
+      )}
+
+      {groupes.map((g) => (
+        <section key={g.cle} className="flex flex-col">
+          <p className="etiquette px-0.5 pb-1">{g.nom}</p>
+          <ul className="flex flex-col">
+            {g.liste.map((exo) => (
+              <li key={exo.id} className="flex min-h-14 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEdite(exo)
+                    setErreur(null)
+                    setOuvert(true)
+                  }}
+                  className="flex min-w-0 flex-1 flex-col items-start rounded-bloc px-0.5 py-2 text-left hover:bg-verre"
+                >
+                  <span className="w-full truncate text-[16px] font-semibold">{exo.nom}</span>
+                  {exo.objectif !== null && (
+                    <span className="text-[13px] text-encre-douce">Objectif {exo.objectif} kg</span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => supprimer(exo)}
+                  aria-label={`Supprimer ${exo.nom}`}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pilule text-encre-douce/60 hover:text-accent"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
               </li>
             ))}
           </ul>
-        )}
-
-        {reste > 0 && (
-          <button
-            type="button"
-            onClick={() => setTout(true)}
-            className="mt-3 w-full rounded-bloc border border-bordure bg-verre
-                       py-2.5 text-xs font-semibold text-encre-douce
-                       transition-colors hover:text-encre"
-          >
-            {reste === 1 ? "Voir l'autre" : `Voir les ${reste} autres`}
-          </button>
-        )}
-      </div>
+        </section>
+      ))}
 
       <Erreur>{erreur}</Erreur>
-
-      <Bouton
-        type="button"
-        className="mt-4"
-        onClick={() => {
-          setEdite(null)
-          setOuvert(true)
-        }}
-      >
-        Ajouter un exercice
-      </Bouton>
 
       <Modale
         titre={edite ? 'Modifier' : 'Nouvel exercice'}
@@ -141,7 +123,7 @@ export function Exercices({ exercices }: { exercices: Exercice[] }) {
           onEnvoyer={envoyer}
         />
       </Modale>
-    </section>
+    </div>
   )
 }
 
@@ -186,7 +168,7 @@ function FormulaireExercice({
       />
 
       <div>
-        <span className="mb-3 block font-mono text-[10.5px] uppercase tracking-[0.08em] text-encre-douce">
+        <span className="mb-2 block px-0.5 text-[15px] font-semibold text-encre-douce">
           Groupe musculaire
         </span>
         <div className="flex flex-wrap gap-2">
@@ -196,18 +178,17 @@ function FormulaireExercice({
               type="button"
               onClick={() => setGroupe(groupe === g.cle ? '' : g.cle)}
               aria-pressed={groupe === g.cle}
-              className={`rounded-bloc border px-3.5 py-2 text-xs font-semibold
-                transition-colors ${
+              className={`h-10 rounded-pilule px-4 text-[14px] transition-colors ${
                   groupe === g.cle
-                    ? 'border-accent-2 bg-accent-2/15 text-accent-2'
-                    : 'border-bordure bg-verre text-encre-douce hover:text-encre'
+                    ? 'bg-encre font-semibold text-fond'
+                    : 'bg-verre text-encre-douce hover:text-encre'
                 }`}
             >
-              {g.ico} {g.nom}
+              {g.nom}
             </button>
           ))}
         </div>
-        <p className="mt-2 font-mono text-[10.5px] leading-relaxed text-encre-douce">
+        <p className="mt-2 px-0.5 text-[13px] leading-relaxed text-encre-douce">
           Le groupe principal sollicité. Facultatif, mais il alimente la vue
           d&apos;équilibre.
         </p>

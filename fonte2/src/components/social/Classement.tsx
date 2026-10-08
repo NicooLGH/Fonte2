@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useState } from 'react'
 import { AvatarCadre } from '@/components/AvatarCadre'
 import type { Classement as Donnees, LigneClassement, PeriodeClassement } from '@/lib/social'
 
@@ -16,8 +19,14 @@ const PERIODES: { cle: PeriodeClassement; nom: string }[] = [
   { cle: 'niveau', nom: 'Niveau' },
 ]
 
-export function Classement({ donnees }: { donnees: Donnees }) {
-  const { periode, lignes, joursRestants } = donnees
+export function Classement({
+  classements,
+}: {
+  /** Les trois périodes, chargées d'avance : changer est immédiat. */
+  classements: Record<PeriodeClassement, Donnees>
+}) {
+  const [periode, setPeriode] = useState<PeriodeClassement>('semaine')
+  const { lignes, joursRestants } = classements[periode]
   const podium = lignes.slice(0, 3)
   const suite = lignes.slice(3)
   const seul = lignes.length <= 1
@@ -26,10 +35,11 @@ export function Classement({ donnees }: { donnees: Donnees }) {
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-1.5">
         {PERIODES.map((p) => (
-          <Link
+          <button
             key={p.cle}
-            href={`/amis?onglet=classement&periode=${p.cle}`}
-            aria-current={p.cle === periode ? 'true' : undefined}
+            type="button"
+            onClick={() => setPeriode(p.cle)}
+            aria-pressed={p.cle === periode}
             className={`flex h-[38px] items-center rounded-pilule px-4 text-[15px] transition-colors ${
               p.cle === periode
                 ? 'bg-encre font-semibold text-fond'
@@ -37,7 +47,7 @@ export function Classement({ donnees }: { donnees: Donnees }) {
             }`}
           >
             {p.nom}
-          </Link>
+          </button>
         ))}
         <span className="flex-1" />
         {joursRestants !== null && (

@@ -9,6 +9,7 @@ import { EcranSeances, type CleOnglet } from '@/components/seances/EcranSeances'
 import { creerClientServeur } from '@/lib/supabase/server'
 import { aujourdhui } from '@/lib/semaine'
 import { jourDe, joursDeLaSemaine, type Jour } from '@/lib/planning'
+import { activite } from '@/lib/cardio'
 
 const ONGLETS: CleOnglet[] = ['historique', 'semaine', 'modeles', 'exercices']
 
@@ -32,15 +33,15 @@ export default async function PageSeances({
     supabase.from('profiles').select('pseudo').eq('id', user!.id).maybeSingle(),
   ])
 
-  // Jours de la semaine en cours où quelque chose a été fait.
+  // Jours de la semaine en cours où quelque chose a été fait, et quoi.
   const semaine = new Set(joursDeLaSemaine(aujourdhui()))
-  const faits = [
-    ...new Set(
-      [...seances.map((s) => s.date), ...cardio.map((c) => c.date)]
-        .filter((d) => semaine.has(d))
-        .map(jourDe)
-    ),
-  ] as Jour[]
+  const faitsLibelles: Record<number, string> = {}
+  const ajouter = (jour: Jour, texte: string) => {
+    faitsLibelles[jour] = faitsLibelles[jour] ? `${faitsLibelles[jour]} + ${texte}` : texte
+  }
+  for (const s of [...seances].reverse()) if (semaine.has(s.date)) ajouter(jourDe(s.date), s.nom || 'Séance')
+  for (const c of [...cardio].reverse()) if (semaine.has(c.date)) ajouter(jourDe(c.date), activite(c.activite).nom)
+  const faits = Object.keys(faitsLibelles).map(Number) as Jour[]
 
   const onglet = ONGLETS.includes(params.onglet as CleOnglet)
     ? (params.onglet as CleOnglet)
@@ -57,6 +58,7 @@ export default async function PageSeances({
       modeles={modeles}
       planning={planning}
       faits={faits}
+      faitsLibelles={faitsLibelles}
       pseudo={(profil?.pseudo as string) ?? ''}
       ongletInitial={onglet}
       ajoutInitial={ajout}

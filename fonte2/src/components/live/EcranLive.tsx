@@ -1306,7 +1306,7 @@ function ilYA(iso: string) {
 function Stat({ valeur, libelle }: { valeur: string; libelle: string }) {
   return (
     <div>
-      <p className="font-display text-[36px] leading-none">{valeur}</p>
+      <p className="font-display text-[clamp(1.5rem,8vw,2.25rem)] leading-none">{valeur}</p>
       <p className="mt-0.5 text-[13px] text-encre-douce">{libelle}</p>
     </div>
   )
@@ -1321,11 +1321,9 @@ function mss(ms: number) {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`
 }
 
-/** « 840 kg », « 14,2 t » */
+/** « 14 200 kg » : une séance se compte en kilos. */
 function tonnage(kg: number) {
-  return kg >= 1000
-    ? `${(kg / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} t`
-    : `${Math.round(kg)} kg`
+  return `${Math.round(kg).toLocaleString('fr-FR')} kg`
 }
 
 function Alerte({ children }: { children: React.ReactNode }) {

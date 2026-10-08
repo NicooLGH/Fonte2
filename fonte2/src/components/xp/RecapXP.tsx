@@ -231,7 +231,7 @@ function Detail({
 function Chiffre({ valeur, libelle }: { valeur: string; libelle: string }) {
   return (
     <div>
-      <p className="font-display text-[36px] leading-none">{valeur}</p>
+      <p className="font-display text-[clamp(1.5rem,8vw,2.25rem)] leading-none">{valeur}</p>
       <p className="mt-0.5 text-[13px] text-encre-douce">{libelle}</p>
     </div>
   )
