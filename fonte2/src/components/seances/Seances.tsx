@@ -14,6 +14,9 @@ import {
   supprimerSeance,
   supprimerCardio,
 } from '@/app/(carnet)/seances/actions'
+import { EditeurCarte } from '@/components/partage/EditeurCarte'
+import { carteDepuisBlocs, type DonneesCarte } from '@/lib/carte-seance'
+import { meilleur1RM } from '@/lib/rm'
 
 /* ============================================================
    Historique
@@ -50,6 +53,7 @@ export function Historique({
     return s ? { genre: 'muscu', date: s.date, tri: '', seance: s } : null
   })
   const [modifiee, setModifiee] = useState<SeanceComplete | null>(null)
+  const [partage, setPartage] = useState<DonneesCarte | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [succes, setSucces] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
@@ -257,6 +261,19 @@ export function Historique({
             }}
             onExporter={() => exporter(ouverte.seance)}
             onSupprimer={() => supprimer(ouverte)}
+            onPartager={() => {
+              const s = ouverte.seance
+              setOuverte(null)
+              setPartage(
+                carteDepuisBlocs({
+                  titre: s.nom || 'Séance',
+                  date: s.date,
+                  dureeSec: s.dureeSec,
+                  blocs: s.blocs.map((b) => ({ nom: nomExo(b.exerciceId), series: b.series })),
+                  records: recordsDe(s, seances).map(nomExo),
+                })
+              )
+            }}
           />
         )}
         {ouverte?.genre === 'cardio' && (
@@ -311,6 +328,8 @@ export function Historique({
           />
         )}
       </Modale>
+
+      {partage && <EditeurCarte donnees={partage} ouvert onFermer={() => setPartage(null)} />}
     </div>
   )
 }
@@ -324,6 +343,7 @@ function DetailSeance({
   onModifier,
   onExporter,
   onSupprimer,
+  onPartager,
 }: {
   seance: SeanceComplete
   nomExo: (id: string) => string
@@ -331,6 +351,7 @@ function DetailSeance({
   onModifier: () => void
   onExporter: () => void
   onSupprimer: () => void
+  onPartager: () => void
 }) {
   const series = seance.blocs.reduce((n, b) => n + b.series.length, 0)
   return (
@@ -363,9 +384,14 @@ function DetailSeance({
       )}
 
       <div className="flex flex-col gap-2">
-        <Bouton type="button" onClick={onModifier} disabled={enCours}>
-          Modifier
-        </Bouton>
+        <div className="grid grid-cols-2 gap-2">
+          <Bouton type="button" onClick={onPartager}>
+            Partager
+          </Bouton>
+          <Bouton variante="discret" type="button" onClick={onModifier} disabled={enCours}>
+            Modifier
+          </Bouton>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <Bouton variante="discret" type="button" onClick={onExporter}>
             Exporter
@@ -408,6 +434,26 @@ function TuileDate({ iso, cardio }: { iso: string; cardio: boolean }) {
 }
 
 /* ---- Utilitaires ---- */
+
+/** Exercices où cette séance bat le meilleur 1RM estimé des séances d'avant. */
+function recordsDe(s: SeanceComplete, toutes: SeanceComplete[]): string[] {
+  const ids: string[] = []
+  for (const b of s.blocs) {
+    const rm = meilleur1RM(b.series)
+    if (rm === null) continue
+    let avant: number | null = null
+    for (const x of toutes) {
+      if (x.id === s.id || x.date >= s.date) continue
+      for (const y of x.blocs)
+        if (y.exerciceId === b.exerciceId) {
+          const r = meilleur1RM(y.series)
+          if (r !== null && (avant === null || r > avant)) avant = r
+        }
+    }
+    if (avant !== null && rm > avant) ids.push(b.exerciceId)
+  }
+  return ids
+}
 
 function nomsCourts(s: SeanceComplete, nomExo: (id: string) => string) {
   return s.blocs.map((b) => nomExo(b.exerciceId)).join(', ')

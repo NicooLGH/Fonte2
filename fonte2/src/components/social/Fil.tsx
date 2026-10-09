@@ -12,6 +12,8 @@ import {
 import { reagirSeance, retirerReaction } from '@/app/(carnet)/amis/actions'
 import { TexteAjuste } from '@/components/ui/TexteAjuste'
 import { Visage } from '@/components/Visage'
+import { EditeurCarte } from '@/components/partage/EditeurCarte'
+import { carteDepuisBlocs } from '@/lib/carte-seance'
 
 /* ============================================================
    Fil des amis
@@ -88,6 +90,7 @@ export function Publication({
   interactif?: boolean
 }) {
   const [detail, setDetail] = useState(false)
+  const [partage, setPartage] = useState(false)
   // Réaction affichée tout de suite ; la base suit en arrière-plan.
   const [maReaction, setMaReaction] = useState<Signe | null>(p.maReaction)
   const [reactions, setReactions] = useState<Record<string, number>>(p.reactions)
@@ -187,6 +190,19 @@ export function Publication({
           )
         })}
         <span className="flex-1" />
+        {!interactif && p.blocs.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setPartage(true)}
+            aria-label="Partager cette séance"
+            className="flex h-9 w-9 items-center justify-center rounded-pilule text-encre-douce hover:text-encre"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+              strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+            </svg>
+          </button>
+        )}
         {p.blocs.length > 0 && (
           <button
             type="button"
@@ -226,6 +242,20 @@ export function Publication({
       )}
 
       {erreur && <p className="font-mono text-[12px] text-accent">{erreur}</p>}
+
+      {partage && (
+        <EditeurCarte
+          ouvert
+          onFermer={() => setPartage(false)}
+          donnees={carteDepuisBlocs({
+            titre: p.nom || 'Séance',
+            date: p.date,
+            dureeSec: p.dureeSec,
+            blocs: p.blocs,
+            records: p.records,
+          })}
+        />
+      )}
     </article>
   )
 }

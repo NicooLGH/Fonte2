@@ -17,6 +17,8 @@ import { lingotsEntre } from '@/lib/lingots'
 import { IconeLingot } from '@/components/lingots/IconeLingot'
 import { fondBanniere } from '@/lib/bannieres'
 import { motifCss } from '@/lib/motifs'
+import { EditeurCarte } from '@/components/partage/EditeurCarte'
+import type { DonneesCarte } from '@/lib/carte-seance'
 
 /* ============================================================
    Récapitulatif d'XP, après l'enregistrement d'une séance
@@ -39,6 +41,7 @@ export function RecapXP({
   gains,
   titre,
   stats,
+  carte = null,
   onContinuer,
 }: {
   avant: number
@@ -47,6 +50,8 @@ export function RecapXP({
   /** Nom du modèle, ou « Séance ». */
   titre: string
   stats: StatsSeance
+  /** De quoi dessiner la carte de partage. */
+  carte?: DonneesCarte | null
   onContinuer: () => void
 }) {
   const nAvant = calculerNiveau(avant)
@@ -74,6 +79,7 @@ export function RecapXP({
       gains={gains}
       titre={titre}
       stats={stats}
+      carte={carte}
       onContinuer={onContinuer}
     />
   )
@@ -87,6 +93,7 @@ function Detail({
   gains,
   titre,
   stats,
+  carte,
   onContinuer,
 }: {
   avant: number
@@ -94,8 +101,10 @@ function Detail({
   gains: GainXP[]
   titre: string
   stats: StatsSeance
+  carte: DonneesCarte | null
   onContinuer: () => void
 }) {
+  const [partage, setPartage] = useState(false)
   const total = gains.reduce((t, g) => t + g.montant, 0)
   const lignes = gains.filter((g) => g.source !== 'badge' && g.source !== 'defi')
   const badges = gains.filter((g) => g.source === 'badge')
@@ -199,6 +208,19 @@ function Detail({
 
         <div className="mt-auto flex flex-col gap-1 pt-4">
           <div className="flex gap-2">
+            {carte && (
+              <button
+                type="button"
+                onClick={() => setPartage(true)}
+                aria-label="Partager ma séance (Instagram…)"
+                className="appui flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-carte bg-verre"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+                  strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+                </svg>
+              </button>
+            )}
             <Link
               href="/story/nouvelle?etiquette=seance"
               aria-label="Partager en story"
@@ -227,6 +249,7 @@ function Detail({
           </Link>
         </div>
       </div>
+      {carte && partage && <EditeurCarte donnees={carte} ouvert onFermer={() => setPartage(false)} />}
     </main>
   )
 }

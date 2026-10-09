@@ -35,6 +35,7 @@ import { ecrireAttente, lireAttente, type SeanceEnAttente } from '@/lib/attente'
 import type { GainXP } from '@/lib/xp'
 import { TexteAjuste } from '@/components/ui/TexteAjuste'
 import { usePastille, Pastille as PastilleGlissante } from '@/components/ui/Pastille'
+import { carteDepuisBlocs, type DonneesCarte } from '@/lib/carte-seance'
 
 /* ============================================================
    Séance en direct
@@ -93,6 +94,7 @@ export function EcranLive({
     gains: GainXP[]
     titre: string
     stats: StatsSeance
+    carte: DonneesCarte
   } | null>(null)
   const [enCours, demarrer] = useTransition()
 
@@ -618,7 +620,21 @@ export function EcranLive({
 
       // Sans XP (SQL pas encore installé), on revient au carnet.
       if (r.xp) {
-        setRecap({ ...r.xp, titre, stats })
+        setRecap({
+          ...r.xp,
+          titre,
+          stats,
+          carte: carteDepuisBlocs({
+            titre,
+            date: enAttente.date,
+            dureeSec,
+            blocs: blocs.map((b) => ({ nom: nomExo(b.exerciceId), series: b.series })),
+            xp: r.xp.apres - r.xp.avant,
+            records: r.xp.gains
+              .filter((g) => g.source === 'record')
+              .map((g) => g.libelle.split(' · ').slice(1).join(' · ')),
+          }),
+        })
         window.scrollTo({ top: 0 })
       } else {
         router.push('/')
