@@ -22,6 +22,8 @@ import {
 } from '@/app/(carnet)/reglages/actions'
 import { usePastille, Pastille } from '@/components/ui/Pastille'
 import { Visage } from '@/components/Visage'
+import { Notifications } from '@/components/reglages/Notifications'
+import type { PreferencesPush } from '@/app/(carnet)/reglages/push'
 
 
 type Theme = 'sombre' | 'clair' | 'auto'
@@ -39,6 +41,7 @@ export function Reglages({
   banniere,
   motif,
   aUnCode,
+  preferencesPush,
 }: {
   pseudo: string
   avatar: string
@@ -55,6 +58,7 @@ export function Reglages({
   /** Niveau actuel : décide de ce qui est débloqué. */
   niveau?: number
   aUnCode: boolean
+  preferencesPush: PreferencesPush
 }) {
   const [message, setMessage] = useState<{ ok?: string; ko?: string }>({})
   const pastilleJour = usePastille(jourRappel)
@@ -233,6 +237,9 @@ export function Reglages({
           <ChoixSons />
         </Ligne>
       </Section>
+
+      {/* ---- Notifications ---- */}
+      <Notifications preferences={preferencesPush} />
 
       {/* ---- Application ---- */}
       <Section titre="Application">

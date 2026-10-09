@@ -11,7 +11,7 @@ const PUBLIQUES = ['/connexion', '/inscription', '/mot-de-passe']
  * Chemins toujours accessibles : le retour des liens email doit
  * passer même sans session, puisque c'est lui qui la crée.
  */
-const TOUJOURS_OUVERTS = ['/auth/callback']
+const TOUJOURS_OUVERTS = ['/auth/callback', '/api/taches']
 
 /**
  * Rafraîchit le jeton d'accès à chaque requête et protège les

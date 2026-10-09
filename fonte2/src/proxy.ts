@@ -18,8 +18,9 @@ export const config = {
   matcher: [
     /*
      * Toutes les requêtes sauf les fichiers statiques : inutile
-     * d'interroger Supabase pour servir une image.
+     * d'interroger Supabase pour servir une image. Les tâches
+     * programmées (/api/taches) ont leur propre secret.
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|api/taches|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?)$).*)',
   ],
 }

@@ -7,6 +7,7 @@ import { codeRequis } from '@/app/(carnet)/admin/verrou'
 import type { Profil } from '@/types/database'
 import { chargerMonXP } from '@/lib/donnees-xp'
 import { calculerNiveau } from '@/lib/xp'
+import { chargerPreferencesPush } from '@/lib/donnees-push'
 
 export default async function PageReglages() {
   const supabase = await creerClientServeur()
@@ -15,11 +16,12 @@ export default async function PageReglages() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/connexion')
 
-  const [admin, rappel, aUnCode, xp] = await Promise.all([
+  const [admin, rappel, aUnCode, xp, preferencesPush] = await Promise.all([
     suisJeAdmin(),
     chargerRappel(),
     codeRequis(),
     chargerMonXP(),
+    chargerPreferencesPush(),
   ])
 
   const { data } = await supabase
@@ -54,6 +56,7 @@ export default async function PageReglages() {
       cadre={profil?.cadre ?? 'aucun'}
       niveau={calculerNiveau(xp).niveau}
       aUnCode={aUnCode}
+      preferencesPush={preferencesPush}
     />
   )
 }

@@ -14,7 +14,7 @@
    n'avait pas de serveur. Ici, ce serait un piège.
    ============================================================ */
 
-const VERSION = 'fonte-next-v1'
+const VERSION = 'fonte-next-v2'
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -79,12 +79,39 @@ self.addEventListener('message', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
+  // Le lien vient de la notification ; on reste toujours dans l'appli.
+  const brut = (e.notification.data && e.notification.data.lien) || '/'
+  const lien = typeof brut === 'string' && /^\/(?![/\\])/.test(brut) ? brut : '/'
   e.waitUntil(
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((liste) => {
-        for (const c of liste) if ('focus' in c) return c.focus()
-        if (self.clients.openWindow) return self.clients.openWindow('/')
+        for (const c of liste) {
+          if ('focus' in c) {
+            if ('navigate' in c) c.navigate(lien).catch(() => {})
+            return c.focus()
+          }
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(lien)
       })
+  )
+})
+
+// Notifications push (session 12), envoyées par le serveur.
+self.addEventListener('push', (e) => {
+  let d = {}
+  try {
+    d = e.data ? e.data.json() : {}
+  } catch {
+    d = { corps: e.data ? e.data.text() : '' }
+  }
+  e.waitUntil(
+    self.registration.showNotification(d.titre || 'FONTE', {
+      body: d.corps || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: d.tag || 'fonte',
+      data: { lien: d.lien || '/' },
+    })
   )
 })
